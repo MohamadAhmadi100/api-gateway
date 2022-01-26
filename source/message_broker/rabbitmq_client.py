@@ -1,4 +1,4 @@
-from source.rabbitmq.rabbitmq import RabbitMQClient
+from source.message_broker.rabbitmq import RabbitMQClient
 
 
 class RabbitMQ:

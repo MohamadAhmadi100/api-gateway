@@ -1,22 +1,19 @@
 import uvicorn
-from fastapi import FastAPI, status, responses, exceptions
-from source.routers.cart.app import cart
+from fastapi import FastAPI
+
+from source.routers.cart.app import app as cart_app
+from config import settings
 
 app = FastAPI(title="API Gateway",
-              description="""
-        An application for API management that sits between a client and a collection of backend services. This application acts as a reverse proxy to accept all application programming interface (API) calls, aggregate the various services required to fulfill them, and return the appropriate result.
-    """,
-              version="0.0.1",
-              # openapi_tags=tags,
-              default_response_class=responses.ORJSONResponse
-              )
+              description="Backend for frontend aka. API Gateway!",
+              version="0.0.1")
 
 # ----------------------------------------- Mount all services here -------------------------------------------------- #
 
-app.mount("/cart", cart)
+app.mount("/cart", cart_app)
 
 # ----------------------------------------- Mount all services here -------------------------------------------------- #
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("main:app", host=settings.UVICORN_HOST, port=settings.UVICORN_PORT, reload=True)
