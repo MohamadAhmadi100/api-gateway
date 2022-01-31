@@ -1,15 +1,18 @@
 import json
+import signal
 import uuid
 
 import pika
 
 from source.config import settings
+from source.helpers.exception_handler import ExceptionHandler
 
 
 class RabbitRPC:
     def __init__(
             self,
-            exchange_name: str
+            exchange_name: str,
+            timeout: int,
     ):
         self.host = settings.RABBITMQ_HOST
         self.port = settings.RABBITMQ_PORT
@@ -21,8 +24,11 @@ class RabbitRPC:
         self.channel.exchange_declare(exchange=self.exchange_name, exchange_type='headers')
         queue_result = self.channel.queue_declare(queue="", exclusive=True)
         self.callback_queue = queue_result.method.queue
-        self.response = None
-        self.corr_id = str(uuid.uuid4())
+        self.broker_response = dict()
+        self.corr_id = None
+        self.response_len = 0
+        self.timeout = timeout
+        signal.signal(signal.SIGALRM, self.timeout_handler)
 
     def connect(self):
         credentials = pika.PlainCredentials(self.user, self.password)
@@ -38,6 +44,10 @@ class RabbitRPC:
             body=json.dumps(message)
         )
 
+    def response_len_setter(self, response_len: int):
+        self.response_len = response_len
+        self.corr_id = str(uuid.uuid4())
+
     def publish(self, message: dict, headers: dict):
         self.channel.basic_publish(
             exchange=self.exchange_name,
@@ -51,17 +61,30 @@ class RabbitRPC:
             body=json.dumps(message)
         )
         print("message sent...")
-        while self.response is None:
+        signal.alarm(self.timeout)
+        while len(self.broker_response) < self.response_len:
             self.connection.process_data_events()
-        return self.response
+        signal.alarm(0)
+        result = self.broker_response.copy()
+        self.broker_response.clear()
+        return result
 
     def on_response(self, channel, method, properties, body):
         if self.corr_id == properties.correlation_id:
             print("message received...")
-            self.response = json.loads(body)
+            key = next(iter(json.loads(body)))
+            self.broker_response[key] = json.loads(body).get(key)
 
     def consume(self):
         self.channel.basic_consume(on_message_callback=self.on_response, queue=self.callback_queue, auto_ack=True)
+
+    def timeout_handler(self, signum, frame):
+        signal.alarm(0)
+        self.response_len = 0
+        self.broker_response = {"error": "timeout"}
+        exc_handler = ExceptionHandler(message="One or more services is not responding")
+        exc_handler.logger()
+        exc_handler.send_sms()
 
 
 if __name__ == '__main__':
@@ -72,4 +95,3 @@ if __name__ == '__main__':
     # print(rpc.response)
     inp = input("enter a message: ")
     rpc.fanout_publish('namaz', {inp: True})
-

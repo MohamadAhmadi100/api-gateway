@@ -1,8 +1,10 @@
+import logging
+
 import uvicorn
 from fastapi import FastAPI
 
-from source.routers.cart.app import app as cart_app
 from config import settings
+from source.routers.cart.app import app as cart_app
 
 app = FastAPI(title="API Gateway",
               description="Backend for frontend aka. API Gateway!",
@@ -12,7 +14,29 @@ app = FastAPI(title="API Gateway",
 
 app.mount("/cart", cart_app)
 
+
 # ----------------------------------------- Mount all services here -------------------------------------------------- #
+
+@app.on_event("startup")
+async def startup_event() -> None:
+    """
+    This function will be called when the application starts.
+    """
+    logging.basicConfig(
+        format='%(asctime)s %(levelname)-8s %(message)s',
+        filename="app.log",
+        level=logging.INFO,
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+    logging.info("Application is starting...")
+
+
+@app.on_event("shutdown")
+def shutdown_event() -> None:
+    """
+    This function will be called when the application stops.
+    """
+    logging.info("Application is shutting down...")
 
 
 if __name__ == "__main__":

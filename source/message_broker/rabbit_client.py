@@ -72,7 +72,10 @@ class RabbitRPCClient:
 
     def consume(self):
         self.channel.basic_consume(queue=self.receiving_queue, on_message_callback=self.publish)
-        self.channel.start_consuming()
+        try:
+            self.channel.start_consuming()
+        except KeyboardInterrupt:
+            self.channel.stop_consuming()
 
 
 if __name__ == "__main__":
@@ -86,10 +89,9 @@ if __name__ == "__main__":
             print("alla homa sale ala mohammad va ale mohammad")
 
 
-    rpc = RabbitRPCClient(receiving_queue="mamad", callback=callback, exchange_name="qad-qamete-salat", headers={'type': 'qad'}, headers_match_all=False)
+    rpc = RabbitRPCClient(receiving_queue="mamad", callback=callback, exchange_name="qad-qamete-salat",
+                          headers={'type': 'qad'}, headers_match_all=False)
     rpc.connect()
     # rpc.consume()
     rpc.fanout_callback_setter(fanout_callback)
     rpc.fanout_consume("namaz")
-
-
