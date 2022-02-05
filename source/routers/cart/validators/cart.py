@@ -20,8 +20,10 @@ class AddCart(BaseCart):
     def system_code_validator(cls, value):
         if not isinstance(value, str):
             raise HTTPException(status_code=400, detail="system_code must be a string")
-        if len(value) != 12:
-            raise HTTPException(status_code=400, detail="system_code must be 12 characters")
+        if len(value) != 9:
+            raise HTTPException(status_code=400, detail="system_code must be 9 characters")
+        if ";" in value:
+            raise HTTPException(status_code=400, detail="forbidden character ';' in system_code")
         return value
 
     @validator("storage_id")

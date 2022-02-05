@@ -41,7 +41,13 @@ class RabbitRPCClient:
     def connect(self):
         credentials = pika.PlainCredentials(self.user, self.password)
         connection = pika.BlockingConnection(
-            pika.ConnectionParameters(host=self.host, port=self.port, credentials=credentials))
+            pika.ConnectionParameters(
+                host=self.host,
+                port=self.port,
+                credentials=credentials,
+                blocked_connection_timeout=86400  # 86400 seconds = 24 hours
+            )
+        )
         return connection
 
     def publish(self, channel, method, properties, body):

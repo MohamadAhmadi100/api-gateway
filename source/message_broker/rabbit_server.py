@@ -33,7 +33,13 @@ class RabbitRPC:
     def connect(self):
         credentials = pika.PlainCredentials(self.user, self.password)
         connection = pika.BlockingConnection(
-            pika.ConnectionParameters(host=self.host, port=self.port, credentials=credentials))
+            pika.ConnectionParameters(
+                host=self.host,
+                port=self.port,
+                credentials=credentials,
+                blocked_connection_timeout=3600  # 86400 seconds = 24 hours
+            )
+        )
         return connection
 
     def fanout_publish(self, exchange_name: str, message: dict):
@@ -81,7 +87,7 @@ class RabbitRPC:
     def timeout_handler(self, signum, frame):
         signal.alarm(0)
         self.response_len = 0
-        self.broker_response = {"error": "timeout"}
+        self.broker_response = {"error": "One or more services is not responding", "status_code": 408}
         exc_handler = ExceptionHandler(message="One or more services is not responding")
         exc_handler.logger()
         exc_handler.send_sms()
