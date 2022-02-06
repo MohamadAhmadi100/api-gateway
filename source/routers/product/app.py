@@ -1,12 +1,9 @@
 from fastapi import FastAPI, HTTPException, Response, responses, Path, Body, Query
 from starlette.exceptions import HTTPException as starletteHTTPException
 
-from source.routers.product.validators import CreateParent
 from source.config import settings
 from source.message_broker.rabbit_server import RabbitRPC
-
-# from source.routers.quantity.validators.quantity import Quantity
-from source.routers.product.validators.product import CreateChild, AddAtributes
+from source.routers.product.validators.product import CreateChild, AddAtributes, CreateParent
 
 TAGS = [
     {
@@ -57,12 +54,12 @@ def get_parent_configs(system_code: str, response: Response) -> dict:
                         detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@app.get("/product/parent/", status_code=200)
+@app.get("/product/parent/", tags=["Product"])
 def create_parent_schema():
     return CreateParent.schema().get("properties")
 
 
-@app.post("/product/parent/", status_code=201)
+@app.post("/product/parent/", tags=["Product"])
 def create_parent(
         item: CreateParent, response: Response
 ) -> dict:
@@ -84,7 +81,7 @@ def create_parent(
                         detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@app.get("/product/{system_code}/items", status_code=200)
+@app.get("/product/{system_code}/items", tags=["Product"])
 def suggest_product(response: Response, system_code: str = Path(..., min_length=11, max_length=11)) -> dict:
     rpc.response_len_setter(response_len=1)
     product_result = rpc.publish(
@@ -106,12 +103,12 @@ def suggest_product(response: Response, system_code: str = Path(..., min_length=
                         detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@app.get("/product/child/", status_code=200)
+@app.get("/product/child/", tags=["Product"])
 def create_child_schema():
     return CreateChild.schema().get("properties")
 
 
-@app.post("/product/child/", status_code=201)
+@app.post("/product/child/", tags=["Product"])
 def create_child(
         item: CreateChild, response: Response
 ) -> dict:
@@ -137,12 +134,12 @@ def create_child(
                         detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@app.get("/product/attributes/", status_code=200)
+@app.get("/product/attributes/", tags=["Product"])
 def add_attributes_schema():
     return AddAtributes.schema().get("properties")
 
 
-@app.post("/product/attributes/", status_code=201)
+@app.post("/product/attributes/", tags=["Product"])
 def add_attributes(response: Response,
                    item: AddAtributes = Body(..., example={
                        "system_code": "100104021006",
@@ -174,7 +171,7 @@ def add_attributes(response: Response,
                         detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@app.get("/product/{system_code}/{lang}", status_code=200)
+@app.get("/product/{system_code}/{lang}", tags=["Product"])
 def get_product_by_system_code(
         response: Response,
         system_code: str = Path(..., min_length=11, max_length=11),
@@ -183,8 +180,8 @@ def get_product_by_system_code(
     """
     Get a product by system_code in main collection in database.
     """
-    rpc.response_len_setter(response_len=1)
-    product_result = rpc.publish(
+    rpc.response_len_setter(response_len=3)
+    result = rpc.publish(
         message={
             "product": {
                 "action": "get_product_by_system_code",
@@ -192,19 +189,59 @@ def get_product_by_system_code(
                     "system_code": system_code,
                     "lang": lang
                 }
+            }, "pricing": {
+                "action": "get_price",
+                "body": {
+                    "system_code": system_code
+                }
+            }, "quantity": {
+                "action": "get_quantity",
+                "body": {
+                    "system_code": system_code
+                }
             }
         },
-        headers={'product': True}
+        headers={'product': True, "pricing": True, "quantity": True}
     )
-    product_result = product_result.get("product", {})
-    if product_result.get("success"):
+    product_result = result.get("product", {})
+    pricing_result = result.get("pricing", {})
+    quantity_result = result.get("quantity", {})
+    if not product_result.get("success"):
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
+    elif not pricing_result.get("success"):
+        raise HTTPException(status_code=pricing_result.get("status_code", 500),
+                            detail={"error": pricing_result.get("error", "Something went wrong")})
+    elif not quantity_result.get("success"):
+        raise HTTPException(status_code=quantity_result.get("status_code", 500),
+                            detail={"error": quantity_result.get("error", "Something went wrong")})
+    else:
         response.status_code = product_result.get("status_code", 200)
-        return product_result.get("message")
-    raise HTTPException(status_code=product_result.get("status_code", 500),
-                        detail={"error": product_result.get("error", "Something went wrong")})
+        final_result = product_result.get("message").copy()
+        final_result["warehouse"] = list()
+        for q_item in quantity_result.get("message", {}).get("storages", []):
+            for p_item in pricing_result.get("message", {}).get("customer_type", []):
+                # get user type and set it here
+                if p_item.get("type") == "B2B":
+                    for storage in p_item.get("storages", []):
+                        if storage.get("storage_id") == q_item.get("storage_id"):
+                            item = dict()
+                            item["warehouse_id"] = storage.get("storage_id")
+                            item["price"] = storage.get("regular")
+                            item["special_price"] = storage.get("special")
+                            item["warehouse_id"] = q_item.get("storage_id")
+                            item["quantity"] = q_item.get("stock_for_sale")
+                            item["warehouse_state"] = q_item.get("warehouse_state")
+                            item["warehouse_city"] = q_item.get("warehouse_city")
+                            item["warehouse_state_id"] = q_item.get("warehouse_state_id")
+                            item["warehouse_city_id"] = q_item.get("warehouse_city_id")
+                            item["warehouse_label"] = q_item.get("warehouse_label")
+                            item["attribute_label"] = q_item.get("attribute_label")
+                            final_result["warehouse"].append(item)
+        return final_result
 
 
-@app.delete("/product/{system_code}", status_code=200)
+@app.delete("/product/{system_code}", tags=["Product"])
 def delete_product(
         response: Response,
         system_code: str = Path(..., min_length=3, max_length=255)
@@ -232,7 +269,7 @@ def delete_product(
                         detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@app.get("/product/update_attribute_collection/", status_code=200)
+@app.get("/product/update_attribute_collection/", tags=["Product"])
 def update_attribute_collection(response: Response) -> dict:
     """
     Update the attribute collection in database.
@@ -284,12 +321,12 @@ def update_attribute_collection(response: Response) -> dict:
                         detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@app.get("/categories/{system_code}/")
+@app.get("/categories/{system_code}/", tags=["Product"])
 def get_all_categories(
-                       response: Response,
-                       system_code: str = Path(00, min_length=2, max_length=6),
-                       page: int = Query(1, ge=1, le=1000),
-                       per_page: int = Query(15, ge=1, le=1000)):
+        response: Response,
+        system_code: str = Path(00, min_length=2, max_length=6),
+        page: int = Query(1, ge=1, le=1000),
+        per_page: int = Query(15, ge=1, le=1000)):
     """
     """
     rpc.response_len_setter(response_len=1)
@@ -313,66 +350,80 @@ def get_all_categories(
     raise HTTPException(status_code=product_result.get("status_code", 500),
                         detail={"error": product_result.get("error", "Something went wrong")})
 
-#
-# @app.post("/api/v1/product/quantity/", tags=["Quantity"])
-# def set_product_quantity(item: Quantity, response: Response) -> dict:
-#     rpc.response_len_setter(response_len=1)
-#     quantity_result = rpc.publish(
-#         message={
-#             "quantity": {
-#                 "action": "set_quantity",
-#                 "body": item.get()
-#             }
-#         },
-#         headers={'quantity': True}
-#     )
-#     quantity_result = quantity_result.get("quantity", {})
-#     if quantity_result.get("success"):
-#         response.status_code = quantity_result.get("status_code", 200)
-#         return quantity_result.get("message")
-#     raise HTTPException(status_code=quantity_result.get("status_code", 500),
-#                         detail={"error": quantity_result.get("error", "Something went wrong")})
-#
-#
-# @app.get("/api/v1/product/quantity/{system_code}/", tags=["Quantity"])
-# def get_product_quantity(system_code: str, response: Response) -> dict:
-#     rpc.response_len_setter(response_len=1)
-#     quantity_result = rpc.publish(
-#         message={
-#             "quantity": {
-#                 "action": "get_quantity",
-#                 "body": {
-#                     "system_code": system_code
-#                 }
-#             }
-#         },
-#         headers={'quantity': True}
-#     )
-#     quantity_result = quantity_result.get("quantity", {})
-#     if quantity_result.get("success"):
-#         response.status_code = quantity_result.get("status_code", 200)
-#         return quantity_result.get("message")
-#     raise HTTPException(status_code=quantity_result.get("status_code", 500),
-#                         detail={"error": quantity_result.get("error", "Something went wrong")})
-#
-#
-# @app.get("/api/v1/product/stock/", tags=["Quantity"])
-# def get_product_stock(system_code: str, response: Response) -> dict:
-#     rpc.response_len_setter(response_len=1)
-#     quantity_result = rpc.publish(
-#         message={
-#             "quantity": {
-#                 "action": "get_stock",
-#                 "body": {
-#                     "system_code": system_code
-#                 }
-#             }
-#         },
-#         headers={'quantity': True}
-#     )
-#     quantity_result = quantity_result.get("quantity", {})
-#     if quantity_result.get("success"):
-#         response.status_code = quantity_result.get("status_code", 200)
-#         return quantity_result.get("message")
-#     raise HTTPException(status_code=quantity_result.get("status_code", 500),
-#                         detail={"error": quantity_result.get("error", "Something went wrong")})
+
+@app.get("/{system_code}/", tags=["Kowsar"])
+def get_kowsar(
+        response: Response,
+        system_code: str
+):
+    """
+    """
+    rpc.response_len_setter(response_len=1)
+    product_result = rpc.publish(
+        message={
+            "product": {
+                "action": "get_kowsar",
+                "body": {
+                    "system_code": system_code
+                }
+            }
+        },
+        headers={'product': True}
+    )
+    product_result = product_result.get("product", {})
+    if product_result.get("success"):
+        response.status_code = product_result.get("status_code", 200)
+        return product_result.get("message")
+    raise HTTPException(status_code=product_result.get("status_code", 500),
+                        detail={"error": product_result.get("error", "Something went wrong")})
+
+
+@app.get("/{system_code}/items/", tags=["Kowsar"])
+def get_kowsar_items(
+        response: Response,
+        system_code: str
+):
+    """
+    """
+    rpc.response_len_setter(response_len=1)
+    product_result = rpc.publish(
+        message={
+            "product": {
+                "action": "get_kowsar_items",
+                "body": {
+                    "system_code": system_code
+                }
+            }
+        },
+        headers={'product': True}
+    )
+    product_result = product_result.get("product", {})
+    if product_result.get("success"):
+        response.status_code = product_result.get("status_code", 200)
+        return product_result.get("message")
+    raise HTTPException(status_code=product_result.get("status_code", 500),
+                        detail={"error": product_result.get("error", "Something went wrong")})
+
+
+@app.get("/update_collection", tags=["Kowsar"])
+def update_kowsar_collection(
+        response: Response
+):
+    """
+    """
+    rpc.response_len_setter(response_len=1)
+    product_result = rpc.publish(
+        message={
+            "product": {
+                "action": "update_kowsar_collection",
+                "body": {}
+            }
+        },
+        headers={'product': True}
+    )
+    product_result = product_result.get("product", {})
+    if product_result.get("success"):
+        response.status_code = product_result.get("status_code", 200)
+        return product_result.get("message")
+    raise HTTPException(status_code=product_result.get("status_code", 500),
+                        detail={"error": product_result.get("error", "Something went wrong")})
