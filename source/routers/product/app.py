@@ -32,65 +32,89 @@ rpc.connect()
 rpc.consume()
 
 
-@app.post("/api/v1/product/quantity/", tags=["Quantity"])
-def set_product_quantity(item: Quantity, response: Response) -> dict:
+@app.get("/api/v1/product/parent/{system_code}/configs/", tags=["Product"])
+def get_parent_configs(system_code: str, response: Response) -> dict:
     rpc.response_len_setter(response_len=1)
-    quantity_result = rpc.publish(
+    product_result = rpc.publish(
         message={
-            "quantity": {
-                "action": "set_quantity",
-                "body": item.get()
-            }
-        },
-        headers={'quantity': True}
-    )
-    quantity_result = quantity_result.get("quantity", {})
-    if quantity_result.get("success"):
-        response.status_code = quantity_result.get("status_code", 200)
-        return quantity_result.get("message")
-    raise HTTPException(status_code=quantity_result.get("status_code", 500),
-                        detail={"error": quantity_result.get("error", "Something went wrong")})
-
-
-@app.get("/api/v1/product/quantity/{system_code}/", tags=["Quantity"])
-def get_product_quantity(system_code: str, response: Response) -> dict:
-    rpc.response_len_setter(response_len=1)
-    quantity_result = rpc.publish(
-        message={
-            "quantity": {
-                "action": "get_quantity",
+            "product": {
+                "action": "get_parent_configs",
                 "body": {
                     "system_code": system_code
                 }
             }
         },
-        headers={'quantity': True}
+        headers={'product': True}
     )
-    quantity_result = quantity_result.get("quantity", {})
-    if quantity_result.get("success"):
-        response.status_code = quantity_result.get("status_code", 200)
-        return quantity_result.get("message")
-    raise HTTPException(status_code=quantity_result.get("status_code", 500),
-                        detail={"error": quantity_result.get("error", "Something went wrong")})
+    product_result = product_result.get("product", {})
+    if product_result.get("success"):
+        response.status_code = product_result.get("status_code", 200)
+        return product_result.get("message")
+    raise HTTPException(status_code=product_result.get("status_code", 500),
+                        detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@app.get("/api/v1/product/stock/", tags=["Quantity"])
-def get_product_stock(system_code: str, response: Response) -> dict:
-    rpc.response_len_setter(response_len=1)
-    quantity_result = rpc.publish(
-        message={
-            "quantity": {
-                "action": "get_stock",
-                "body": {
-                    "system_code": system_code
-                }
-            }
-        },
-        headers={'quantity': True}
-    )
-    quantity_result = quantity_result.get("quantity", {})
-    if quantity_result.get("success"):
-        response.status_code = quantity_result.get("status_code", 200)
-        return quantity_result.get("message")
-    raise HTTPException(status_code=quantity_result.get("status_code", 500),
-                        detail={"error": quantity_result.get("error", "Something went wrong")})
+
+#
+# @app.post("/api/v1/product/quantity/", tags=["Quantity"])
+# def set_product_quantity(item: Quantity, response: Response) -> dict:
+#     rpc.response_len_setter(response_len=1)
+#     quantity_result = rpc.publish(
+#         message={
+#             "quantity": {
+#                 "action": "set_quantity",
+#                 "body": item.get()
+#             }
+#         },
+#         headers={'quantity': True}
+#     )
+#     quantity_result = quantity_result.get("quantity", {})
+#     if quantity_result.get("success"):
+#         response.status_code = quantity_result.get("status_code", 200)
+#         return quantity_result.get("message")
+#     raise HTTPException(status_code=quantity_result.get("status_code", 500),
+#                         detail={"error": quantity_result.get("error", "Something went wrong")})
+#
+#
+# @app.get("/api/v1/product/quantity/{system_code}/", tags=["Quantity"])
+# def get_product_quantity(system_code: str, response: Response) -> dict:
+#     rpc.response_len_setter(response_len=1)
+#     quantity_result = rpc.publish(
+#         message={
+#             "quantity": {
+#                 "action": "get_quantity",
+#                 "body": {
+#                     "system_code": system_code
+#                 }
+#             }
+#         },
+#         headers={'quantity': True}
+#     )
+#     quantity_result = quantity_result.get("quantity", {})
+#     if quantity_result.get("success"):
+#         response.status_code = quantity_result.get("status_code", 200)
+#         return quantity_result.get("message")
+#     raise HTTPException(status_code=quantity_result.get("status_code", 500),
+#                         detail={"error": quantity_result.get("error", "Something went wrong")})
+#
+#
+# @app.get("/api/v1/product/stock/", tags=["Quantity"])
+# def get_product_stock(system_code: str, response: Response) -> dict:
+#     rpc.response_len_setter(response_len=1)
+#     quantity_result = rpc.publish(
+#         message={
+#             "quantity": {
+#                 "action": "get_stock",
+#                 "body": {
+#                     "system_code": system_code
+#                 }
+#             }
+#         },
+#         headers={'quantity': True}
+#     )
+#     quantity_result = quantity_result.get("quantity", {})
+#     if quantity_result.get("success"):
+#         response.status_code = quantity_result.get("status_code", 200)
+#         return quantity_result.get("message")
+#     raise HTTPException(status_code=quantity_result.get("status_code", 500),
+#                         detail={"error": quantity_result.get("error", "Something went wrong")})

@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from config import settings
 from source.routers.cart.app import app as cart_app
 from source.routers.pricing.app import app as pricing_app
+from source.routers.product.app import app as product_app
 from source.routers.quantity.app import app as quantity_app
 
 app = FastAPI(title="API Gateway",
@@ -19,6 +20,8 @@ app.mount("/cart", cart_app)
 app.mount("/pricing", pricing_app)
 
 app.mount("/quantity", quantity_app)
+
+app.mount("/product", product_app)
 
 
 # ----------------------------------------- Mount all services here -------------------------------------------------- #
