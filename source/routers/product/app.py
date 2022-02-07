@@ -218,26 +218,23 @@ def get_product_by_system_code(
     else:
         response.status_code = product_result.get("status_code", 200)
         final_result = product_result.get("message").copy()
-        final_result["warehouse"] = list()
-        for q_item in quantity_result.get("message", {}).get("storages", []):
-            for p_item in pricing_result.get("message", {}).get("customer_type", []):
-                # get user type and set it here
-                if p_item.get("type") == "B2B":
-                    for storage in p_item.get("storages", []):
-                        if storage.get("storage_id") == q_item.get("storage_id"):
-                            item = dict()
-                            item["warehouse_id"] = storage.get("storage_id")
-                            item["price"] = storage.get("regular")
-                            item["special_price"] = storage.get("special")
-                            item["warehouse_id"] = q_item.get("storage_id")
-                            item["quantity"] = q_item.get("stock_for_sale")
-                            item["warehouse_state"] = q_item.get("warehouse_state")
-                            item["warehouse_city"] = q_item.get("warehouse_city")
-                            item["warehouse_state_id"] = q_item.get("warehouse_state_id")
-                            item["warehouse_city_id"] = q_item.get("warehouse_city_id")
-                            item["warehouse_label"] = q_item.get("warehouse_label")
-                            item["attribute_label"] = q_item.get("attribute_label")
-                            final_result["warehouse"].append(item)
+        for product in final_result.get("products", []):
+            product["warehouse"] = list()
+            for quantity in quantity_result.get("message", {}).get("products", {}).get(product.get("system_code")).get("B2B").get("storages", []):
+                for price in pricing_result.get("message", {}).get("products", {}).get(product.get("system_code")).get("B2B").get("storages", []):
+                    if quantity.get("storage_id") == price.get("storage_id"):
+                        item = dict()
+                        item["warehouse_id"] = quantity.get("storage_id")
+                        item["price"] = price.get("regular")
+                        item["special_price"] = price.get("special")
+                        item["quantity"] = quantity.get("stock_for_sale")
+                        item["warehouse_state"] = quantity.get("warehouse_state")
+                        item["warehouse_city"] = quantity.get("warehouse_city")
+                        item["warehouse_state_id"] = quantity.get("warehouse_state_id")
+                        item["warehouse_city_id"] = quantity.get("warehouse_city_id")
+                        item["warehouse_label"] = quantity.get("warehouse_label")
+                        item["attribute_label"] = quantity.get("attribute_label")
+                        product["warehouse"].append(item)
         return final_result
 
 

@@ -8,11 +8,20 @@ from source.routers.quantity.validators.storage import Storage
 
 
 class Quantity(BaseModel):
+    parent_system_code: str
     system_code: str
     stock: int
     total_stock_for_sale: int
     customer_types: List[CustomerType] = []
     storages: List[Storage] = []
+
+    @validator("parent_system_code")
+    def parent_system_code_validator(cls, value):
+        if not isinstance(value, str):
+            raise HTTPException(status_code=422, detail={"error": "parent_system_code must be str"})
+        elif 127 < len(value) or len(value) < 1:
+            raise HTTPException(status_code=422, detail={"error": "parent_system_code must be between 1 and 127"})
+        return value
 
     @validator("system_code")
     def system_code_validator(cls, value):
@@ -59,6 +68,7 @@ class Quantity(BaseModel):
     class Config:
         schema_extra = {
             "example": {
+                "parent_system_code": "1",
                 "system_code": '1000',
                 "stock": 1,
                 "total_stock_for_sale": 1,
@@ -85,6 +95,7 @@ class Quantity(BaseModel):
 
     def get(self):
         return {
+            "parent_system_code": self.parent_system_code,
             "system_code": self.system_code,
             "stock": self.stock,
             "total_stock_for_sale": self.total_stock_for_sale,

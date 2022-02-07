@@ -7,10 +7,21 @@ from source.routers.pricing.validators.customer_validator import CustomerTypeMod
 
 
 class Price(BaseModel):
+    parent_system_code: str
     system_code: str
     regular: int
     special: Optional[int] = None
     customer_type: List[CustomerTypeModel] = []
+
+    @validator("parent_system_code")
+    def parent_system_code_validator(cls, value):
+        if value is not None:
+            if not isinstance(value, str):
+                raise HTTPException(status_code=422, detail={"error": "parent_system_code must be str"})
+            elif 20 < len(value) or len(value) < 1:
+                raise HTTPException(status_code=422,
+                                    detail={"error": "parent_system_code must be between 1 and 100000000000000"})
+            return value
 
     @validator("system_code")
     def system_code_validator(cls, value):
@@ -51,7 +62,8 @@ class Price(BaseModel):
     class Config:
         schema_extra = {
             "example": {
-                'system_code': "1",
+                "parent_system_code": "1",
+                'system_code': "12",
                 "regular": 60000000,
                 "special": 50000000,
                 "customer_type": [
@@ -83,6 +95,7 @@ class Price(BaseModel):
 
     def get(self) -> dict:
         return {
+            'parent_system_code': self.parent_system_code,
             "system_code": self.system_code,
             'regular': self.regular,
             'special': self.special,
