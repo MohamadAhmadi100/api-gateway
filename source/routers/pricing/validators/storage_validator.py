@@ -1,6 +1,7 @@
+from typing import Optional
+
 from fastapi import HTTPException
 from pydantic import BaseModel, validator
-from typing import Optional
 
 
 class StoragesModel(BaseModel):

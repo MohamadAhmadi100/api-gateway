@@ -220,8 +220,8 @@ def get_product_by_system_code(
         final_result = product_result.get("message").copy()
         for product in final_result.get("products", []):
             product["warehouse"] = list()
-            for quantity in quantity_result.get("message", {}).get("products", {}).get(product.get("system_code")).get("B2B").get("storages", []):
-                for price in pricing_result.get("message", {}).get("products", {}).get(product.get("system_code")).get("B2B").get("storages", []):
+            for quantity in quantity_result.get("message", {}).get("products", {}).get(product.get("system_code")).get("customer_types").get("B2B").get("storages", []):
+                for price in pricing_result.get("message", {}).get("products", {}).get(product.get("system_code")).get("customer_type").get("B2B").get("storages", []):
                     if quantity.get("storage_id") == price.get("storage_id"):
                         item = dict()
                         item["warehouse_id"] = quantity.get("storage_id")

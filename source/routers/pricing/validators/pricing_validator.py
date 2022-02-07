@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional
 
 from fastapi import HTTPException
 from pydantic import BaseModel, validator
@@ -50,47 +50,46 @@ class Price(BaseModel):
                 raise HTTPException(status_code=422, detail={"error": "special must be between 1 and 100000000000000"})
         return value
 
-    @validator('customer_type')
-    def customer_type_validator(cls, value):
-        if value:
-            if not isinstance(value, list):
-                raise HTTPException(status_code=422, detail={"error": "customer_type must be list"})
-            elif len(value) >= 255:
-                raise HTTPException(status_code=422, detail={"error": "customer_type should be less than 255"})
-        return value
-
     class Config:
         schema_extra = {
             "example": {
-                "parent_system_code": "1",
-                'system_code': "12",
+                "parent_system_code": "10010100201",
+                "system_code": "100101002001",
                 "regular": 60000000,
                 "special": 50000000,
-                "customer_type": [
+                "customer_type":
                     {
-                        'type': 'B2B',
-                        "regular": 60000000,
-                        "special": 50000000,
-                        "storages": [
-                            {
-                                "storage_id": "1",
-                                "regular": 60000000,
-                                "special": 42000000,
-                            }
-                        ]
-                    },
-                    {
-                        'type': 'B2C',
-                        "regular": 60000000,
-                        "special": 50000000,
-                        "storages": []
-                    },
-                    {
-                        'type': 'B2G',
-                        "regular": 60000000,
-                        "special": 50000000,
-                        "storages": []
-                    }]}
+                        "B2B": {
+                            'type': 'B2B',
+                            "regular": 60000000,
+                            "special": 50000000,
+                            "storages": [
+                                {
+                                    "storage_id": "0",
+                                    "regular": 30000000,
+                                    "special": 22000000,
+                                },
+                                {
+                                    "storage_id": "1",
+                                    "regular": 60000000,
+                                    "special": 42000000,
+                                }
+                            ]
+                        },
+                        "B2C": {
+                            'type': 'B2C',
+                            "regular": 60000000,
+                            "special": 50000000,
+                            "storages": []
+                        },
+                        "B2G": {
+                            'type': 'B2G',
+                            "regular": 60000000,
+                            "special": 50000000,
+                            "storages": []
+                        }
+                    }
+            }
         }
 
     def get(self) -> dict:
@@ -99,5 +98,5 @@ class Price(BaseModel):
             "system_code": self.system_code,
             'regular': self.regular,
             'special': self.special,
-            'customer_type': self.customer_type
+            'customer_type': self.customer_type.dict()
         }

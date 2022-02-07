@@ -55,6 +55,6 @@ class CustomerTypes(BaseModel):
 
 
 class CustomerTypeModel(BaseModel):
-    B2B: CustomerTypes
-    B2C: CustomerTypes
-    B2G: CustomerTypes
+    B2B: Optional[CustomerTypes]
+    B2C: Optional[CustomerTypes]
+    B2G: Optional[CustomerTypes]

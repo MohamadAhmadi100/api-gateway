@@ -1,14 +1,15 @@
-from typing import List
+from typing import List, Optional
 
 from fastapi import HTTPException
 from pydantic import BaseModel, validator
+
 from source.routers.quantity.validators.storage import Storage
 
 
 class CustomerType(BaseModel):
     type: str
     stock_for_sale: int
-    storeges: List[Storage]
+    storages: List[Storage]
 
     @validator("type")
     def type_validator(cls, value):
@@ -39,5 +40,11 @@ class CustomerType(BaseModel):
         return {
             "type": self.type,
             "stock_for_sale": self.stock_for_sale,
-            "storages": [storage.get() for storage in self.storeges]
+            "storages": [storage.get() for storage in self.storages]
         }
+
+
+class CustomerTypeModel(BaseModel):
+    B2B: Optional[CustomerType] = {}
+    B2C: Optional[CustomerType] = {}
+    B2G: Optional[CustomerType] = {}
