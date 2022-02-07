@@ -1,10 +1,14 @@
+from typing import List
+
 from fastapi import HTTPException
 from pydantic import BaseModel, validator
+from source.routers.quantity.validators.storage import Storage
 
 
 class CustomerType(BaseModel):
     type: str
     stock_for_sale: int
+    storeges: List[Storage]
 
     @validator("type")
     def type_validator(cls, value):
@@ -23,8 +27,17 @@ class CustomerType(BaseModel):
                                 detail={"error": "stock_for_sale must be between 1 and 100_000_000_000_000"})
         return value
 
+    @validator("storages")
+    def storages_validator(cls, value):
+        if not isinstance(value, list):
+            raise HTTPException(status_code=422, detail={"error": "storages must be list"})
+        elif 127 < len(value) or len(value) < 1:
+            raise HTTPException(status_code=422, detail={"error": "storages must be between 1 and 127"})
+        return value
+
     def get(self):
         return {
             "type": self.type,
-            "stock_for_sale": self.stock_for_sale
+            "stock_for_sale": self.stock_for_sale,
+            "storages": [storage.get() for storage in self.storeges]
         }

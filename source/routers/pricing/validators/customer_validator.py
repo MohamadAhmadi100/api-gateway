@@ -6,7 +6,7 @@ from pydantic import BaseModel, validator
 from source.routers.pricing.validators.storage_validator import StoragesModel
 
 
-class CustomerTypeModel(BaseModel):
+class CustomerTypes(BaseModel):
     type: str
     regular: int
     special: Optional[int] = None
@@ -52,3 +52,9 @@ class CustomerTypeModel(BaseModel):
             'special': self.special,
             'storages': [storage.get() for storage in self.storages]
         }
+
+
+class CustomerTypeModel(BaseModel):
+    B2B: CustomerTypes
+    B2C: CustomerTypes
+    B2G: CustomerTypes

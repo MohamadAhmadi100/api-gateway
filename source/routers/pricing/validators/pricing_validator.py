@@ -11,7 +11,7 @@ class Price(BaseModel):
     system_code: str
     regular: int
     special: Optional[int] = None
-    customer_type: List[CustomerTypeModel] = []
+    customer_type: CustomerTypeModel = {}
 
     @validator("parent_system_code")
     def parent_system_code_validator(cls, value):
@@ -99,5 +99,5 @@ class Price(BaseModel):
             "system_code": self.system_code,
             'regular': self.regular,
             'special': self.special,
-            'customer_type': [type.get() for type in self.customer_type]
+            'customer_type': self.customer_type
         }
