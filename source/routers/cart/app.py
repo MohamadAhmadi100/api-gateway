@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 
 from source.config import settings
 from source.message_broker.rabbit_server import RabbitRPC
@@ -25,77 +25,147 @@ rpc.connect()
 rpc.consume()
 
 
-@app.put("/api/v1/cart/", status_code=202, tags=["Cart"])
-def add_and_edit_product(item: AddCart) -> dict:
+@app.put("/api/v1/cart/", tags=["Cart"])
+def add_and_edit_product(item: AddCart, response: Response) -> dict:
     """
     add and edit item in cart
     """
     # get user from token
     user = {"user_id": 0}
-    rpc.response_len_setter(response_len=3)
     # check if all will have response(timeout)
-    product_result = rpc.publish(
+    rpc.response_len_setter(response_len=3)
+    result = rpc.publish(
         message={
             "product": {
                 "action": "get_product_by_system_code",
                 "body": {
-                    "system_code": item.system_code
+                    "system_code": item.parent_system_code,
+                    "lang": "fa_ir"
                 }
-            },
-            "pricing": {
-                "action": "get_price_by_system_code",
+            }, "pricing": {
+                "action": "get_price",
                 "body": {
-                    "system_code": item.system_code,
-                    "storage_id": item.storage_id,
-                    "user": user
+                    "system_code": item.parent_system_code
                 }
-            },
-            "quantity": {
-                "action": "get_quantity_by_system_code",
+            }, "quantity": {
+                "action": "get_quantity",
                 "body": {
-                    "system_code": item.system_code,
-                    "storage_id": item.storage_id,
-                    "count": item.count
+                    "system_code": item.parent_system_code
                 }
             }
         },
-        headers={'product': True, 'pricing': True, 'quantity': True}
+        headers={'product': True, "pricing": True, "quantity": True}
     )
-    if product_result.get("error"):
-        raise HTTPException(status_code=400, detail=product_result.get("error"))
-    if product_result.get("product"):
-        product_detail = product_result.get("product")
-        product_detail["price"] = product_result.get("price")
-        product_detail["warehouse"] = product_result.get("quantity")
+    product_result = result.get("product", {})
+    pricing_result = result.get("pricing", {})
+    quantity_result = result.get("quantity", {})
+    if not product_result.get("success"):
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
+    elif not pricing_result.get("success"):
+        raise HTTPException(status_code=pricing_result.get("status_code", 500),
+                            detail={"error": pricing_result.get("error", "Something went wrong")})
+    elif not quantity_result.get("success"):
+        raise HTTPException(status_code=quantity_result.get("status_code", 500),
+                            detail={"error": quantity_result.get("error", "Something went wrong")})
+    else:
+        product_result = product_result.get("message").copy()
+        final_result = dict()
+        final_result["user_info"] = user
+        for product in product_result.get("products", []):
+            if product.get("system_code") == item.system_code:
+                final_result["product"] = product
+                break
+        for price in pricing_result.get("message", {}).get("products", {}).get(item.system_code, {}).get(
+                "customer_type").get("B2B").get("storages", []):
+            if price.get("storage_id") == item.storage_id:
+                final_result["price"] = price.get("special") if price.get("special") else price.get("regular")
+                break
+        for quantity in quantity_result.get("message", {}).get("products", {}).get(item.system_code, {}).get(
+                "customer_types").get("B2B").get("storages", []):
+            if quantity.get("storage_id") == item.storage_id:
+                if quantity.get("stock_for_sale") > item.count:
+                    final_result["count"] = item.count
+                    final_result["storage_id"] = item.storage_id
+                    break
+                else:
+                    raise HTTPException(status_code=400,
+                                        detail={"error": "Not enough quantity"})
         rpc.response_len_setter(response_len=1)
         cart_result = rpc.publish(
             message={
                 "cart": {
-                    "action": "add_to_cart",
+                    "action": "add_and_edit_product_in_cart",
                     "body": {
-                        "user": user,
-                        "product": product_detail
+                        "user_info": final_result.get("user_info"),
+                        "product": final_result.get("product"),
+                        "price": final_result.get("price"),
+                        "count": final_result.get("count"),
+                        "storage_id": final_result.get("storage_id")
                     }
                 }
             },
             headers={'cart': True}
         )
-        if cart_result.get("error"):
-            raise HTTPException(status_code=400, detail=cart_result.get("error"))
+        cart_result = cart_result.get("cart", {})
+        if not cart_result.get("success"):
+            raise HTTPException(status_code=product_result.get("status_code", 500),
+                                detail={"error": product_result.get("error", "Something went wrong")})
         else:
-            return cart_result
+            response.status_code = cart_result.get("status_code", 200)
+            return cart_result.get("message")
+
+
+@app.get("/api/v1/cart/{user_id}/", tags=["Cart"])
+def get_cart(user_id: int, response: Response) -> dict:
+    """
+    get user cart
+    """
+    rpc.response_len_setter(response_len=1)
+    result = rpc.publish(
+        message={
+            "cart": {
+                "action": "get_cart",
+                "body": {
+                    "user_id": user_id
+                }
+            }
+        },
+        headers={'cart': True}
+    )
+    cart_result = result.get("cart", {})
+    if not cart_result.get("success"):
+        raise HTTPException(status_code=cart_result.get("status_code", 500),
+                            detail={"error": cart_result.get("error", "Something went wrong")})
     else:
-        raise HTTPException(status_code=404, detail={"message": "product doesn't exists",
-                                                     "label": "محصول موجود نیست",
-                                                     "redirect": "/product/{system_code}"})
+        response.status_code = cart_result.get("status_code", 200)
+        return cart_result.get("message")
 
 
-# @app.get("/api/v1/cart/", status_code=200, tags=["Cart"])
-# def get_cart() -> dict:
-#     rpc.response_len_setter(response_len=1)
-#     # check if all will have response(timeout)
-#     result = rpc.publish(
-#         message={},
-#         headers={'cart': True, 'action': 'get'}
-#     )
-#     return result
+@app.delete("/api/v1/cart/{system_code}/{user_id}/{storage_id}", status_code=200, tags=["Cart"])
+def remove_product_from_cart(system_code: str, user_id: int, storage_id: str, response: Response) -> dict:
+    """
+    remove an item from cart
+
+    """
+    rpc.response_len_setter(response_len=1)
+    result = rpc.publish(
+        message={
+            "cart": {
+                "action": "remove_product_from_cart",
+                "body": {
+                    "user_id": user_id,
+                    "system_code": system_code,
+                    "storage_id": storage_id
+                }
+            }
+        },
+        headers={'cart': True}
+    )
+    cart_result = result.get("cart", {})
+    if not cart_result.get("success"):
+        raise HTTPException(status_code=cart_result.get("status_code", 500),
+                            detail={"error": cart_result.get("error", "Something went wrong")})
+    else:
+        response.status_code = cart_result.get("status_code", 200)
+        return cart_result.get("message")
