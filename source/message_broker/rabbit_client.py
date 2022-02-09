@@ -39,18 +39,21 @@ class RabbitRPCClient:
         )
 
     def connect(self):
+        # connect to rabbit with defined credentials
         credentials = pika.PlainCredentials(self.user, self.password)
         connection = pika.BlockingConnection(
             pika.ConnectionParameters(
                 host=self.host,
                 port=self.port,
                 credentials=credentials,
+                heartbeat=5,
                 blocked_connection_timeout=86400  # 86400 seconds = 24 hours
             )
         )
         return connection
 
     def publish(self, channel, method, properties, body):
+        # publish result of messages
         message = self.callback(json.loads(body))
         channel.basic_publish(exchange='',
                               routing_key=properties.reply_to,
@@ -65,6 +68,7 @@ class RabbitRPCClient:
         self.fanout_callback = fanout_callback
 
     def fanout_consume(self, exchange_name: str):
+        # consume fanout messages
         self.channel.exchange_declare(exchange=exchange_name, exchange_type='fanout')
         received_queue = self.channel.queue_declare(queue='', exclusive=True)
         received_queue_name = received_queue.method.queue
@@ -77,6 +81,7 @@ class RabbitRPCClient:
         self.channel.start_consuming()
 
     def consume(self):
+        # wait and get messages from API GW
         self.channel.basic_consume(queue=self.receiving_queue, on_message_callback=self.publish)
         try:
             self.channel.start_consuming()
@@ -86,18 +91,20 @@ class RabbitRPCClient:
 
 if __name__ == "__main__":
     def callback(message: dict):
-        message['another-type'] = 'qamat'
+        message['another-test'] = 'testing...'
         return message
 
 
-    def fanout_callback(message: dict):
-        if message.get("salavat"):
-            print("alla homa sale ala mohammad va ale mohammad")
-
-
-    rpc = RabbitRPCClient(receiving_queue="mamad", callback=callback, exchange_name="qad-qamete-salat",
-                          headers={'type': 'qad'}, headers_match_all=False)
+    rpc = RabbitRPCClient(receiving_queue="test_queue", callback=callback, exchange_name="test_exchange",
+                          headers={'service': True}, headers_match_all=False)
     rpc.connect()
-    # rpc.consume()
+    rpc.consume()
+    # ----------------------------------------------------------------------
+
+    def fanout_callback(message: dict):
+        if message.get("message"):
+            print("fanout_message...")
+
+
     rpc.fanout_callback_setter(fanout_callback)
-    rpc.fanout_consume("namaz")
+    rpc.fanout_consume("another_test_exchange")

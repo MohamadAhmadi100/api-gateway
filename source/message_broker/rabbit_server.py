@@ -31,18 +31,21 @@ class RabbitRPC:
         signal.signal(signal.SIGALRM, self.timeout_handler)
 
     def connect(self):
+        # connect to rabbit with defined credentials
         credentials = pika.PlainCredentials(self.user, self.password)
         connection = pika.BlockingConnection(
             pika.ConnectionParameters(
                 host=self.host,
                 port=self.port,
                 credentials=credentials,
+                heartbeat=5,
                 blocked_connection_timeout=3600  # 86400 seconds = 24 hours
             )
         )
         return connection
 
     def fanout_publish(self, exchange_name: str, message: dict):
+        # publish to all services
         self.channel.exchange_declare(exchange=exchange_name, exchange_type='fanout')
         self.channel.basic_publish(
             exchange=exchange_name,
@@ -51,10 +54,12 @@ class RabbitRPC:
         )
 
     def response_len_setter(self, response_len: int):
+        # response length setter for timeout handler
         self.response_len = response_len
         self.corr_id = str(uuid.uuid4())
 
     def publish(self, message: dict, headers: dict):
+        # publish message with given message and headers
         self.channel.basic_publish(
             exchange=self.exchange_name,
             routing_key='',
@@ -85,6 +90,7 @@ class RabbitRPC:
         self.channel.basic_consume(on_message_callback=self.on_response, queue=self.callback_queue, auto_ack=True)
 
     def timeout_handler(self, signum, frame):
+        # manual handler for not taking response from consumers according to timeout
         signal.alarm(0)
         self.response_len = 0
         self.broker_response = {"error": "One or more services is not responding", "status_code": 408}
@@ -94,10 +100,22 @@ class RabbitRPC:
 
 
 if __name__ == '__main__':
-    rpc = RabbitRPC(exchange_name='qad-qamete-salat')
+    rpc = RabbitRPC(exchange_name='test_exchange', timeout=5)
     rpc.connect()
-    # rpc.consume()
-    # rpc.publish(message={'type': 'qad'}, headers={'type': 'qad'})
-    # print(rpc.response)
-    inp = input("enter a message: ")
-    rpc.fanout_publish('namaz', {inp: True})
+    rpc.consume()
+    rpc.response_len_setter(response_len=1)
+    test_result = rpc.publish(
+        message={
+            "service": {
+                "action": "get_something",
+                "body": {
+                    "test_data": "some_test_data"
+                }
+            }
+        },
+        headers={"service": True}
+    )
+    test_result = test_result.get("service", {})
+    # -----------------------------------------------------------------
+
+    rpc.fanout_publish('another_test_exchange', {"message": True})
