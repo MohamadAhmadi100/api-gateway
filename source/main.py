@@ -9,6 +9,7 @@ from source.routers.pricing.app import app as pricing_app
 from source.routers.product.app import app as product_app
 from source.routers.quantity.app import app as quantity_app
 from source.routers.customer.app import app as customer_app
+from source.routers.wallet.app import app as wallet_app
 
 app = FastAPI(title="API Gateway",
               description="Backend for frontend aka. API Gateway!",
@@ -26,8 +27,10 @@ app.mount("/product", product_app)
 
 app.mount("/customer", customer_app)
 
+app.mount("/wallet", wallet_app)
 
-# ----------------------------------------- Mount all services here -------------------------------------------------- #
+
+# ----------------------------------------- Start logging features  -------------------------------------------------- #
 
 @app.on_event("startup")
 async def startup_event() -> None:
