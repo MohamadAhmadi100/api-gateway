@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Response, responses
+from fastapi import FastAPI, HTTPException, Response, responses, Path
 from starlette.exceptions import HTTPException as starletteHTTPException
 
 from source.config import settings
@@ -8,7 +8,7 @@ from source.routers.pricing.validators.pricing_validator import Price
 TAGS = [
     {
         "name": "Pricing",
-        "description": "Pricing CRUD"
+        "description": "Service for setting prices of the products according to customer's types and storages"
     }
 ]
 app = FastAPI(
@@ -22,11 +22,13 @@ app = FastAPI(
 )
 
 
+# customize exception handler of fast api
 @app.exception_handler(starletteHTTPException)
 def validation_exception_handler(request, exc):
     return responses.JSONResponse(exc.detail, status_code=exc.status_code)
 
 
+# initialize rabbit mq
 rpc = RabbitRPC(exchange_name='headers_exchange', timeout=5)
 rpc.connect()
 rpc.consume()
@@ -34,6 +36,16 @@ rpc.consume()
 
 @app.post("/api/v1/product/price/", tags=["Pricing"])
 def set_product_price(item: Price, response: Response) -> dict:
+    """
+    set product(12 digits) price according to customer type and warehouse
+    priority of each price is like this:
+    1. Special price of warehouse
+    2. Price of warehouse
+    3. Special price of customer type
+    4. Price of customer type
+    5. Special price of all
+    6. Price of all
+    """
     rpc.response_len_setter(response_len=1)
     pricing_result = rpc.publish(
         message={
@@ -53,7 +65,10 @@ def set_product_price(item: Price, response: Response) -> dict:
 
 
 @app.get("/api/v1/product/price/{system_code}/", tags=["Pricing"])
-def get_product_price(system_code: str, response: Response) -> dict:
+def get_product_price(response: Response, system_code: str = Path(..., min_length=11, max_length=11)) -> dict:
+    """
+    get product price
+    """
     rpc.response_len_setter(response_len=1)
     pricing_result = rpc.publish(
         message={

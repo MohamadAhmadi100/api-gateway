@@ -54,5 +54,11 @@ def shutdown_event() -> None:
     logging.info("Application is shutting down...")
 
 
+@app.get("/")
+def main():
+    return [{"path": "http://" + settings.UVICORN_HOST + ":" + str(settings.UVICORN_PORT) + route.path + "/api/v1/docs"}
+            for route in app.routes][4:-1]
+
+
 if __name__ == "__main__":
     uvicorn.run("main:app", host=settings.UVICORN_HOST, port=settings.UVICORN_PORT, reload=True)

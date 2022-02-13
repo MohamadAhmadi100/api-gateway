@@ -2,24 +2,28 @@ from pydantic import BaseSettings
 
 
 class Settings(BaseSettings):
-    APP_NAME: str = "API-Gateway-app"
-    DEBUG_MODE: bool = True
+    # Settings
+    APP_NAME: str
+    DEBUG_MODE: bool
 
     # RabbitMQ
-    RABBITMQ_HOST: str = "200.100.100.205"
-    RABBITMQ_PORT: int = 5672
-    RABBITMQ_USER: str = "rbtmq"
-    RABBITMQ_PASSWORD: str = "DeVrab!t123"
+    RABBITMQ_HOST: str
+    RABBITMQ_PORT: int
+    RABBITMQ_USER: str
+    RABBITMQ_PASSWORD: str
 
     # Uvicorn
-    UVICORN_HOST: str = "0.0.0.0"
-    UVICORN_PORT: int = 8000
+    UVICORN_HOST: str
+    UVICORN_PORT: int
 
     # Kavenegar
-    TOKEN: str = "535041646375714D57613535695561696E7355724A796B2B5657715833434939"
-    SENDER: str = "10008663"
-    RECIPIENTS: list = ["09025606950", "09113485808", "09123854358"]
-    TEMPLATE: str = "service-error"
+    TOKEN: str
+    SENDER: str
+    RECIPIENTS: list
+    TEMPLATE: str
+
+    class Config:
+        env_file = ".env"  # get from dotenv file
 
 
 settings = Settings()

@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException, Response, Depends, Header
+from fastapi import FastAPI, HTTPException, Response, responses, Path, Depends
+from starlette.exceptions import HTTPException as starletteHTTPException
 
 from source.config import settings
 from source.message_broker.rabbit_server import RabbitRPC
@@ -11,6 +12,7 @@ TAGS = [
         "description": "Cart CRUD"
     }
 ]
+
 app = FastAPI(
     title="Cart API",
     description="This is Cart gateway MicroService",
@@ -21,6 +23,14 @@ app = FastAPI(
     debug=settings.DEBUG_MODE
 )
 
+
+# customize exception handler of fast api
+@app.exception_handler(starletteHTTPException)
+def validation_exception_handler(request, exc):
+    return responses.JSONResponse(exc.detail, status_code=exc.status_code)
+
+
+# initialize rabbit mq
 rpc = RabbitRPC(exchange_name='headers_exchange', timeout=5)
 rpc.connect()
 rpc.consume()
@@ -33,6 +43,7 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
                          ) -> dict:
     """
     add and edit item in cart
+    edit is based on product count and warehouse id
     """
     # get user from token
     user, token_dict = auth_header
@@ -159,8 +170,9 @@ def get_cart(response: Response, auth_header=Depends(auth_handler.check_current_
 
 
 @app.delete("/api/v1/cart/{system_code}/{user_id}/{storage_id}", status_code=200, tags=["Cart"])
-def remove_product_from_cart(system_code: str, storage_id: str, response: Response,
-                             auth_header=Depends(auth_handler.check_current_user_tokens)) -> dict:
+def remove_product_from_cart(response: Response, auth_header=Depends(auth_handler.check_current_user_tokens),
+                             storage_id: str = Path(..., min_length=1, max_length=2),
+                             system_code: str = Path(..., min_length=12, max_length=12)) -> dict:
     """
     remove an item from cart
     """
