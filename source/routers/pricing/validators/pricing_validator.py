@@ -74,7 +74,7 @@ class Price(BaseModel):
                                     "regular": 60000000,
                                     "special": 42000000,
                                 }
-                            ]
+                             ]
                         },
                         "B2C": {
                             'type': 'B2C',

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Response, responses
+from fastapi import FastAPI, HTTPException, Response, responses, Path
 from starlette.exceptions import HTTPException as starletteHTTPException
 
 from source.config import settings
@@ -22,11 +22,13 @@ app = FastAPI(
 )
 
 
+# customize exception handler of fast api
 @app.exception_handler(starletteHTTPException)
 def validation_exception_handler(request, exc):
     return responses.JSONResponse(exc.detail, status_code=exc.status_code)
 
 
+# initialize rabbit mq
 rpc = RabbitRPC(exchange_name='headers_exchange', timeout=5)
 rpc.connect()
 rpc.consume()
@@ -34,6 +36,13 @@ rpc.consume()
 
 @app.post("/api/v1/product/quantity/", tags=["Quantity"])
 def set_product_quantity(item: Quantity, response: Response) -> dict:
+    """
+    set product(12 digits) quantity according to customer type and warehouse
+    priority of each quantity is like this:
+    1. Stock for sale of warehouse
+    2. Stock for sale of customer type
+    3. Stock for sale of all
+    """
     rpc.response_len_setter(response_len=1)
     quantity_result = rpc.publish(
         message={
@@ -53,7 +62,10 @@ def set_product_quantity(item: Quantity, response: Response) -> dict:
 
 
 @app.get("/api/v1/product/quantity/{system_code}/", tags=["Quantity"])
-def get_product_quantity(system_code: str, response: Response) -> dict:
+def get_product_quantity(response: Response, system_code: str = Path(..., min_length=11, max_length=11)) -> dict:
+    """
+    get product quantity
+    """
     rpc.response_len_setter(response_len=1)
     quantity_result = rpc.publish(
         message={
@@ -75,7 +87,10 @@ def get_product_quantity(system_code: str, response: Response) -> dict:
 
 
 @app.get("/api/v1/product/stock/", tags=["Quantity"])
-def get_product_stock(system_code: str, response: Response) -> dict:
+def get_product_stock(response: Response, system_code: str = Path(..., min_length=12, max_length=12)) -> dict:
+    """
+    get product stock
+    """
     rpc.response_len_setter(response_len=1)
     quantity_result = rpc.publish(
         message={

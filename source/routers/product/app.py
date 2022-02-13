@@ -22,18 +22,23 @@ app = FastAPI(
 )
 
 
+# customize exception handler of fast api
 @app.exception_handler(starletteHTTPException)
 def validation_exception_handler(request, exc):
     return responses.JSONResponse(exc.detail, status_code=exc.status_code)
 
 
+# initialize rabbit mq
 rpc = RabbitRPC(exchange_name='headers_exchange', timeout=5)
 rpc.connect()
 rpc.consume()
 
 
 @app.get("/api/v1/product/parent/{system_code}/configs/", tags=["Product"])
-def get_parent_configs(system_code: str, response: Response) -> dict:
+def get_parent_configs(response: Response, system_code: str = Path(..., min_length=11, max_length=11)) -> dict:
+    """
+    Get parent system code configs
+    """
     rpc.response_len_setter(response_len=1)
     product_result = rpc.publish(
         message={
@@ -56,6 +61,9 @@ def get_parent_configs(system_code: str, response: Response) -> dict:
 
 @app.get("/product/parent/", tags=["Product"])
 def create_parent_schema():
+    """
+    Get create parent json schema
+    """
     return CreateParent.schema().get("properties")
 
 
@@ -83,6 +91,9 @@ def create_parent(
 
 @app.get("/product/{system_code}/items", tags=["Product"])
 def suggest_product(response: Response, system_code: str = Path(..., min_length=11, max_length=11)) -> dict:
+    """
+    Get child system code configs
+    """
     rpc.response_len_setter(response_len=1)
     product_result = rpc.publish(
         message={
@@ -105,6 +116,9 @@ def suggest_product(response: Response, system_code: str = Path(..., min_length=
 
 @app.get("/product/child/", tags=["Product"])
 def create_child_schema():
+    """
+    Get create child json schema
+    """
     return CreateChild.schema().get("properties")
 
 
@@ -136,6 +150,9 @@ def create_child(
 
 @app.get("/product/attributes/", tags=["Product"])
 def add_attributes_schema():
+    """
+    Get add attributes json schema
+    """
     return AddAtributes.schema().get("properties")
 
 
@@ -175,7 +192,7 @@ def add_attributes(response: Response,
 def get_product_by_system_code(
         response: Response,
         system_code: str = Path(..., min_length=11, max_length=11),
-        lang: str = Path("fa_ir", min_length=2, max_length=127)
+        lang: str = Path("fa_ir", min_length=2, max_length=8)
 ) -> dict:
     """
     Get a product by system_code in main collection in database.
@@ -220,8 +237,10 @@ def get_product_by_system_code(
         final_result = product_result.get("message").copy()
         for product in final_result.get("products", []):
             product["warehouse"] = list()
-            for quantity in quantity_result.get("message", {}).get("products", {}).get(product.get("system_code")).get("customer_types").get("B2B").get("storages", []):
-                for price in pricing_result.get("message", {}).get("products", {}).get(product.get("system_code")).get("customer_type").get("B2B").get("storages", []):
+            for quantity in quantity_result.get("message", {}).get("products", {}).get(product.get("system_code")).get(
+                    "customer_types").get("B2B").get("storages", []):
+                for price in pricing_result.get("message", {}).get("products", {}).get(product.get("system_code")).get(
+                        "customer_type").get("B2B").get("storages", []):
                     if quantity.get("storage_id") == price.get("storage_id"):
                         item = dict()
                         item["warehouse_id"] = quantity.get("storage_id")
@@ -241,7 +260,7 @@ def get_product_by_system_code(
 @app.delete("/product/{system_code}", tags=["Product"])
 def delete_product(
         response: Response,
-        system_code: str = Path(..., min_length=3, max_length=255)
+        system_code: str = Path(..., min_length=12, max_length=12)
 ) -> dict:
     """
     Delete a product by name in main collection in database.
@@ -271,7 +290,7 @@ def update_attribute_collection(response: Response) -> dict:
     """
     Update the attribute collection in database.
     """
-    # TODO: Later, the attributes below should come from API GW
+    # TODO: Later, it should be moved to add attribute from attribute service
     attributes = [
         {
             "required": True,
@@ -325,6 +344,7 @@ def get_all_categories(
         page: int = Query(1, ge=1, le=1000),
         per_page: int = Query(15, ge=1, le=1000)):
     """
+    Get all available categories in database.
     """
     rpc.response_len_setter(response_len=1)
     product_result = rpc.publish(
@@ -351,9 +371,10 @@ def get_all_categories(
 @app.get("/{system_code}/", tags=["Kowsar"])
 def get_kowsar(
         response: Response,
-        system_code: str
+        system_code: str = Path(..., min_length=2, max_length=12)
 ):
     """
+    Get kowsar item by system code
     """
     rpc.response_len_setter(response_len=1)
     product_result = rpc.publish(
@@ -378,9 +399,10 @@ def get_kowsar(
 @app.get("/{system_code}/items/", tags=["Kowsar"])
 def get_kowsar_items(
         response: Response,
-        system_code: str
+        system_code: str = Path(..., min_length=2, max_length=9)
 ):
     """
+    Get children of kowsar item
     """
     rpc.response_len_setter(response_len=1)
     product_result = rpc.publish(
@@ -407,6 +429,7 @@ def update_kowsar_collection(
         response: Response
 ):
     """
+    Update kowsar collection based on given file
     """
     rpc.response_len_setter(response_len=1)
     product_result = rpc.publish(

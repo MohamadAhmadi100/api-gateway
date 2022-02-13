@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Response, responses
+from fastapi import FastAPI, HTTPException, Response, responses, Path
 from starlette.exceptions import HTTPException as starletteHTTPException
 
 from source.config import settings
@@ -37,7 +37,14 @@ rpc.consume()
 @app.post("/api/v1/product/price/", tags=["Pricing"])
 def set_product_price(item: Price, response: Response) -> dict:
     """
-    set product(12 digits) price according to customer type and storages
+    set product(12 digits) price according to customer type and warehouse
+    priority of each price is like this:
+    1. Special price of warehouse
+    2. Price of warehouse
+    3. Special price of customer type
+    4. Price of customer type
+    5. Special price of all
+    6. Price of all
     """
     rpc.response_len_setter(response_len=1)
     pricing_result = rpc.publish(
@@ -58,9 +65,9 @@ def set_product_price(item: Price, response: Response) -> dict:
 
 
 @app.get("/api/v1/product/price/{system_code}/", tags=["Pricing"])
-def get_product_price(system_code: str, response: Response) -> dict:
+def get_product_price(response: Response, system_code: str = Path(..., min_length=11, max_length=11)) -> dict:
     """
-    get product(11 digits) price
+    get product price
     """
     rpc.response_len_setter(response_len=1)
     pricing_result = rpc.publish(

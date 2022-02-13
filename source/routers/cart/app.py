@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException, Response, responses, Path
+from starlette.exceptions import HTTPException as starletteHTTPException
 
 from source.config import settings
 from source.message_broker.rabbit_server import RabbitRPC
@@ -10,6 +11,7 @@ TAGS = [
         "description": "Cart CRUD"
     }
 ]
+
 app = FastAPI(
     title="Cart API",
     description="This is Cart gateway MicroService",
@@ -20,6 +22,14 @@ app = FastAPI(
     debug=settings.DEBUG_MODE
 )
 
+
+# customize exception handler of fast api
+@app.exception_handler(starletteHTTPException)
+def validation_exception_handler(request, exc):
+    return responses.JSONResponse(exc.detail, status_code=exc.status_code)
+
+
+# initialize rabbit mq
 rpc = RabbitRPC(exchange_name='headers_exchange', timeout=5)
 rpc.connect()
 rpc.consume()
@@ -29,10 +39,10 @@ rpc.consume()
 def add_and_edit_product(item: AddCart, response: Response) -> dict:
     """
     add and edit item in cart
+    edit is based on product count and warehouse id
     """
     # get user from token
     user = {"user_id": 0}
-    # check if all will have response(timeout)
     rpc.response_len_setter(response_len=3)
     result = rpc.publish(
         message={
@@ -117,7 +127,7 @@ def add_and_edit_product(item: AddCart, response: Response) -> dict:
 
 
 @app.get("/api/v1/cart/{user_id}/", tags=["Cart"])
-def get_cart(user_id: int, response: Response) -> dict:
+def get_cart(response: Response, user_id: int = Path(..., ge=0, lt=80_000_000)) -> dict:
     """
     get user cart
     """
@@ -143,10 +153,11 @@ def get_cart(user_id: int, response: Response) -> dict:
 
 
 @app.delete("/api/v1/cart/{system_code}/{user_id}/{storage_id}", status_code=200, tags=["Cart"])
-def remove_product_from_cart(system_code: str, user_id: int, storage_id: str, response: Response) -> dict:
+def remove_product_from_cart(response: Response, user_id: int = Path(..., ge=0, lt=80_000_000),
+                             storage_id: str = Path(..., min_length=1, max_length=2),
+                             system_code: str = Path(..., min_length=12, max_length=12)) -> dict:
     """
     remove an item from cart
-
     """
     rpc.response_len_setter(response_len=1)
     result = rpc.publish(
