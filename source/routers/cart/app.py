@@ -1,9 +1,10 @@
-from fastapi import FastAPI, HTTPException, Response, responses, Path
+from fastapi import FastAPI, HTTPException, Response, responses, Path, Depends
 from starlette.exceptions import HTTPException as starletteHTTPException
 
 from source.config import settings
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.cart.validators.cart import AddCart
+from source.routers.customer.models.auth import AuthHandler
 
 TAGS = [
     {
@@ -34,15 +35,20 @@ rpc = RabbitRPC(exchange_name='headers_exchange', timeout=5)
 rpc.connect()
 rpc.consume()
 
+auth_handler = AuthHandler()
+
 
 @app.put("/api/v1/cart/", tags=["Cart"])
-def add_and_edit_product(item: AddCart, response: Response) -> dict:
+def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(auth_handler.check_current_user_tokens)
+                         ) -> dict:
     """
     add and edit item in cart
     edit is based on product count and warehouse id
     """
     # get user from token
-    user = {"user_id": 0}
+    user, token_dict = auth_header
+    customer_type = user.get("customer_type")
+    # check if all will have response(timeout)
     rpc.response_len_setter(response_len=3)
     result = rpc.publish(
         message={
@@ -81,18 +87,18 @@ def add_and_edit_product(item: AddCart, response: Response) -> dict:
     else:
         product_result = product_result.get("message").copy()
         final_result = dict()
-        final_result["user_info"] = user
+        final_result["user_info"] = {"user_id": user.get("user_id")}
         for product in product_result.get("products", []):
             if product.get("system_code") == item.system_code:
                 final_result["product"] = product
                 break
         for price in pricing_result.get("message", {}).get("products", {}).get(item.system_code, {}).get(
-                "customer_type").get("B2B").get("storages", []):
+                "customer_type").get(customer_type).get("storages", []):
             if price.get("storage_id") == item.storage_id:
                 final_result["price"] = price.get("special") if price.get("special") else price.get("regular")
                 break
         for quantity in quantity_result.get("message", {}).get("products", {}).get(item.system_code, {}).get(
-                "customer_types").get("B2B").get("storages", []):
+                "customer_types").get(customer_type).get("storages", []):
             if quantity.get("storage_id") == item.storage_id:
                 if quantity.get("stock_for_sale") > item.count:
                     final_result["count"] = item.count
@@ -126,18 +132,19 @@ def add_and_edit_product(item: AddCart, response: Response) -> dict:
             return cart_result.get("message")
 
 
-@app.get("/api/v1/cart/{user_id}/", tags=["Cart"])
-def get_cart(response: Response, user_id: int = Path(..., ge=0, lt=80_000_000)) -> dict:
+@app.get("/api/v1/cart/", tags=["Cart"])
+def get_cart(response: Response, auth_header=Depends(auth_handler.check_current_user_tokens)) -> dict:
     """
     get user cart
     """
+    user, token_dict = auth_header
     rpc.response_len_setter(response_len=1)
     result = rpc.publish(
         message={
             "cart": {
                 "action": "get_cart",
                 "body": {
-                    "user_id": user_id
+                    "user_id": user.get("user_id")
                 }
             }
         },
@@ -153,19 +160,20 @@ def get_cart(response: Response, user_id: int = Path(..., ge=0, lt=80_000_000)) 
 
 
 @app.delete("/api/v1/cart/{system_code}/{user_id}/{storage_id}", status_code=200, tags=["Cart"])
-def remove_product_from_cart(response: Response, user_id: int = Path(..., ge=0, lt=80_000_000),
+def remove_product_from_cart(response: Response, auth_header=Depends(auth_handler.check_current_user_tokens),
                              storage_id: str = Path(..., min_length=1, max_length=2),
                              system_code: str = Path(..., min_length=12, max_length=12)) -> dict:
     """
     remove an item from cart
     """
+    user, token_dict = auth_header
     rpc.response_len_setter(response_len=1)
     result = rpc.publish(
         message={
             "cart": {
                 "action": "remove_product_from_cart",
                 "body": {
-                    "user_id": user_id,
+                    "user_id": user.get("user_id"),
                     "system_code": system_code,
                     "storage_id": storage_id
                 }
