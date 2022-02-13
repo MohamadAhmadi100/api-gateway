@@ -84,8 +84,3 @@ class AuthHandler:
 
         else:
             raise HTTPException(status_code=401, detail={"error": "مجددا وارد شوید", "redirect": "login"})
-
-
-# customer_auth_handler = AuthHandler()
-# print(customer_auth_handler.encode_access_token("09371864426"))
-# print(customer_auth_handler.encode_refresh_token("09371864426"))

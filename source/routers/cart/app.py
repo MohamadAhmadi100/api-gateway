@@ -81,21 +81,31 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
             if product.get("system_code") == item.system_code:
                 final_result["product"] = product
                 break
-        for price in pricing_result.get("message", {}).get("products", {}).get(item.system_code, {}).get(
-                "customer_type").get(customer_type).get("storages", []):
-            if price.get("storage_id") == item.storage_id:
-                final_result["price"] = price.get("special") if price.get("special") else price.get("regular")
-                break
-        for quantity in quantity_result.get("message", {}).get("products", {}).get(item.system_code, {}).get(
-                "customer_types").get(customer_type).get("storages", []):
-            if quantity.get("storage_id") == item.storage_id:
-                if quantity.get("stock_for_sale") > item.count:
-                    final_result["count"] = item.count
-                    final_result["storage_id"] = item.storage_id
-                    break
-                else:
-                    raise HTTPException(status_code=400,
-                                        detail={"error": "Not enough quantity"})
+
+        # price actions
+
+        main_price = pricing_result.get("message", {}).get("products", {}).get(item.system_code, {})
+        customer_type_price = main_price.get("customer_type", {}).get(customer_type, {})
+        storage_price = customer_type_price.get("storage", {})
+
+        price = storage_price if storage_price else customer_type_price if customer_type_price else main_price
+
+        final_result["price"] = price.get("special") if price.get("special") else price.get("regular")
+
+        # quantity actions
+
+        main_quantity = quantity_result.get("message", {}).get("products", {}).get(item.system_code, {})
+        cusomer_type_quantity = main_quantity.get("customer_types", {}).get(customer_type, {})
+        storage_quantity = cusomer_type_quantity.get("storages", {}).get(item.storage_id, {})
+
+        quantity = storage_quantity if storage_quantity else cusomer_type_quantity if cusomer_type_quantity else main_quantity
+
+        if quantity.get("stock_for_sale") >= item.count:
+            final_result["count"] = item.count
+            final_result["storage_id"] = item.storage_id
+        else:
+            raise HTTPException(status_code=400,
+                                detail={"error": "Not enough quantity"})
         rpc.response_len_setter(response_len=1)
         cart_result = rpc.publish(
             message={
@@ -149,7 +159,8 @@ def get_cart(response: Response, auth_header=Depends(auth_handler.check_current_
 
 
 @app.delete("/api/v1/cart/{system_code}/{user_id}/{storage_id}", status_code=200, tags=["Cart"])
-def remove_product_from_cart(system_code: str, storage_id: str, response: Response, auth_header=Depends(auth_handler.check_current_user_tokens)) -> dict:
+def remove_product_from_cart(system_code: str, storage_id: str, response: Response,
+                             auth_header=Depends(auth_handler.check_current_user_tokens)) -> dict:
     """
     remove an item from cart
     """

@@ -43,12 +43,15 @@ def register(
         },
         headers={'customer': True}
     )
-    cart_result = result.get("customer", {})
-    if not cart_result.get("success"):
-        raise HTTPException(status_code=cart_result.get("status_code", 500),
-                            detail={"error": cart_result.get("error", "Something went wrong")})
+    customer_result = result.get("customer", {})
+    if not customer_result.get("success"):
+        raise HTTPException(status_code=customer_result.get("status_code", 500),
+                            detail={"error": customer_result.get("error", "Something went wrong")})
     else:
-        response.headers["refreshToken"] = auth_handler.encode_refresh_token(user_id=value.customer_phone_number)
-        response.headers["accessToken"] = auth_handler.encode_access_token(user_id=value.customer_phone_number)
-        response.status_code = cart_result.get("status_code", 200)
-        return cart_result.get("message")
+        customer_info = customer_result.get("message").get('data')
+        response.headers["refreshToken"] = auth_handler.encode_refresh_token(customer_info.get('customerID'),
+                                                                             customer_info.get('customerType'))
+        response.headers["accessToken"] = auth_handler.encode_access_token(customer_info.get('customerID'),
+                                                                           customer_info.get('customerType'))
+        response.status_code = customer_result.get("status_code", 200)
+        return customer_result.get("message")

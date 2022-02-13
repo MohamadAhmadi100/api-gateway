@@ -11,16 +11,11 @@ class Cart(BaseCart):
     # status: str = "in_cart"
 
 
-class Attributes(BaseModel):
-    pass
-
-
 class AddCart(BaseCart):
     parent_system_code: str
     system_code: str
     storage_id: str
     count: int
-    attributes: Attributes
 
     @validator("parent_system_code")
     def parent_system_code_validator(cls, value):
