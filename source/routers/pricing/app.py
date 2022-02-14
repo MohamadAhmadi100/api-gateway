@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Response, responses, Path
 from starlette.exceptions import HTTPException as starletteHTTPException
 
 from source.config import settings
+from source.helpers.case_converter import convert_case
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.pricing.validators.pricing_validator import Price
 
@@ -59,13 +60,14 @@ def set_product_price(item: Price, response: Response) -> dict:
     pricing_result = pricing_result.get("pricing", {})
     if pricing_result.get("success"):
         response.status_code = pricing_result.get("status_code", 200)
-        return pricing_result.get("message")
+        return {"message": pricing_result.get("message")}
     raise HTTPException(status_code=pricing_result.get("status_code", 500),
                         detail={"error": pricing_result.get("error", "Something went wrong")})
 
 
-@app.get("/api/v1/product/price/{system_code}/", tags=["Pricing"])
-def get_product_price(response: Response, system_code: str = Path(..., min_length=11, max_length=11)) -> dict:
+@app.get("/api/v1/product/price/{systemCode}/", tags=["Pricing"])
+def get_product_price(response: Response,
+                      system_code: str = Path(..., min_length=11, max_length=11, alias='systemCode')) -> dict:
     """
     get product price
     """
@@ -84,6 +86,6 @@ def get_product_price(response: Response, system_code: str = Path(..., min_lengt
     pricing_result = pricing_result.get("pricing", {})
     if pricing_result.get("success"):
         response.status_code = pricing_result.get("status_code", 200)
-        return pricing_result.get("message")
+        return convert_case(pricing_result.get("message"), 'camel')
     raise HTTPException(status_code=pricing_result.get("status_code", 500),
                         detail={"error": pricing_result.get("error", "Something went wrong")})

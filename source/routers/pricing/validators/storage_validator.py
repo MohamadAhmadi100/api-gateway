@@ -1,11 +1,11 @@
 from typing import Optional
 
 from fastapi import HTTPException
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, Field
 
 
 class StoragesModel(BaseModel):
-    storage_id: str
+    storage_id: str = Field(..., alias="storageId")
     regular: int
     special: Optional[int] = None
 

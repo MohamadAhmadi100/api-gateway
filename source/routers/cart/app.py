@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Response, responses, Path, Depends
 from starlette.exceptions import HTTPException as starletteHTTPException
 
 from source.config import settings
+from source.helpers.case_converter import convert_case
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.cart.validators.cart import AddCart
 from source.routers.customer.models.auth import AuthHandler
@@ -117,6 +118,7 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
         else:
             raise HTTPException(status_code=400,
                                 detail={"error": "Not enough quantity"})
+
         rpc.response_len_setter(response_len=1)
         cart_result = rpc.publish(
             message={
@@ -139,7 +141,7 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
                                 detail={"error": product_result.get("error", "Something went wrong")})
         else:
             response.status_code = cart_result.get("status_code", 200)
-            return cart_result.get("message")
+            return {"message": cart_result.get("message")}
 
 
 @app.get("/api/v1/cart/", tags=["Cart"])
@@ -166,13 +168,13 @@ def get_cart(response: Response, auth_header=Depends(auth_handler.check_current_
                             detail={"error": cart_result.get("error", "Something went wrong")})
     else:
         response.status_code = cart_result.get("status_code", 200)
-        return cart_result.get("message")
+        return convert_case(cart_result.get("message"), 'camel')
 
 
-@app.delete("/api/v1/cart/{system_code}/{user_id}/{storage_id}", status_code=200, tags=["Cart"])
+@app.delete("/api/v1/cart/{systemCode}/{storageId}", status_code=200, tags=["Cart"])
 def remove_product_from_cart(response: Response, auth_header=Depends(auth_handler.check_current_user_tokens),
-                             storage_id: str = Path(..., min_length=1, max_length=2),
-                             system_code: str = Path(..., min_length=12, max_length=12)) -> dict:
+                             storage_id: str = Path(..., min_length=1, max_length=2, alias='storageId'),
+                             system_code: str = Path(..., min_length=12, max_length=12, alias='systemCode')) -> dict:
     """
     remove an item from cart
     """
@@ -197,4 +199,4 @@ def remove_product_from_cart(response: Response, auth_header=Depends(auth_handle
                             detail={"error": cart_result.get("error", "Something went wrong")})
     else:
         response.status_code = cart_result.get("status_code", 200)
-        return cart_result.get("message")
+        return {"message": cart_result.get("message")}

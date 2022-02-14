@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, Field
 
 
 class BaseCart(BaseModel):
@@ -7,14 +7,14 @@ class BaseCart(BaseModel):
 
 
 class Cart(BaseCart):
-    user_info: dict
+    user_info: dict = Field(..., alias="userInfo")
     # status: str = "in_cart"
 
 
 class AddCart(BaseCart):
-    parent_system_code: str
-    system_code: str
-    storage_id: str
+    parent_system_code: str = Field(..., alias="parentSystemCode")
+    system_code: str = Field(..., alias="systemCode")
+    storage_id: str = Field(..., alias="storageId")
     count: int
 
     @validator("parent_system_code")
@@ -56,9 +56,9 @@ class AddCart(BaseCart):
     class Config:
         schema_extra = {
             "example": {
-                "parent_system_code": "10010100201",
-                "system_code": "100101002001",
-                "storage_id": "1",
+                "parentSystemCode": "10010100201",
+                "systemCode": "100101002001",
+                "storageId": "1",
                 "count": 1
             }
         }

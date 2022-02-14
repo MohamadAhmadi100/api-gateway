@@ -1,15 +1,15 @@
 from fastapi import HTTPException
-from pydantic import validator, BaseModel
+from pydantic import validator, BaseModel, Field
 
 from source.routers.quantity.validators.customer_type import CustomerTypeModel
 
 
 class Quantity(BaseModel):
-    parent_system_code: str
-    system_code: str
+    parent_system_code: str = Field(..., alias="parentSystemCode")
+    system_code: str = Field(..., alias="systemCode")
     stock: int
-    total_stock_for_sale: int
-    customer_types: CustomerTypeModel = {}
+    total_stock_for_sale: int = Field(..., alias="totalStockForSale")
+    customer_types: CustomerTypeModel = Field({}, alias="customerTypes")
 
     @validator("parent_system_code")
     def parent_system_code_validator(cls, value):
@@ -48,29 +48,28 @@ class Quantity(BaseModel):
     class Config:
         schema_extra = {
             "example": {
-                "parent_system_code": "10010100201",
-                "system_code": "100101002001",
+                "parentSystemCode": "10010100201",
+                "systemCode": "100101002001",
                 "stock": 500,
-                "total_stock_for_sale": 250,
-                "customer_types":
-                    {
-                        "B2B": {
-                            "type": 'B2B',
-                            "stock_for_sale": 250,
-                            "storages": [
-                                {
-                                    "storage_id": "0",
-                                    "stock": 400,
-                                    "stock_for_sale": 200,
-                                },
-                                {
-                                    "storage_id": "1",
-                                    "stock": 100,
-                                    "stock_for_sale": 50,
-                                }
-                            ]
-                        }
+                "totalStockForSale": 250,
+                "customerTypes": {
+                    "B2B": {
+                        "type": 'B2B',
+                        "stockForSale": 250,
+                        "storages": [
+                            {
+                                "storageId": "0",
+                                "stock": 400,
+                                "stockForSale": 200,
+                            },
+                            {
+                                "storageId": "1",
+                                "stock": 100,
+                                "stockForSale": 50,
+                            }
+                        ]
                     }
+                }
 
             }
         }
@@ -81,5 +80,5 @@ class Quantity(BaseModel):
             "system_code": self.system_code,
             "stock": self.stock,
             "total_stock_for_sale": self.total_stock_for_sale,
-            "customer_types": self.customer_types.dict(),
+            "customer_types": self.customer_types.dict()
         }

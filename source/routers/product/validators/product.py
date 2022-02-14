@@ -6,12 +6,13 @@ from pydantic import BaseModel, validator, Field
 
 class CreateParent(BaseModel):
     system_code: str = Field(
-        ..., title="شناسه محصول", maxLength=11, minLength=11, placeholder="10010402101", isRequired=True
+        ..., title="شناسه محصول", maxLength=11, minLength=11, placeholder="10010402101", isRequired=True,
+        alias="systemCode"
     )
     name: Optional[str] = Field(
         None, title="نام", minLength=3, maxLength=256, placeholder="ردمی ۹ سی", isRequired=False
     )
-    visible_in_site: bool
+    visible_in_site: bool = Field(..., title="نمایش در سایت", isRequired=True, alias="visibleInSite")
 
     @validator('system_code')
     def system_code_validator(cls, value):
@@ -53,12 +54,12 @@ class CreateParent(BaseModel):
 
 class CreateChild(BaseModel):
     parent_system_code: str = Field(
-        ..., title="شناسه اصلی محصول", maxLength=11, minLength=11, placeholder="10010402101", isRequired=True
+        ..., title="شناسه اصلی محصول", maxLength=11, minLength=11, placeholder="10010402101", isRequired=True, alias="parentSystemCode"
     )
     system_code: str = Field(
-        ..., title="شناسه محصول", maxLength=12, minLength=12, placeholder="100104021006", isRequired=True
+        ..., title="شناسه محصول", maxLength=12, minLength=12, placeholder="100104021006", isRequired=True, alias="systemCode"
     )
-    visible_in_site: bool
+    visible_in_site: bool = Field(..., title="نمایش در سایت", isRequired=True, alias="visibleInSite")
 
     @validator('system_code')
     def system_code_validator(cls, value):
@@ -86,6 +87,6 @@ class CreateChild(BaseModel):
 
 class AddAtributes(BaseModel):
     system_code: str = Field(
-        ..., title="شناسه محصول", maxLength=12, minLength=12, placeholder="100104021006", isRequired=True
+        ..., title="شناسه محصول", maxLength=12, minLength=12, placeholder="100104021006", isRequired=True, alias="systemCode"
     )
     attributes: dict

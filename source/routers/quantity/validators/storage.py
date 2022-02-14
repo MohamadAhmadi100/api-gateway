@@ -1,11 +1,11 @@
 from fastapi import HTTPException
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, Field
 
 
 class Storage(BaseModel):
-    storage_id: str
+    storage_id: str = Field(..., alias="storageId")
     stock: int
-    stock_for_sale: int
+    stock_for_sale: int = Field(..., alias="stockForSale")
 
     @validator("storage_id")
     def storage_id_validator(cls, value):

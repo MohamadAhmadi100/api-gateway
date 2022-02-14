@@ -1,14 +1,14 @@
 from typing import List, Optional
 
 from fastapi import HTTPException
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, Field
 
 from source.routers.quantity.validators.storage import Storage
 
 
 class CustomerType(BaseModel):
     type: str
-    stock_for_sale: int
+    stock_for_sale: int = Field(..., alias='stockForSale')
     storages: List[Storage]
 
     @validator("type")

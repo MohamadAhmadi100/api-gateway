@@ -1,17 +1,17 @@
 from typing import Optional
 
 from fastapi import HTTPException
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, Field
 
 from source.routers.pricing.validators.customer_validator import CustomerTypeModel
 
 
 class Price(BaseModel):
-    parent_system_code: str
-    system_code: str
+    parent_system_code: str = Field(..., alias='parentSystemCode')
+    system_code: str = Field(..., alias='systemCode')
     regular: int
     special: Optional[int] = None
-    customer_type: CustomerTypeModel = {}
+    customer_type: CustomerTypeModel = Field({}, alias='customerType')
 
     @validator("parent_system_code")
     def parent_system_code_validator(cls, value):
@@ -53,11 +53,11 @@ class Price(BaseModel):
     class Config:
         schema_extra = {
             "example": {
-                "parent_system_code": "10010100201",
-                "system_code": "100101002001",
+                "parentSystemCode": "10010100201",
+                "systemCode": "100101002001",
                 "regular": 60000000,
                 "special": 50000000,
-                "customer_type":
+                "customerType":
                     {
                         "B2B": {
                             'type': 'B2B',
@@ -65,12 +65,12 @@ class Price(BaseModel):
                             "special": 50000000,
                             "storages": [
                                 {
-                                    "storage_id": "0",
+                                    "storageId": "0",
                                     "regular": 30000000,
                                     "special": 22000000,
                                 },
                                 {
-                                    "storage_id": "1",
+                                    "storageId": "1",
                                     "regular": 60000000,
                                     "special": 42000000,
                                 }

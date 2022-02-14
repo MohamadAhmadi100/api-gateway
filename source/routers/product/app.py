@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Response, responses, Path, Body, Que
 from starlette.exceptions import HTTPException as starletteHTTPException
 
 from source.config import settings
+from source.helpers.case_converter import convert_case
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.product.validators.product import CreateChild, AddAtributes, CreateParent
 
@@ -34,8 +35,9 @@ rpc.connect()
 rpc.consume()
 
 
-@app.get("/api/v1/product/parent/{system_code}/configs/", tags=["Product"])
-def get_parent_configs(response: Response, system_code: str = Path(..., min_length=11, max_length=11)) -> dict:
+@app.get("/api/v1/product/parent/{systemCode}/configs/", tags=["Product"])
+def get_parent_configs(response: Response,
+                       system_code: str = Path(..., min_length=9, max_length=9, alias='systemCode')) -> dict:
     """
     Get parent system code configs
     """
@@ -54,7 +56,7 @@ def get_parent_configs(response: Response, system_code: str = Path(..., min_leng
     product_result = product_result.get("product", {})
     if product_result.get("success"):
         response.status_code = product_result.get("status_code", 200)
-        return product_result.get("message")
+        return convert_case(product_result.get("message"), 'camel')
     raise HTTPException(status_code=product_result.get("status_code", 500),
                         detail={"error": product_result.get("error", "Something went wrong")})
 
@@ -84,13 +86,14 @@ def create_parent(
     product_result = product_result.get("product", {})
     if product_result.get("success"):
         response.status_code = product_result.get("status_code", 200)
-        return product_result.get("message")
+        return convert_case(product_result.get("message"), 'camel')
     raise HTTPException(status_code=product_result.get("status_code", 500),
                         detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@app.get("/product/{system_code}/items", tags=["Product"])
-def suggest_product(response: Response, system_code: str = Path(..., min_length=11, max_length=11)) -> dict:
+@app.get("/product/{systemCode}/items", tags=["Product"])
+def suggest_product(response: Response,
+                    system_code: str = Path(..., min_length=11, max_length=11, alias='systemCode')) -> dict:
     """
     Get child system code configs
     """
@@ -109,7 +112,7 @@ def suggest_product(response: Response, system_code: str = Path(..., min_length=
     product_result = product_result.get("product", {})
     if product_result.get("success"):
         response.status_code = product_result.get("status_code", 200)
-        return product_result.get("message")
+        return convert_case(product_result.get("message"), 'camel')
     raise HTTPException(status_code=product_result.get("status_code", 500),
                         detail={"error": product_result.get("error", "Something went wrong")})
 
@@ -143,7 +146,7 @@ def create_child(
     product_result = product_result.get("product", {})
     if product_result.get("success"):
         response.status_code = product_result.get("status_code", 200)
-        return product_result.get("message")
+        return convert_case(product_result.get("message"), 'camel')
     raise HTTPException(status_code=product_result.get("status_code", 500),
                         detail={"error": product_result.get("error", "Something went wrong")})
 
@@ -159,7 +162,7 @@ def add_attributes_schema():
 @app.post("/product/attributes/", tags=["Product"])
 def add_attributes(response: Response,
                    item: AddAtributes = Body(..., example={
-                       "system_code": "100104021006",
+                       "systemCode": "100104021006",
                        "attributes": {
                            "image": "/src/default.jpg",
                            "year": 2020
@@ -183,15 +186,15 @@ def add_attributes(response: Response,
     product_result = product_result.get("product", {})
     if product_result.get("success"):
         response.status_code = product_result.get("status_code", 200)
-        return product_result.get("message")
+        return convert_case(product_result.get("message"), 'camel')
     raise HTTPException(status_code=product_result.get("status_code", 500),
                         detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@app.get("/product/{system_code}/{lang}", tags=["Product"])
+@app.get("/product/{systemCode}/{lang}", tags=["Product"])
 def get_product_by_system_code(
         response: Response,
-        system_code: str = Path(..., min_length=11, max_length=11),
+        system_code: str = Path(..., min_length=11, max_length=11, alias='systemCode'),
         lang: str = Path("fa_ir", min_length=2, max_length=8)
 ) -> dict:
     """
@@ -237,10 +240,12 @@ def get_product_by_system_code(
         final_result = product_result.get("message").copy()
         for product in final_result.get("products", []):
             product["warehouse"] = list()
-            for quantity in quantity_result.get("message", {}).get("products", {}).get(product.get("system_code")).get(
-                    "customer_types").get("B2B").get("storages", []):
-                for price in pricing_result.get("message", {}).get("products", {}).get(product.get("system_code")).get(
-                        "customer_type").get("B2B").get("storages", []):
+            for quantity_key, quantity in quantity_result.get("message", {}).get("products", {}).get(
+                    product.get("system_code")).get("customer_types").get("B2B").get("storages", {}).items():
+
+                for price_key, price in pricing_result.get("message", {}).get("products", {}).get(
+                        product.get("system_code")).get("customer_type").get("B2B").get("storages", {}).items():
+
                     if quantity.get("storage_id") == price.get("storage_id"):
                         item = dict()
                         item["warehouse_id"] = quantity.get("storage_id")
@@ -254,13 +259,13 @@ def get_product_by_system_code(
                         item["warehouse_label"] = quantity.get("warehouse_label")
                         item["attribute_label"] = quantity.get("attribute_label")
                         product["warehouse"].append(item)
-        return final_result
+        return convert_case(final_result, 'camel')
 
 
-@app.delete("/product/{system_code}", tags=["Product"])
+@app.delete("/product/{systemCode}", tags=["Product"])
 def delete_product(
         response: Response,
-        system_code: str = Path(..., min_length=12, max_length=12)
+        system_code: str = Path(..., min_length=12, max_length=12, alias='systemCode')
 ) -> dict:
     """
     Delete a product by name in main collection in database.
@@ -280,7 +285,7 @@ def delete_product(
     product_result = product_result.get("product", {})
     if product_result.get("success"):
         response.status_code = product_result.get("status_code", 200)
-        return product_result.get("message")
+        return convert_case(product_result.get("message"), 'camel')
     raise HTTPException(status_code=product_result.get("status_code", 500),
                         detail={"error": product_result.get("error", "Something went wrong")})
 
@@ -332,17 +337,17 @@ def update_attribute_collection(response: Response) -> dict:
     product_result = product_result.get("product", {})
     if product_result.get("success"):
         response.status_code = product_result.get("status_code", 200)
-        return product_result.get("message")
+        return convert_case(product_result.get("message"), 'camel')
     raise HTTPException(status_code=product_result.get("status_code", 500),
                         detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@app.get("/categories/{system_code}/", tags=["Product"])
+@app.get("/categories/{systemCode}/", tags=["Product"])
 def get_all_categories(
         response: Response,
-        system_code: str = Path(00, min_length=2, max_length=6),
+        system_code: str = Path(00, min_length=2, max_length=6, alias='systemCode'),
         page: int = Query(1, ge=1, le=1000),
-        per_page: int = Query(15, ge=1, le=1000)):
+        per_page: int = Query(15, ge=1, le=1000, alias='perPage')):
     """
     Get all available categories in database.
     """
@@ -363,15 +368,15 @@ def get_all_categories(
     product_result = product_result.get("product", {})
     if product_result.get("success"):
         response.status_code = product_result.get("status_code", 200)
-        return product_result.get("message")
+        return convert_case(product_result.get("message"), 'camel')
     raise HTTPException(status_code=product_result.get("status_code", 500),
                         detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@app.get("/{system_code}/", tags=["Kowsar"])
+@app.get("/{systemCode}/", tags=["Kowsar"])
 def get_kowsar(
         response: Response,
-        system_code: str = Path(..., min_length=2, max_length=12)
+        system_code: str = Path(..., min_length=2, max_length=12, alias='systemCode')
 ):
     """
     Get kowsar item by system code
@@ -391,15 +396,15 @@ def get_kowsar(
     product_result = product_result.get("product", {})
     if product_result.get("success"):
         response.status_code = product_result.get("status_code", 200)
-        return product_result.get("message")
+        return convert_case(product_result.get("message"), 'camel')
     raise HTTPException(status_code=product_result.get("status_code", 500),
                         detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@app.get("/{system_code}/items/", tags=["Kowsar"])
+@app.get("/{systemCode}/items/", tags=["Kowsar"])
 def get_kowsar_items(
         response: Response,
-        system_code: str = Path(..., min_length=2, max_length=9)
+        system_code: str = Path(..., min_length=2, max_length=9, alias='systemCode')
 ):
     """
     Get children of kowsar item
@@ -419,7 +424,7 @@ def get_kowsar_items(
     product_result = product_result.get("product", {})
     if product_result.get("success"):
         response.status_code = product_result.get("status_code", 200)
-        return product_result.get("message")
+        return convert_case(product_result.get("message"), 'camel')
     raise HTTPException(status_code=product_result.get("status_code", 500),
                         detail={"error": product_result.get("error", "Something went wrong")})
 
@@ -444,6 +449,6 @@ def update_kowsar_collection(
     product_result = product_result.get("product", {})
     if product_result.get("success"):
         response.status_code = product_result.get("status_code", 200)
-        return product_result.get("message")
+        return convert_case(product_result.get("message"), 'camel')
     raise HTTPException(status_code=product_result.get("status_code", 500),
                         detail={"error": product_result.get("error", "Something went wrong")})
