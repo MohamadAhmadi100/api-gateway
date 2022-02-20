@@ -5,6 +5,7 @@ from source.config import settings
 from source.helpers.case_converter import convert_case
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.product.validators.product import CreateChild, AddAtributes, CreateParent
+from source.helpers.create_class import CreateClass
 
 TAGS = [
     {
@@ -174,11 +175,29 @@ def add_attributes(response: Response,
     attributes will be validated before insert.
     """
     rpc.response_len_setter(response_len=1)
+    attribute_result = rpc.publish(
+        message={
+            "product": {
+                "action": "get_kowsar",
+                "body": {
+                    "system_code": item.system_code,
+                }
+            }
+        },
+        headers={'product': True}
+    )
+    attributes = attribute_result.get("product", {}).get("message", {}).get("attributes", {})
+    dict_data = {obj.get("name"): obj for obj in attributes}
+    attribute_model = CreateClass(class_name="attribute_model", attributes=dict_data).get_pydantic_class()
+    attribute_object = attribute_model(**item.attributes)
     product_result = rpc.publish(
         message={
             "product": {
                 "action": "add_attributes",
-                "body": dict(item)
+                "body": {
+                    "system_code": item.system_code,
+                    "attributes": dict(attribute_object)
+                }
             }
         },
         headers={'product': True}

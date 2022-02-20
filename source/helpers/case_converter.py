@@ -40,4 +40,5 @@ def convert_case(dict_data, action):
             new_value = convert_case(item, action)
             new_list.append(new_value)
         return new_list
+    return dict_data
 
