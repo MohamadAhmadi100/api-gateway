@@ -11,6 +11,7 @@ from source.routers.quantity.app import app as quantity_app
 from source.routers.customer.app import app as customer_app
 from source.routers.wallet.app import app as wallet_app
 from source.routers.attribute.app import app as attribute_app
+from source.routers.payment.app import app as payment_app
 
 app = FastAPI(title="API Gateway",
               description="Backend for frontend aka. API Gateway!",
@@ -31,6 +32,8 @@ app.mount("/customer", customer_app)
 app.mount("/wallet", wallet_app)
 
 app.mount("/attributes", attribute_app)
+
+app.mount("/payment", payment_app)
 
 
 # ----------------------------------------- Start logging features  -------------------------------------------------- #
