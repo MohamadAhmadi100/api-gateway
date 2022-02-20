@@ -45,7 +45,7 @@ class Transaction(BaseModel):
     order_number: int = Field(..., alias="orderNumber")
     payment_id: int = Field(..., alias="paymentId")
     payment_method: PaymentMethod = Field(..., alias="paymentMethod")
-    payment_date: datetime = Field(..., alias="paymentDate")
+    payment_date: str = Field(..., alias="paymentDate")
     amount: str = Field(..., alias="amount")
     balance: Balance = Field(..., alias="balance")
     wallet_id: int = Field(..., alias="walletId")
