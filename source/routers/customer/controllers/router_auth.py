@@ -1,6 +1,6 @@
 import json
 
-from fastapi import Response, Depends, HTTPException
+from fastapi import Response, Depends, HTTPException, Header
 from fastapi import status, APIRouter
 
 from source.message_broker.rabbit_server import RabbitRPC
@@ -138,10 +138,16 @@ def checking_login_otp_code(
                             detail={"error": customer_result.get("error", "Something went wrong")})
     else:
         customer_info = customer_result.get("message").get('data')
-        response.headers["refreshToken"] = auth_handler.encode_refresh_token(customer_info.get('customerID'),
-                                                                             customer_info.get('customerType'))
-        response.headers["accessToken"] = auth_handler.encode_access_token(customer_info.get('customerID'),
-                                                                           customer_info.get('customerType'))
+        response.headers["refreshToken"] = auth_handler.encode_refresh_token(
+            user_id=customer_info.get('customerID'),
+            customer_type=customer_info.get('customerType'),
+            phone_number=customer_info.get('customerPhoneNumber'),
+        )
+        response.headers["accessToken"] = auth_handler.encode_access_token(
+            user_id=customer_info.get('customerID'),
+            customer_type=customer_info.get('customerType'),
+            phone_number=customer_info.get('customerPhoneNumber'),
+        )
         response.status_code = customer_result.get("status_code", 200)
         return customer_result.get("message")
 
@@ -177,10 +183,16 @@ def checking_login_password(
                             detail={"error": customer_result.get("error", "Something went wrong")})
     else:
         customer_info = customer_result.get("message").get('data')
-        response.headers["refreshToken"] = auth_handler.encode_refresh_token(customer_info.get('customerID'),
-                                                                             customer_info.get('customerType', [])[0])
-        response.headers["accessToken"] = auth_handler.encode_access_token(customer_info.get('customerID'),
-                                                                           customer_info.get('customerType', [])[0])
+        response.headers["refreshToken"] = auth_handler.encode_refresh_token(
+            user_id=customer_info.get('customerID'),
+            customer_type=customer_info.get('customerType', [])[0],
+            phone_number=customer_info.get('customerPhoneNumber')
+        )
+        response.headers["accessToken"] = auth_handler.encode_access_token(
+            user_id=customer_info.get('customerID'),
+            customer_type=customer_info.get('customerType', [])[0],
+            phone_number=customer_info.get('customerPhoneNumber')
+        )
         response.status_code = customer_result.get("status_code", 200)
         return customer_result.get("message")
 
@@ -221,5 +233,5 @@ def save_logout(
         raise HTTPException(status_code=customer_result.get("status_code", 500),
                             detail={"error": customer_result.get("error", "Something went wrong")})
     else:
-        response.status_code = customer_result.get("status_code", 200)
+        response.status_code = customer_result.get("status_code", 202)
         return customer_result.get("message")
