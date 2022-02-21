@@ -39,7 +39,9 @@ def create_wallet(data: Wallet, response: Response) -> None:
         message={
             "wallet": {
                 "action": "create_wallet",
-                "body": dict(data)
+                "body": {
+                    "data": dict(data)
+                }
             }
         },
         headers={'wallet': True}
@@ -53,19 +55,20 @@ def create_wallet(data: Wallet, response: Response) -> None:
 
 @app.post("/transaction", tags=["transaction_create"])
 def create_transaction(data: Transaction, response: Response):
-    return data
-    # rpc.response_len_setter(response_len=1)
-    # transaction_response = rpc.publish(
-    #     message={
-    #         "wallet": {
-    #             "action": "create_transaction",
-    #             "data": dict(data)
-    #         }
-    #     },
-    #     headers={'transaction': True}
-    # ).get("transaction", {})
-    # if transaction_response.get("success"):
-    #     response.status_code = transaction_response.get("status_code", 200)
-    #     return transaction_response
-    # raise HTTPException(status_code=transaction_response.get("status_code", 500),
-    #                     detail={"error": transaction_response.get("error", "Wallet service Internal error")})
+    rpc.response_len_setter(response_len=1)
+    transaction_response = rpc.publish(
+        message={
+            "wallet": {
+                "action": "create_transaction",
+                "body": {
+                    "data": dict(data)
+                }
+            }
+        },
+        headers={'wallet': True}
+    ).get("wallet", {})
+    if transaction_response.get("success"):
+        response.status_code = transaction_response.get("status_code", 200)
+        return transaction_response
+    raise HTTPException(status_code=transaction_response.get("status_code", 500),
+                        detail={"error": transaction_response.get("error", "Wallet service Internal error")})

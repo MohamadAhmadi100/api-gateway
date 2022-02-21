@@ -5,7 +5,9 @@ from pydantic import BaseModel, Field, validator
 
 
 class Wallet(BaseModel):
-    customer_id: int = Field(alias="customerId")
+    customer_id: int = Field(..., alias="customerId")
+    customer_name: int = Field(..., alias="customerName")
+    customer_phone_number: int = Field(..., alias="customerPhoneNumber")
 
 
 class ActionType(str, Enum):
@@ -30,7 +32,6 @@ class ProcessType(str, Enum):
 
 
 class Type(str, Enum):
-
     rebate = "rebate"
     return_order = "return order"
     return_product = "return product"
@@ -45,7 +46,7 @@ class Transaction(BaseModel):
     order_number: int = Field(..., alias="orderNumber")
     payment_id: int = Field(..., alias="paymentId")
     payment_method: PaymentMethod = Field(..., alias="paymentMethod")
-    payment_date: datetime = Field(..., alias="paymentDate")
+    payment_date: str = Field(..., alias="paymentDate")
     amount: str = Field(..., alias="amount")
     balance: Balance = Field(..., alias="balance")
     wallet_id: int = Field(..., alias="walletId")
