@@ -39,7 +39,9 @@ def create_wallet(data: Wallet, response: Response) -> None:
         message={
             "wallet": {
                 "action": "create_wallet",
-                "body": dict(data)
+                "body": {
+                    "data": dict(data)
+                }
             }
         },
         headers={'wallet': True}
