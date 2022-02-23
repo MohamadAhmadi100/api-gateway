@@ -17,7 +17,7 @@ class RabbitRPC:
         self.host = settings.RABBITMQ_HOST
         self.port = settings.RABBITMQ_PORT
         self.user = settings.RABBITMQ_USER
-        self.password = settings.RABBITMQ_PASSWORD
+        self.password = settings.RABBITMQ_PASS
         self.connection = self.connect()
         self.channel = self.connection.channel()
         self.exchange_name = exchange_name
