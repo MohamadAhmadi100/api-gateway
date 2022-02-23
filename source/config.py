@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     RABBITMQ_HOST: str
     RABBITMQ_PORT: int
     RABBITMQ_USER: str
-    RABBITMQ_PASSWORD: str
+    RABBITMQ_PASS: str
 
     # Uvicorn
     UVICORN_HOST: str
