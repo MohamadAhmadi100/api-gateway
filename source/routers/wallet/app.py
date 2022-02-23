@@ -3,7 +3,8 @@ from starlette.exceptions import HTTPException as starletteHTTPException
 from source.config import settings
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.pricing.validators.pricing_validator import Price
-from source.routers.wallet.validators.wallet import Wallet, Transaction
+from source.routers.wallet.validators.wallet import Wallet
+from source.routers.wallet.validators.transaction import Transaction
 
 TAGS = [
     {
@@ -74,3 +75,26 @@ def get_wallet(customerId: int, response: Response):
         return wallet_response
     raise HTTPException(status_code=wallet_response.get("status_code", 500),
                         detail={"error": wallet_response.get("error", "Wallet service Internal error")})
+
+
+@app.post("/transactions_details", tags=["transactions"])
+def gte_transactions(data: Transaction, response: Response):
+    rpc.response_len_setter(response_len=1)
+    wallet_response = rpc.publish(
+        message={
+            "wallet": {
+                "action": "get_transaction",
+                "body": {
+                    "data": dict(data)
+                }
+            }
+        },
+        headers={'wallet': True}
+    ).get("wallet", {})
+    if wallet_response.get("success"):
+        response.status_code = wallet_response.get("status_code", 200)
+        return wallet_response
+    raise HTTPException(status_code=wallet_response.get("status_code", 500),
+                        detail={"error": wallet_response.get("error", "Wallet service Internal error")})
+
+
