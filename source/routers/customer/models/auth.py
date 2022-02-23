@@ -26,7 +26,7 @@ class AuthHandler:
             'sub': {"user_id": user_id, "customer_type": customer_type, "phone_number": phone_number},
             'scope': 'access'
         }
-        return jwt.encode(pay_load, self.SECRET_KEY, algorithm='HS256')
+        return jwt.encode(pay_load, self.SECRET_KEY, algorithm='HS256').decode("utf-8")
 
     def encode_refresh_token(self, user_id: str, customer_type: str, phone_number: str) -> str:
         pay_load = {
@@ -35,7 +35,7 @@ class AuthHandler:
             'sub': {"user_id": user_id, "customer_type": customer_type, "phone_number": phone_number},
             'scope': 'refresh'
         }
-        return jwt.encode(pay_load, self.SECRET_KEY, algorithm='HS256')
+        return jwt.encode(pay_load, self.SECRET_KEY, algorithm='HS256').decode("utf-8")
 
     def decode_access_token(self, token: str) -> Union[Optional[bool], Any]:
         try:
