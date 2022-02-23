@@ -12,5 +12,6 @@ services:
     api:
         build: .
         environment:
+            - PORT=8000
           ports:
           - 8000:80
