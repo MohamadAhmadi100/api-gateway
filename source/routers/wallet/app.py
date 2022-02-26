@@ -2,9 +2,7 @@ from fastapi import FastAPI, HTTPException, Response, responses, Depends
 from starlette.exceptions import HTTPException as starletteHTTPException
 from source.config import settings
 from source.message_broker.rabbit_server import RabbitRPC
-from source.routers.cart.app import auth_handler
-from source.routers.pricing.validators.pricing_validator import Price
-from source.routers.wallet.validators.wallet import Wallet, Transaction
+from source.routers.wallet.validators.wallet import Wallet
 from source.routers.wallet.validators.update_wallet import UpdateData
 
 TAGS = [
@@ -76,7 +74,6 @@ def get_wallet(customerId: int, response: Response):
         return wallet_response
     raise HTTPException(status_code=wallet_response.get("status_code", 500),
                         detail={"error": wallet_response.get("error", "Wallet service Internal error")})
-
 
 
 @app.put("/update", tags=["edit_wallet_data"])

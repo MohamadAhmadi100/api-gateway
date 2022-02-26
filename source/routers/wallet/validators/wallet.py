@@ -11,13 +11,13 @@ class Wallet(BaseModel):
     customer_phone_number: str = Field(..., alias="customerPhoneNumber")
 
     @validator("customer_name")
-    def check_customer_name(cls, v):
+    def check_customer_name(cls, v):                                           #todo: what is v?
         if not v.isalpha():
             raise ValueError("customer name must be alphabetic")
         return v
 
     @validator("customer_phone_number")
-    def check_customer_phone_number(cls, v):
+    def check_customer_phone_number(cls, v):                                   #todo: what is v?
         regex = r'^09[0-9]{9}$'
         check = re.fullmatch(regex, v)
         if not check:
@@ -71,7 +71,7 @@ class Transaction(BaseModel):
     type_: Type = Field(..., alias="type")
 
     @validator('amount')
-    def check_amount(cls, v):
+    def check_amount(cls, v):                                           #todo what is v?
         """
         amount should be numeric
         """
