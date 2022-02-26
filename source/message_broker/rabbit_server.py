@@ -58,7 +58,7 @@ class RabbitRPC:
         self.response_len = response_len
         self.corr_id = str(uuid.uuid4())
 
-    def publish(self, message: dict, headers: dict):
+    def publish(self, message: dict, headers: dict, extra_data: str = None):
         # publish message with given message and headers
         self.channel.basic_publish(
             exchange=self.exchange_name,
@@ -67,9 +67,10 @@ class RabbitRPC:
                 reply_to=self.callback_queue,
                 correlation_id=self.corr_id,
                 delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE,
-                headers=headers
+                headers=headers,
+                type=extra_data
             ),
-            body=json.dumps(message)
+            body=json.dumps(message) if isinstance(message, dict) else message
         )
         print("message sent...")
         signal.alarm(self.timeout)
