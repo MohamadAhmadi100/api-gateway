@@ -11,6 +11,7 @@ build:
   tags:
     - ci
   script:
+    - ls
     - echo APP_NAME=$APP_NAME >> .env
     - echo DEBUG_MODE=$DEBUG_MODE >> .env
     - echo RABBITMQ_HOST=$RABBITMQ_HOST >> .env
