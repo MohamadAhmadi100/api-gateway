@@ -2,6 +2,7 @@ import json
 
 from fastapi import Response, Depends, HTTPException,Path,Body, Query
 from fastapi import status, APIRouter
+from source.helpers.case_converter import convert_case
 from fastapi.openapi.models import RequestBody
 
 from source.message_broker.rabbit_server import RabbitRPC
@@ -16,7 +17,7 @@ rpc.connect()
 rpc.consume()
 
 
-@router.get('/{page}', status_code=200)
+@router.get('/{page}')
 def get_all_coupons(
         response: Response,
         page: int = Path(1, ge=1, le=1000),
@@ -41,6 +42,7 @@ def get_all_coupons(
     coupon_result = coupon_result.get("coupon",{})
     if coupon_result.get("success"):
         response.status_code = coupon_result.get("status_code", 200)
+        return convert_case(coupon_result.get("message"), 'camel')
     raise HTTPException(status_code=coupon_result.get("status_code", 500),
                         detail={"error": coupon_result.get("error", "Something went wrong")})
 
@@ -103,7 +105,7 @@ def create_coupon( response: Response,
     coupon_result = coupon_result.get("coupon", {})
     if coupon_result.get("success"):
         response.status_code = coupon_result.get("status_code", 200)
-        return coupon_result
+        return convert_case(coupon_result.get("message"), 'camel')
     raise HTTPException(status_code=coupon_result.get("status_code", 500),
                         detail={"error": coupon_result.get("error", "Coupon service Internal error")})
 
@@ -129,7 +131,7 @@ def get_coupons_by_filter(response: Response,coupon_types: int =Path(...,)):
     coupon_result = coupon_result.get("coupon", {})
     if coupon_result.get("success"):
         response.status_code = coupon_result.get("status_code", 200)
-        return coupon_result
+        return convert_case(coupon_result.get("message"), 'camel')
     raise HTTPException(status_code=coupon_result.get("status_code", 500),
                         detail={"error": coupon_result.get("error", "Coupon service Internal error")})
 
@@ -163,7 +165,7 @@ def get_by_coupon_id(response: Response,coupon_id:int):
     coupon_result = coupon_result.get("product", {})
     if coupon_result.get("success"):
         response.status_code = coupon_result.get("status_code", 200)
-        return {"message": coupon_result.get("message")}
+        return convert_case(coupon_result.get("message"), 'camel')
     raise HTTPException(status_code=coupon_result.get("status_code", 500),
                         detail={"error": coupon_result.get("error", "Something went wrong")})
 
@@ -190,11 +192,11 @@ def update_coupon(coupon_id: str, response: Response):
     coupon_result = product_result.get("coupon", {})
     if coupon_result.get("success"):
         response.status_code = coupon_result.get("status_code", 200)
-        return {"message": coupon_result.get("message")}
+        return convert_case(coupon_result.get("message"), 'camel')
     raise HTTPException(status_code=coupon_result.get("status_code", 500),
                         detail={"error": coupon_result.get("error", "Something went wrong")})
 
-@router.put('/disable/{coupon_id}', status_code=201)
+@router.put('/disable/{coupon_id}')
 def disable_coupon(coupon_id: str,response: Response):
     """
     disable coupon_id
@@ -214,7 +216,7 @@ def disable_coupon(coupon_id: str,response: Response):
     coupon_result = product_result.get("coupon", {})
     if coupon_result.get("success"):
         response.status_code = coupon_result.get("status_code", 200)
-        return {"message": coupon_result.get("message")}
+        return convert_case(coupon_result.get("message"), 'camel')
     raise HTTPException(status_code=coupon_result.get("status_code", 500),
                         detail={"error": coupon_result.get("error", "Something went wrong")})
 
