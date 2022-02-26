@@ -72,7 +72,7 @@ class CustomerVerifyPassword(CustomerAuth):
         dataType="string",
         type="password",
         isRquired=True,
-        regexPattern="^^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,32}$",
+        regexPattern="^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,32}$",
     )
 
     @validator("customer_password")

@@ -4,7 +4,7 @@ from starlette.exceptions import HTTPException as starletteHTTPException
 from source.config import settings
 from source.helpers.case_converter import convert_case
 from source.message_broker.rabbit_server import RabbitRPC
-from source.routers.coupon.controller import router_coupon
+from source.routers.coupon.controller.router_coupon import router as router_coupon
 
 TAGS = [
     {
@@ -13,7 +13,7 @@ TAGS = [
     }
 ]
 app = FastAPI(
-    title="Pricing API",
+    title="Coupon API",
     description="This is Coupon Gateway MicroService",
     version="0.1.0",
     openapi_tags=TAGS,
@@ -24,14 +24,8 @@ app = FastAPI(
 
 app.include_router(router_coupon)
 
+
 # customize exception handler of fast api
 @app.exception_handler(starletteHTTPException)
 def validation_exception_handler(request, exc):
     return responses.JSONResponse(exc.detail, status_code=exc.status_code)
-
-
-# # initialize rabbit mq
-# rpc = RabbitRPC(exchange_name='headers_exchange', timeout=5)
-# rpc.connect()
-# rpc.consume()
-
