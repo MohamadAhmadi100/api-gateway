@@ -12,6 +12,7 @@ from source.routers.customer.app import app as customer_app
 from source.routers.wallet.app import app as wallet_app
 from source.routers.attribute.app import app as attribute_app
 from source.routers.payment.app import app as payment_app
+from source.routers.coupon.app import app as coupon_app
 from source.routers.gallery.app import app as gallery_app
 
 app = FastAPI(title="API Gateway",
@@ -36,6 +37,7 @@ app.mount("/attributes", attribute_app)
 
 app.mount("/payment", payment_app)
 
+app.mount("/coupon", coupon_app)
 app.mount("/gallery", gallery_app)
 
 

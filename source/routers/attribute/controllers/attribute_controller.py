@@ -58,7 +58,7 @@ def add_attribute(
         - It will be index number of these things: ['Text Field', 'Text Area', 'Text Editor', 'Date', 'Date and Time',
         'Yes or No', 'Multiple Select', 'Dropdown', 'Price', 'Media Image', 'Color', 'Number']
     - **required**: if the attribute is required or not(Boolean type)
-    - **use_in_filter**: if the attribute is used in filter or not(Boolean type)
+    - **use_in_filter**: if the attribute is used in filter or notThe
     - **use_for_sort**: if the attribute is used for sorting or not(Boolean type)
     - **parent**: declare parent attribute to set attribute to it's children
     - **default_value**: default value of the attribute
