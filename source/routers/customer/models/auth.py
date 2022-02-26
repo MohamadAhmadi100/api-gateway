@@ -19,23 +19,23 @@ class AuthHandler:
     def verify_password(self, user_password: str, hashed_password: str) -> str:
         return self.pwd_context.verify(user_password, hashed_password)
 
-    def encode_access_token(self, user_id: str, customer_type: str, phone_number: str) -> str:
+    def encode_access_token(self, sud_dict: dict) -> str:
         pay_load = {
             'exp': datetime.utcnow() + self.access_exp,
             'iat': datetime.utcnow(),
-            'sub': {"user_id": user_id, "customer_type": customer_type, "phone_number": phone_number},
+            'sub': sud_dict,
             'scope': 'access'
         }
-        return jwt.encode(pay_load, self.SECRET_KEY, algorithm='HS256').decode("utf-8")
+        return jwt.encode(pay_load, self.SECRET_KEY, algorithm='HS256')
 
-    def encode_refresh_token(self, user_id: str, customer_type: str, phone_number: str) -> str:
+    def encode_refresh_token(self, sud_dict: dict) -> str:
         pay_load = {
             'exp': datetime.utcnow() + self.refresh_exp,
             'iat': datetime.utcnow(),
-            'sub': {"user_id": user_id, "customer_type": customer_type, "phone_number": phone_number},
+            'sub': sud_dict,
             'scope': 'refresh'
         }
-        return jwt.encode(pay_load, self.SECRET_KEY, algorithm='HS256').decode("utf-8")
+        return jwt.encode(pay_load, self.SECRET_KEY, algorithm='HS256')
 
     def decode_access_token(self, token: str) -> Union[Optional[bool], Any]:
         try:
