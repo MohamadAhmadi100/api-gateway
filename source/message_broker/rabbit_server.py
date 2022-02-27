@@ -60,17 +60,21 @@ class RabbitRPC:
 
     def publish(self, message: dict, headers: dict):
         # publish message with given message and headers
-        self.channel.basic_publish(
-            exchange=self.exchange_name,
-            routing_key='',
-            properties=pika.BasicProperties(
-                reply_to=self.callback_queue,
-                correlation_id=self.corr_id,
-                delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE,
-                headers=headers
-            ),
-            body=json.dumps(message)
-        )
+        try:
+            self.channel.basic_publish(
+                exchange=self.exchange_name,
+                routing_key='',
+                properties=pika.BasicProperties(
+                    reply_to=self.callback_queue,
+                    correlation_id=self.corr_id,
+                    delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE,
+                    headers=headers
+                ),
+                body=json.dumps(message)
+            )
+        except (exceptions.ConnectionClosed, exceptions.ChannelClosed) as error:
+            time.sleep(5)
+            self.reconnect()
         print("message sent...")
         signal.alarm(self.timeout)
         while len(self.broker_response) < self.response_len:
