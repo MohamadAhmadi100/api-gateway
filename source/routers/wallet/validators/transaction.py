@@ -31,22 +31,22 @@ class Transaction(BaseModel):
     ranges: Optional[list] = Field(alias="ranges", default=list())
 
     @validator("filters")
-    def check_filters(cls, v):
-        if v is not None:
-            for i in v:
+    def check_filters(cls, filters):
+        if filters is not None:
+            for i in filters:
                 if len(i.keys()) != 2:
                     raise ValueError("filter is not valid")
                 elif "name" not in i.keys():
                     raise ValueError("name doesnt exist in filter")
                 elif "value" not in i.keys():
                     raise ValueError("value doesnt exist in filter")
-            return v
+            return filters
         return None
 
     @validator("ranges")
-    def check_ranges(cls, v):
-        if v is not False:
-            for i in v:
+    def check_ranges(cls, ranges):
+        if ranges is not False:
+            for i in ranges:
                 if len(i) != 2:
                     raise ValueError("filter is not valid")
                 elif "name" not in i.keys():
@@ -57,5 +57,5 @@ class Transaction(BaseModel):
                     raise ValueError("value doesnt have min")
                 elif "max" not in i["value"]:
                     raise ValueError("value doesnt have max")
-            return v
+            return ranges
         return None
