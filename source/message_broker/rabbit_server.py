@@ -30,6 +30,19 @@ class RabbitRPC:
         self.timeout = timeout
         signal.signal(signal.SIGALRM, self.timeout_handler)
 
+    def reconnect(self):
+        self.connection = self.connect()
+        self.channel = self.connection.channel()
+        self.exchange_name = exchange_name
+        self.channel.exchange_declare(exchange=self.exchange_name, exchange_type='headers')
+        queue_result = self.channel.queue_declare(queue="", exclusive=True)
+        self.callback_queue = queue_result.method.queue
+        self.broker_response = dict()
+        self.corr_id = None
+        self.response_len = 0
+        self.timeout = timeout
+        signal.signal(signal.SIGALRM, self.timeout_handler)
+
     def connect(self):
         # connect to rabbit with defined credentials
         credentials = pika.PlainCredentials(self.user, self.password)
@@ -72,17 +85,17 @@ class RabbitRPC:
                 ),
                 body=json.dumps(message)
             )
+            print("message sent...")
+            signal.alarm(self.timeout)
+            while len(self.broker_response) < self.response_len:
+                self.connection.process_data_events()
+            signal.alarm(0)
+            result = self.broker_response.copy()
+            self.broker_response.clear()
+            return result
         except (exceptions.ConnectionClosed, exceptions.ChannelClosed) as error:
             time.sleep(5)
             self.reconnect()
-        print("message sent...")
-        signal.alarm(self.timeout)
-        while len(self.broker_response) < self.response_len:
-            self.connection.process_data_events()
-        signal.alarm(0)
-        result = self.broker_response.copy()
-        self.broker_response.clear()
-        return result
 
     def on_response(self, channel, method, properties, body):
         if self.corr_id == properties.correlation_id:
