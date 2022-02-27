@@ -17,7 +17,20 @@ class RabbitRPC:
         self.host = settings.RABBITMQ_HOST
         self.port = settings.RABBITMQ_PORT
         self.user = settings.RABBITMQ_USER
-        self.password = settings.RABBITMQ_PASSWORD
+        self.password = settings.RABBITMQ_PASS
+        self.connection = self.connect()
+        self.channel = self.connection.channel()
+        self.exchange_name = exchange_name
+        self.channel.exchange_declare(exchange=self.exchange_name, exchange_type='headers')
+        queue_result = self.channel.queue_declare(queue="", exclusive=True)
+        self.callback_queue = queue_result.method.queue
+        self.broker_response = dict()
+        self.corr_id = None
+        self.response_len = 0
+        self.timeout = timeout
+        signal.signal(signal.SIGALRM, self.timeout_handler)
+
+    def reconnect(self):
         self.connection = self.connect()
         self.channel = self.connection.channel()
         self.exchange_name = exchange_name
@@ -60,26 +73,29 @@ class RabbitRPC:
 
     def publish(self, message: dict, headers: dict, extra_data: str = None):
         # publish message with given message and headers
-        self.channel.basic_publish(
-            exchange=self.exchange_name,
-            routing_key='',
-            properties=pika.BasicProperties(
-                reply_to=self.callback_queue,
-                correlation_id=self.corr_id,
-                delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE,
-                headers=headers,
-                type=extra_data
-            ),
-            body=json.dumps(message) if isinstance(message, dict) else message
-        )
-        print("message sent...")
-        signal.alarm(self.timeout)
-        while len(self.broker_response) < self.response_len:
-            self.connection.process_data_events()
-        signal.alarm(0)
-        result = self.broker_response.copy()
-        self.broker_response.clear()
-        return result
+        try:
+            self.channel.basic_publish(
+                exchange=self.exchange_name,
+                routing_key='',
+                properties=pika.BasicProperties(
+                    reply_to=self.callback_queue,
+                    correlation_id=self.corr_id,
+                    delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE,
+                    headers=headers
+                ),
+                body=json.dumps(message)
+            )
+            print("message sent...")
+            signal.alarm(self.timeout)
+            while len(self.broker_response) < self.response_len:
+                self.connection.process_data_events()
+            signal.alarm(0)
+            result = self.broker_response.copy()
+            self.broker_response.clear()
+            return result
+        except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed) as error:
+            time.sleep(5)
+            self.reconnect()
 
     def on_response(self, channel, method, properties, body):
         if self.corr_id == properties.correlation_id:
