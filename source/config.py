@@ -1,6 +1,6 @@
 from pydantic import BaseSettings
 import os 
-from python_dotenv import load_dotenv
+from dotenv import load_dotenv
 
 load_dotenv()
 
