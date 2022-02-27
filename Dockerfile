@@ -6,11 +6,11 @@ COPY ./README.md /api-gateway/README.md
 
 COPY ./requirements.txt /api-gateway/requirements.txt
 
-COPY ./.env /api-gateway/.env
-
 COPY ./setup.py /api-gateway/setup.py
 
 COPY ./source /api-gateway/source
+
+COPY ./.env /api-gateway/source/.env
 
 RUN pip install --upgrade pip
 
