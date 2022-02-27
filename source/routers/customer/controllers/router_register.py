@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi import Response
 
 # from customer.models.model_register import Customer
-# from customer.mudoles import log
+# from customer.modules import log
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.models.auth import AuthHandler
 from source.routers.customer.validators import validation_register
@@ -45,13 +45,18 @@ def register(
     )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
-        raise HTTPException(status_code=customer_result.get("status_code", 500),
-                            detail={"error": customer_result.get("error", "Something went wrong")})
+        raise HTTPException(
+            status_code=customer_result.get("status_code", 500),
+            detail={"error": customer_result.get("error", "Something went wrong")}
+        )
     else:
         customer_info = customer_result.get("message").get('data')
-        response.headers["refreshToken"] = auth_handler.encode_refresh_token(customer_info.get('customerID'),
-                                                                             customer_info.get('customerType'))
-        response.headers["accessToken"] = auth_handler.encode_access_token(customer_info.get('customerID'),
-                                                                           customer_info.get('customerType'))
+        sub_dict = {
+            "user_id": customer_info.get('customerID'),
+            "customer_type": customer_info.get('customerType'),
+            "phone_number": customer_info.get('customerPhoneNumber'),
+        }
+        response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
+        response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
         response.status_code = customer_result.get("status_code", 200)
-        return customer_result.get("message")
+        return customer_result

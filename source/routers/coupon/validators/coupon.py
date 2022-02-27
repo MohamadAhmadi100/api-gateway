@@ -2,7 +2,7 @@ import re
 from typing import Optional
 
 from fastapi import HTTPException
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator,Field
 from persiantools.jdatetime import JalaliDate
 
 VALID_COUPON_TYPE = (
@@ -12,31 +12,82 @@ VALID_COUPON_TYPE = (
 today = JalaliDate.today()
 
 class Coupon(BaseModel):
-    title: str
-    # code_length: Optional[int]
-    created_time: Optional[str]
-    started_at: Optional[str]
-    expire_time: str
-    has_expire: bool
-    count: int
-    assign_customers: list
-    user_limit: Optional[int] = 0
-    assign_customer_groups: Optional[list] = None
-    min_order_price: Optional[int] = 0
-    min_order: Optional[int] = 0
-    item_count: Optional[int] = 0
-    value: int
-    max_value: int
-    value_type: int
-    is_enabled: bool
-    coupon_codes: list
-    prefix: Optional[str] = ""
-    suffix: Optional[str] = ""
-    assigned_product: Optional[list] = None
-    assigned_events: list
-    coupon_types: int
-    used_count: Optional[dict] = None
-    fixed_name: Optional[bool] = True
+    title: str = Field(
+                     ..., title = "اسم کوپن", maxLength = 16, minLength = 2, isRequired = True ,alias="title")
+
+
+
+    created_time: Optional[str]= Field(
+        None, title="", minLength=10, maxLength=10, isRequired=False
+    )
+
+    started_at: Optional[str]=Field(
+        None, title="", minLength=10, maxLength=10, isRequired=False
+    )
+
+    expire_time: str=Field(
+        None, title="", minLength=10, maxLength=10, isRequired=True, alias="expireTime"
+    )
+    has_expire: bool = Field(
+        None, title="", isRequired=True, alias="hasExpire"
+    )
+    count: int= Field(
+        None, title="", minLength=1, maxLength=1000, isRequired=True ,alias="count"
+    )
+    assign_customers: list= Field(
+        None, title="", minLength=1, maxLength=1000, isRequired=True ,alias=""
+    )
+    user_limit: Optional[int] = Field(
+        None, title="", minLength=1, maxLength=1000, isRequired=False, alias="userLimit"
+    )
+    assign_customer_groups: Optional[list] = Field(
+        None, title="", minLength=1, maxLength=1000, isRequired=False, alias=""
+    )
+    min_order_price: Optional[int] = Field(
+        None, title="",  isRequired=False, alias="minOrderPrice"
+    )
+    min_order: Optional[int] = Field(
+        None, title="", isRequired=False, alias="minOrder"
+    )
+    item_count: Optional[int] = Field(
+        None, title="", minLength=1, maxLength=1000, isRequired=False,alias="itemCount"
+    )
+    value: int = Field(
+        None, title="", isRequired=True,alias="value"
+    )
+    max_value: int = Field(
+        None, title="", isRequired=True, alias="maxValue"
+    )
+    value_type: int = Field(
+        None, title="", isRequired=True , alias="valueType"
+    )
+    is_enabled: bool = Field(
+        None, title="",  isRequired=True , alias="isEnabled"
+    )
+    coupon_codes: list = Field(
+        None, title="", minLength=2, maxLength=64, isRequired=True
+    )
+    prefix: Optional[str] = Field(
+        None, title="", minLength=2, maxLength=8, isRequired=False, alias="prefix"
+    )
+    suffix: Optional[str] = Field(
+        None, title="", minLength=2, maxLength=8, isRequired=False,  alias="suffix"
+    )
+    assigned_product: Optional[list] = Field(
+        None, title="", minLength=1, maxLength=1000, isRequired=False,  alias="assignedProduct"
+    )
+    assigned_events: list = Field(
+        None, title="",  isRequired=True , alias="assignedEvent"
+    )
+    coupon_types: int = Field(
+        None, title="", isRequired=True,  alias="couponTypes"
+    )
+    used_count: Optional[dict] = Field(
+        None, title="", isRequired=False,  alias="usedCount"
+    )
+    fixed_name: Optional[bool] = Field(
+        None, title="", isRequired=False , alias="fixedName"
+    )
 
     @validator('coupon_types')
     def coupon_types_validator(cls, value):

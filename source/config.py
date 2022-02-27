@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     RABBITMQ_HOST: str
     RABBITMQ_PORT: int
     RABBITMQ_USER: str
-    RABBITMQ_PASSWORD: str
+    RABBITMQ_PASS: str
 
     # Uvicorn
     UVICORN_HOST: str
@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     GALLERY_dir: str
 
     class Config:
-        env_file = ".env"  # get from dotenv file
+        env_file = "../.env"  # get from dotenv file
 
 
 settings = Settings()
