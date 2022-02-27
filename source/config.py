@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     GALLERY_dir: str
 
     class Config:
-        env_file = ".env"  # get from dotenv file
+        env_file = "./.env"  # get from dotenv file
 
 
 settings = Settings()
