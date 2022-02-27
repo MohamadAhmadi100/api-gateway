@@ -5,10 +5,10 @@ from fastapi import status, APIRouter
 
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.models.auth import AuthHandler
-# from customer.mudoles.otp import OTP
+# from customer.modules.otp import OTP
 from source.routers.customer.validators import validation_auth
 
-# from customer.mudoles import log
+# from customer.modules import log
 
 
 router_auth = APIRouter(
