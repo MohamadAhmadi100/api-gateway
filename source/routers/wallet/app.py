@@ -1,9 +1,9 @@
-from fastapi import FastAPI, HTTPException, Response, responses
+from fastapi import FastAPI, HTTPException, Response, responses, Depends
 from starlette.exceptions import HTTPException as starletteHTTPException
 from source.config import settings
 from source.message_broker.rabbit_server import RabbitRPC
-from source.routers.pricing.validators.pricing_validator import Price
-from source.routers.wallet.validators.wallet import Wallet, Transaction
+from source.routers.wallet.validators.wallet import Wallet
+from source.routers.wallet.validators.update_wallet import UpdateData
 
 TAGS = [
     {
@@ -39,7 +39,9 @@ def create_wallet(data: Wallet, response: Response) -> None:
         message={
             "wallet": {
                 "action": "create_wallet",
-                "body": dict(data)
+                "body": {
+                    "data": dict(data)
+                }
             }
         },
         headers={'wallet': True}
@@ -51,21 +53,47 @@ def create_wallet(data: Wallet, response: Response) -> None:
                         detail={"error": wallet_response.get("error", "Wallet service Internal error")})
 
 
-@app.post("/transaction", tags=["transaction_create"])
-def create_transaction(data: Transaction, response: Response):
-    return data
-    # rpc.response_len_setter(response_len=1)
-    # transaction_response = rpc.publish(
-    #     message={
-    #         "wallet": {
-    #             "action": "create_transaction",
-    #             "data": dict(data)
-    #         }
-    #     },
-    #     headers={'transaction': True}
-    # ).get("transaction", {})
-    # if transaction_response.get("success"):
-    #     response.status_code = transaction_response.get("status_code", 200)
-    #     return transaction_response
-    # raise HTTPException(status_code=transaction_response.get("status_code", 500),
-    #                     detail={"error": transaction_response.get("error", "Wallet service Internal error")})
+@app.get("/wallet_details", tags=["get_wallet"])
+def get_wallet(customerId: int, response: Response):
+    print(customerId)
+    rpc.response_len_setter(response_len=1)
+    wallet_response = rpc.publish(
+        message={
+            "wallet": {
+                "action": "get_wallet",
+                "body": {
+                    "data": int(customerId)
+                }
+            }
+        },
+        headers={'wallet': True}
+    ).get("wallet", {})
+
+    if wallet_response.get("success"):
+        response.status_code = wallet_response.get("status_code", 200)
+        return wallet_response
+    raise HTTPException(status_code=wallet_response.get("status_code", 500),
+                        detail={"error": wallet_response.get("error", "Wallet service Internal error")})
+
+
+@app.put("/update", tags=["edit_wallet_data"])
+def update_wallet(data: UpdateData, response: Response):
+    print(data)
+    rpc.response_len_setter(response_len=1)
+    wallet_response = rpc.publish(
+        message={
+            "wallet": {
+                "action": "update_wallet",
+                "body": {
+                    "data": dict(data)
+                }
+            }
+        },
+        headers={'wallet': True}
+    ).get("wallet", {})
+
+    if wallet_response.get("success"):
+        response.status_code = wallet_response.get("status_code", 200)
+        return wallet_response
+    raise HTTPException(status_code=wallet_response.get("status_code", 500),
+                        detail={"error": wallet_response.get("error", "Wallet service Internal error")})

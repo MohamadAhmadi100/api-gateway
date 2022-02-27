@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from enum import Enum
 
@@ -5,7 +6,23 @@ from pydantic import BaseModel, Field, validator
 
 
 class Wallet(BaseModel):
-    customer_id: int = Field(alias="customerId")
+    customer_id: int = Field(..., alias="customerId")
+    customer_name: str = Field(..., alias="customerName")
+    customer_phone_number: str = Field(..., alias="customerPhoneNumber")
+
+    @validator("customer_name")
+    def check_customer_name(cls, v):                                           #todo: what is v?
+        if not v.isalpha():
+            raise ValueError("customer name must be alphabetic")
+        return v
+
+    @validator("customer_phone_number")
+    def check_customer_phone_number(cls, v):                                   #todo: what is v?
+        regex = r'^09[0-9]{9}$'
+        check = re.fullmatch(regex, v)
+        if not check:
+            raise ValueError("phone number is not acceptable")
+        return v
 
 
 class ActionType(str, Enum):
@@ -30,7 +47,6 @@ class ProcessType(str, Enum):
 
 
 class Type(str, Enum):
-
     rebate = "rebate"
     return_order = "return order"
     return_product = "return product"
@@ -45,7 +61,7 @@ class Transaction(BaseModel):
     order_number: int = Field(..., alias="orderNumber")
     payment_id: int = Field(..., alias="paymentId")
     payment_method: PaymentMethod = Field(..., alias="paymentMethod")
-    payment_date: datetime = Field(..., alias="paymentDate")
+    payment_date: str = Field(..., alias="paymentDate")
     amount: str = Field(..., alias="amount")
     balance: Balance = Field(..., alias="balance")
     wallet_id: int = Field(..., alias="walletId")
@@ -55,7 +71,7 @@ class Transaction(BaseModel):
     type_: Type = Field(..., alias="type")
 
     @validator('amount')
-    def check_amount(cls, v):
+    def check_amount(cls, v):                                           #todo what is v?
         """
         amount should be numeric
         """

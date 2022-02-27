@@ -71,7 +71,7 @@ class RabbitRPC:
         self.response_len = response_len
         self.corr_id = str(uuid.uuid4())
 
-    def publish(self, message: dict, headers: dict):
+    def publish(self, message: dict, headers: dict, extra_data: str = None):
         # publish message with given message and headers
         try:
             self.channel.basic_publish(
