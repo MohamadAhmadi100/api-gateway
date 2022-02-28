@@ -9,6 +9,7 @@ from source.message_broker.rabbit_server import RabbitRPC
 
 from source.routers.coupon.validators.coupon import Coupon
 
+# from customer.mudoles import log
 
 router = APIRouter()
 
