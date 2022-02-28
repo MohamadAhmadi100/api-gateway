@@ -113,3 +113,13 @@ class AuthHandler:
         else:
             raise HTTPException(status_code=401, detail={"error": "مجددا وارد شوید", "redirect": "login"})
 
+a_dict = {
+    "a": "1111",
+    "b": "222222"
+}
+a = AuthHandler()
+
+b = a.encode_access_token(a_dict)
+print(b)
+print(a.decode_access_token(b))
+
