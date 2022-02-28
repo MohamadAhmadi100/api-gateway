@@ -12,8 +12,6 @@ COPY ./source /api-gateway/source
 
 COPY ./.env /api-gateway/source/.env
 
-RUN pip install --upgrade pip
-
 RUN pip install -e /api-gateway/.
 
 CMD ["python", "/api-gateway/source/main.py"]
