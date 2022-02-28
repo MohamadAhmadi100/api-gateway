@@ -152,4 +152,35 @@ def get_transaction(data: Transaction, response: Response):
     raise HTTPException(status_code=wallet_response.get("status_code", 500),
                         detail={"error": wallet_response.get("error", "Wallet service Internal error")})
 
+
 # ----------------------------------- end customer endpoints --------------------------------------- #
+auth = AuthHandler()
+
+
+@app.get("/get-wallet", tags=["edit_wallet_by_customer_id"])
+def get_wallet_by_customer_id(
+        response: Response,
+        auth_header=Depends(auth.check_current_user_tokens)
+):
+    customer_id, token_dict = auth_header
+
+    response.headers["accessToken"] = token_dict.get("access_token")
+    response.headers["refreshToken"] = token_dict.get("refresh_token")
+    rpc.response_len_setter(response_len=1)
+    wallet_response = rpc.publish(
+        message={
+            "wallet": {
+                "action": "get_wallet_customer_side",
+                "body": {
+                    "customer_id": customer_id.get("customer_id")
+                }
+            }
+        },
+        headers={'wallet': True}
+    ).get("wallet", {})
+
+    if wallet_response.get("success"):
+        response.status_code = wallet_response.get("status_code", 200)
+        return wallet_response
+    raise HTTPException(status_code=wallet_response.get("status_code", 500),
+                        detail={"error": wallet_response.get("error", "Wallet service Internal error")})
