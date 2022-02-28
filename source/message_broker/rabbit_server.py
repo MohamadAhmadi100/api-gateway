@@ -1,6 +1,7 @@
 import json
 import signal
 import uuid
+import time
 
 import pika
 
@@ -92,6 +93,7 @@ class RabbitRPC:
             self.broker_response.clear()
             return result
         except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed) as error:
+            time.sleep(5)
             self.reconnect()
 
     def on_response(self, channel, method, properties, body):
