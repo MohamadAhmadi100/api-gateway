@@ -170,7 +170,7 @@ def get_wallet_by_customer_id(
     wallet_response = rpc.publish(
         message={
             "wallet": {
-                "action": "get_wallet_customer_side",
+                "action": "customer_get_wallet",
                 "body": {
                     "customer_id": customer_id.get("customer_id")
                 }
