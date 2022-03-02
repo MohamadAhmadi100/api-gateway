@@ -1,11 +1,10 @@
 import json
 
-from fastapi import Response, Depends, HTTPException, Header
+from fastapi import Response, Depends, HTTPException
 from fastapi import status, APIRouter
 
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
-# from customer.modules.otp import OTP
 from source.routers.customer.validators import validation_auth
 
 # from customer.modules import log

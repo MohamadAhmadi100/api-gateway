@@ -1,15 +1,17 @@
 from datetime import timedelta, datetime
-from typing import Union, Dict, Any, Optional
+from typing import Union, Any, Optional
 
 import jwt
 from fastapi import HTTPException, Header
 from jwt import exceptions as jwt_exceptions
 from passlib.context import CryptContext
 
+from source.config import settings
+
 
 class AuthHandler:
     pwd_context = CryptContext(schemes=['bcrypt'], deprecated="auto")
-    SECRET_KEY = "a5cad81912ad25eb12920bf6357d799773887f77291fec95c345fd136078bf2c"
+    SECRET_KEY = settings.SECRET_KEY
     refresh_exp = timedelta(days=1)
     access_exp = timedelta(days=0, minutes=20)
 
@@ -112,14 +114,3 @@ class AuthHandler:
 
         else:
             raise HTTPException(status_code=401, detail={"error": "مجددا وارد شوید", "redirect": "login"})
-
-a_dict = {
-    "a": "1111",
-    "b": "222222"
-}
-a = AuthHandler()
-
-b = a.encode_access_token(a_dict)
-print(b)
-print(a.decode_access_token(b))
-

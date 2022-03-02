@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     # Gallery
     GALLERY_DIR: str
 
+    # Auth
+    SECRET_KEY: str
+
     class Config:
         env_file = "env/"  # get from dotenv file
 
