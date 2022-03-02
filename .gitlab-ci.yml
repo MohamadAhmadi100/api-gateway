@@ -10,6 +10,7 @@ build:
     - temp
   tags:
     - pay
+    - ci-jon
   script:
     - ls
     - echo APP_NAME=$APP_NAME >> .env
@@ -34,6 +35,7 @@ dev_deploy:
     - temp
   tags:
     - pay
+    - ci-jon
   script:
     - echo APP_NAME=$APP_NAME >> .env
     - echo DEBUG_MODE=$DEBUG_MODE >> .env
@@ -57,6 +59,7 @@ push:
     - master
   tags:
     - pay
+    - ci-jon
   script:
     - docker login 200.100.100.219:80 -u registry -p $REGPASS
     - docker build -t api-gateway:0.0.1 . -t 200.100.100.219:80/backend/web-api-gateway:$CI_COMMIT_SHORT_SHA
@@ -68,6 +71,7 @@ master_deploy:
     - master
   tags:
     - pay
+    - ci-jon
   script:
     - docker login 200.100.100.219:80 -u registry -p $REGPASS
     - docker run -p 8000:80 api-gateway:0.0.1
