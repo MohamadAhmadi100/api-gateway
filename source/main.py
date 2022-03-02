@@ -28,6 +28,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 # ----------------------------------------- Mount all services here -------------------------------------------------- #
 
 app.mount("/cart", cart_app)
@@ -47,6 +48,7 @@ app.mount("/attributes", attribute_app)
 app.mount("/payment", payment_app)
 
 app.mount("/coupon", coupon_app)
+
 app.mount("/gallery", gallery_app)
 
 

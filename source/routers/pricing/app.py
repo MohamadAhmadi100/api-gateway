@@ -59,6 +59,17 @@ def set_product_price(item: Price, response: Response) -> dict:
     )
     pricing_result = pricing_result.get("pricing", {})
     if pricing_result.get("success"):
+        rpc.publish(
+            message={
+                "product": {
+                    "action": "step_up_product",
+                    "body": {
+                        "system_code": item.system_code
+                    }
+                }
+            },
+            headers={"product": True}
+        )
         response.status_code = pricing_result.get("status_code", 200)
         return {"message": pricing_result.get("message")}
     raise HTTPException(status_code=pricing_result.get("status_code", 500),

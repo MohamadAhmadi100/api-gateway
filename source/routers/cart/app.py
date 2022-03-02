@@ -5,7 +5,7 @@ from source.config import settings
 from source.helpers.case_converter import convert_case
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.cart.validators.cart import AddCart
-from source.routers.customer.models.auth import AuthHandler
+from source.routers.customer.module.auth import AuthHandler
 
 TAGS = [
     {

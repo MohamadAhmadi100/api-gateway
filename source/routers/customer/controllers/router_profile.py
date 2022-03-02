@@ -3,7 +3,7 @@
 #
 # from customer.models.model_register import Customer
 # from customer.models.model_profile import Profile
-# from customer.mudoles.auth import AuthHandler
+# from customer.modules.auth import AuthHandler
 # from customer.validators import validation_profile, validation_auth
 #
 # router_profile = APIRouter(

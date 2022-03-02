@@ -1,8 +1,9 @@
 from pydantic import BaseSettings
-import os 
+import os
 from dotenv import load_dotenv
 
 load_dotenv()
+
 
 class Settings(BaseSettings):
     # Settings
@@ -27,6 +28,9 @@ class Settings(BaseSettings):
 
     # Gallery
     GALLERY_DIR: str = os.getenv("GALLERY_DIR")
+
+    # Auth
+    SECRET_KEY: str = os.getenv("SECRET_KEY")
 
 
 settings = Settings()
