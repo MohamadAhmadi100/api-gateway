@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     TEMPLATE: str = os.getenv("TEMPLATE")
 
     # Gallery
-    GALLERY_dir: str = os.getenv("GALLERY_dir")
+    GALLERY_DIR: str = os.getenv("GALLERY_DIR")
 
 
 settings = Settings()
