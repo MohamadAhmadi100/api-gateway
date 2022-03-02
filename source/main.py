@@ -78,7 +78,7 @@ def shutdown_event() -> None:
 
 @app.get("/")
 def main():
-    return [{"path": "https://devapi.aasood.com" + route.path + "/docs"}
+    return [{"path": "https://devapi.aasood.com" + route.path + "/docs/"}
             for route in app.routes][4:-1]
 
 
