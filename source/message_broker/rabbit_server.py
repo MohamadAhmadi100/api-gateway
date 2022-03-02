@@ -35,12 +35,6 @@ class RabbitRPC:
         self.connection = self.connect()
         self.channel = self.connection.channel()
         self.channel.exchange_declare(exchange=self.exchange_name, exchange_type='headers')
-        queue_result = self.channel.queue_declare(queue="", exclusive=True)
-        self.callback_queue = queue_result.method.queue
-        self.broker_response = dict()
-        self.corr_id = None
-        self.response_len = 0
-        signal.signal(signal.SIGALRM, self.timeout_handler)
 
     def connect(self):
         # connect to rabbit with defined credentials
@@ -93,7 +87,7 @@ class RabbitRPC:
             self.broker_response.clear()
             return result
         except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed) as error:
-            time.sleep(5)
+            time.sleep(0.5)
             self.reconnect()
 
     def on_response(self, channel, method, properties, body):
