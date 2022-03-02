@@ -90,25 +90,36 @@ class AuthHandler:
             raise HTTPException(status_code=401, detail={"error": "مجددا وارد شوید", "redirect": "login"})
 
         if access_tok_payload:
-            user_name = access_tok_payload.get("sub")
+            user_data = access_tok_payload.get("sub")
             tokens = {
                 "access_token_payload": access_tok_payload,
                 "refresh_token_payload": refresh_tok_payload,
                 "access_token": access,
                 "refresh_token": refresh,
             }
-            return user_name, tokens
+            return user_data, tokens
 
         elif access_tok_payload is None and refresh_tok_payload:
-            user_name = refresh_tok_payload.get("sub")
-            new_access_token = self.encode_access_token(user_name.get("user_id"), user_name.get("customer_type"))
+            user_data = refresh_tok_payload.get("sub")
+            new_access_token = self.encode_access_token(user_data)
             tokens = {
                 "access_token_payload": access_tok_payload,
                 "refresh_token_payload": refresh_tok_payload,
                 "access_token": new_access_token,
                 "refresh_token": refresh,
             }
-            return user_name, tokens
+            return user_data, tokens
 
         else:
             raise HTTPException(status_code=401, detail={"error": "مجددا وارد شوید", "redirect": "login"})
+
+a_dict = {
+    "a": "1111",
+    "b": "222222"
+}
+a = AuthHandler()
+
+b = a.encode_access_token(a_dict)
+print(b)
+print(a.decode_access_token(b))
+

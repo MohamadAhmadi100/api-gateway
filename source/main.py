@@ -38,6 +38,7 @@ app.mount("/attributes", attribute_app)
 app.mount("/payment", payment_app)
 
 app.mount("/coupon", coupon_app)
+
 app.mount("/gallery", gallery_app)
 
 

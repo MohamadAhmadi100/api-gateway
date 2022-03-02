@@ -37,9 +37,9 @@ class Transaction(BaseModel):
                 if len(i.keys()) != 2:
                     raise ValueError("filter is not valid")
                 elif "name" not in i.keys():
-                    raise ValueError("name doesnt exist in filter")
+                    raise ValueError("name doesn't exist in filter")
                 elif "value" not in i.keys():
-                    raise ValueError("value doesnt exist in filter")
+                    raise ValueError("value doesn't exist in filter")
             return filters
         return None
 
@@ -50,12 +50,12 @@ class Transaction(BaseModel):
                 if len(i) != 2:
                     raise ValueError("filter is not valid")
                 elif "name" not in i.keys():
-                    raise ValueError("name doesnt exist in filter")
+                    raise ValueError("name doesn't exist in filter")
                 elif "value" not in i.keys():
-                    raise ValueError("value doesnt exist in filter")
+                    raise ValueError("value doesn't exist in filter")
                 elif "min" not in i["value"]:
-                    raise ValueError("value doesnt have min")
+                    raise ValueError("value doesn't have min")
                 elif "max" not in i["value"]:
-                    raise ValueError("value doesnt have max")
+                    raise ValueError("value doesn't have max")
             return ranges
         return None

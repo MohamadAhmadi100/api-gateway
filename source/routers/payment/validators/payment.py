@@ -33,9 +33,9 @@ class SendData(BaseModel):
     @validator("service")
     def check_service(cls, service):
         input_data = ["service_name", "service_function"]
-        if service.keys() not in input_data:
+        if not set(service.keys()).issubset(input_data):
             raise ValueError("input data is invalid")
         services = ["wallet", "order"]
-        if service.get("service").lower() not in services:
+        if service.get("service_name").lower() not in services:
             raise ValueError("service name doesn't exist")
         return service

@@ -1,4 +1,4 @@
-import json
+
 
 from fastapi import Response, Depends, HTTPException,Path,Body, Query
 from fastapi import status, APIRouter
@@ -40,7 +40,8 @@ def get_all_coupons(
         },
         headers={'coupon': True}
     )
-    coupon_result = coupon_result.get("coupon",{})
+    coupon_result = coupon_result.get("coupon")
+    print(coupon_result)
     if coupon_result.get("success"):
         response.status_code = coupon_result.get("status_code", 200)
         return convert_case(coupon_result.get("message"), 'camel')
@@ -89,7 +90,7 @@ def create_coupon( response: Response,
 
                         "fixed_name": True
                     })
-                    ) -> dict:
+                    ) :
     """
     Generate a coupon and add to coupon collection in database with this information:
     """
@@ -156,7 +157,7 @@ def get_by_coupon_id(response: Response,coupon_id:int):
         message={
             "coupon": {
                 "action": "get_by_coupon_id",
-                "body": {"coupon": coupon_id
+                "body": {"coupon_id": coupon_id
                 }
             }
 
