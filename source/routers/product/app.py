@@ -39,7 +39,7 @@ rpc.consume()
 auth_handler = AuthHandler()
 
 
-@app.get("/api/v1/product/parent/{systemCode}/configs/", tags=["Product"])
+@app.get("/parent/{systemCode}/configs/", tags=["Product"])
 def get_parent_configs(response: Response,
                        system_code: str = Path(..., min_length=9, max_length=9, alias='systemCode')) -> dict:
     """
