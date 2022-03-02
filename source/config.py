@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     TEMPLATE: str
 
     # Gallery
-    GALLERY_dir: str
+    GALLERY_DIR: str
 
     class Config:
         env_file = ".env"  # get from dotenv file
