@@ -5,7 +5,7 @@ from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.wallet.validators.wallet import Wallet
 from source.routers.wallet.validators.transaction import Transaction
 from source.routers.wallet.validators.update_wallet import UpdateData
-from source.routers.customer.models.auth import AuthHandler
+from source.routers.customer.module.auth import AuthHandler
 
 TAGS = [
     {

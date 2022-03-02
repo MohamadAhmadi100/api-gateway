@@ -4,7 +4,7 @@ from fastapi import Response
 # from customer.models.model_register import Customer
 # from customer.modules import log
 from source.message_broker.rabbit_server import RabbitRPC
-from source.routers.customer.models.auth import AuthHandler
+from source.routers.customer.module.auth import AuthHandler
 from source.routers.customer.validators import validation_register
 
 router_register = APIRouter(

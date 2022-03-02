@@ -1,6 +1,4 @@
-
-
-from fastapi import Response, Depends, HTTPException,Path,Body, Query
+from fastapi import Response, Depends, HTTPException, Path, Body, Query
 from fastapi import status, APIRouter
 from source.helpers.case_converter import convert_case
 from fastapi.openapi.models import RequestBody
@@ -49,48 +47,48 @@ def get_all_coupons(
                         detail={"error": coupon_result.get("error", "Something went wrong")})
 
 
-@router.post("/create",tags=["coupon_create"] )
-def create_coupon( response: Response,
-                  data: Coupon = Body(..., example = {
+@router.post("/create", tags=["coupon_create"])
+def create_coupon(response: Response,
+                  data: Coupon = Body(..., example={
 
-                        "title": "yalda",
-                        "code_length": 4,
-                        "created_time": "1400-11-27",
-                        "started_at": "1400-11-27",
-                        "expire_time": "1400-12-15",
-                        "has_expire": False,
-                        "count": 1000,
-                        "assign_customers": [
-                            1234, 1258, 1584
-                        ],
-                        "user_limit": 10,
-                        "assign_customer_groups": [
-                            1234, 1258, 1584
-                        ],
-                        "min_order_price": 500,
-                        "min_order": 200,
-                        "item_count": 20,
-                        "value": 20,
-                        "max_value": 200,
-                        "value_type": "percent",
-                        "is_enabled": True,
-                        "coupon_codes": [
-                            {"coupon_ID": "GE-123", "used": 0}, {"coupon_ID": "RF-456", "used": 1}
-                        ],
-                        "prefix": "GE",
-                        "suffix": "RE",
-                        "assigned_product": [
-                            "mobile", "notebook", "headset"
-                        ],
-                        "assigned_events": [
-                            "yalda", "nouruz"
-                        ],
-                        "coupon_types": 5,
-                        "used_count": {'customer_id': 1234, "use_count": 0},
+                      "title": "yalda",
+                      "code_length": 4,
+                      "created_time": "1400-11-27",
+                      "started_at": "1400-11-27",
+                      "expire_time": "1400-12-15",
+                      "has_expire": False,
+                      "count": 1000,
+                      "assign_customers": [
+                          1234, 1258, 1584
+                      ],
+                      "user_limit": 10,
+                      "assign_customer_groups": [
+                          1234, 1258, 1584
+                      ],
+                      "min_order_price": 500,
+                      "min_order": 200,
+                      "item_count": 20,
+                      "value": 20,
+                      "max_value": 200,
+                      "value_type": "percent",
+                      "is_enabled": True,
+                      "coupon_codes": [
+                          {"coupon_ID": "GE-123", "used": 0}, {"coupon_ID": "RF-456", "used": 1}
+                      ],
+                      "prefix": "GE",
+                      "suffix": "RE",
+                      "assigned_product": [
+                          "mobile", "notebook", "headset"
+                      ],
+                      "assigned_events": [
+                          "yalda", "nouruz"
+                      ],
+                      "coupon_types": 5,
+                      "used_count": {'customer_id': 1234, "use_count": 0},
 
-                        "fixed_name": True
-                    })
-                    ) :
+                      "fixed_name": True
+                  })
+                  ):
     """
     Generate a coupon and add to coupon collection in database with this information:
     """
@@ -99,7 +97,7 @@ def create_coupon( response: Response,
         message={
             "coupon": {
                 "action": "create_coupon",
-                "body": {"coupon":dict(data)}
+                "body": {"coupon": dict(data)}
             }
         },
         headers={'coupon': True}
@@ -113,7 +111,7 @@ def create_coupon( response: Response,
 
 
 @router.get('/{coupon_types}')
-def get_coupons_by_filter(response: Response,coupon_types: int =Path(...,)):
+def get_coupons_by_filter(response: Response, coupon_types: int = Path(..., )):
     """
     Get coupons with filter
     """
@@ -121,14 +119,14 @@ def get_coupons_by_filter(response: Response,coupon_types: int =Path(...,)):
     rpc.response_len_setter(response_len=1)
     coupon_result = rpc.publish(
         message={
-            "coupon":{
-                "action":"get_coupons_by_filter",
-                "body":{
-                    "coupon_types":coupon_types
+            "coupon": {
+                "action": "get_coupons_by_filter",
+                "body": {
+                    "coupon_types": coupon_types
                 }
             }
         },
-        headers={"coupon":True}
+        headers={"coupon": True}
     )
     coupon_result = coupon_result.get("coupon", {})
     if coupon_result.get("success"):
@@ -148,7 +146,7 @@ def get_code_list():
 
 
 @router.get('/coupon_id/{coupon_id}')
-def get_by_coupon_id(response: Response,coupon_id:int):
+def get_by_coupon_id(response: Response, coupon_id: int):
     """
      Get coupon_id
      """
@@ -158,7 +156,7 @@ def get_by_coupon_id(response: Response,coupon_id:int):
             "coupon": {
                 "action": "get_by_coupon_id",
                 "body": {"coupon_id": coupon_id
-                }
+                         }
             }
 
         },
@@ -170,8 +168,6 @@ def get_by_coupon_id(response: Response,coupon_id:int):
         return convert_case(coupon_result.get("message"), 'camel')
     raise HTTPException(status_code=coupon_result.get("status_code", 500),
                         detail={"error": coupon_result.get("error", "Something went wrong")})
-
-
 
 
 @router.put('/{coupon_id}')
@@ -198,8 +194,9 @@ def update_coupon(coupon_id: str, response: Response):
     raise HTTPException(status_code=coupon_result.get("status_code", 500),
                         detail={"error": coupon_result.get("error", "Something went wrong")})
 
+
 @router.put('/disable/{coupon_id}')
-def disable_coupon(coupon_id: str,response: Response):
+def disable_coupon(coupon_id: str, response: Response):
     """
     disable coupon_id
     """
@@ -221,7 +218,6 @@ def disable_coupon(coupon_id: str,response: Response):
         return convert_case(coupon_result.get("message"), 'camel')
     raise HTTPException(status_code=coupon_result.get("status_code", 500),
                         detail={"error": coupon_result.get("error", "Something went wrong")})
-
 
 
 @router.post('/request', status_code=200)

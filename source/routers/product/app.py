@@ -4,7 +4,7 @@ from starlette.exceptions import HTTPException as starletteHTTPException
 from source.config import settings
 from source.helpers.case_converter import convert_case
 from source.message_broker.rabbit_server import RabbitRPC
-from source.routers.customer.models.auth import AuthHandler
+from source.routers.customer.module.auth import AuthHandler
 from source.routers.product.validators.product import CreateChild, AddAtributes, CreateParent
 from source.helpers.create_class import CreateClass
 
@@ -217,11 +217,13 @@ def add_attributes(response: Response,
 def get_product_by_system_code(
         response: Response,
         system_code: str = Path(..., min_length=11, max_length=11, alias='systemCode'),
-        lang: str = Path("fa_ir", min_length=2, max_length=8)
+        lang: str = Path("fa_ir", min_length=2, max_length=8),
+        auth_header=Depends(auth_handler.check_current_user_tokens)
 ) -> dict:
     """
     Get a product by system_code in main collection in database.
     """
+    customer_type = auth_header[0].get("customer_type")
     rpc.response_len_setter(response_len=3)
     result = rpc.publish(
         message={
@@ -263,10 +265,10 @@ def get_product_by_system_code(
         for product in final_result.get("products", []):
             product["warehouse"] = list()
             for quantity_key, quantity in quantity_result.get("message", {}).get("products", {}).get(
-                    product.get("system_code")).get("customer_types").get("B2B").get("storages", {}).items():
+                    product.get("system_code")).get("customer_types").get(customer_type).get("storages", {}).items():
 
                 for price_key, price in pricing_result.get("message", {}).get("products", {}).get(
-                        product.get("system_code")).get("customer_type").get("B2B").get("storages", {}).items():
+                        product.get("system_code")).get("customer_type").get(customer_type).get("storages", {}).items():
 
                     if quantity.get("storage_id") == price.get("storage_id"):
                         item = dict()
@@ -482,14 +484,13 @@ def get_product_list_by_system_code(
         system_code: int = Path(..., alias='systemCode'),
         page: int = Query(1, alias='page'),
         per_page: int = Query(10, alias='perPage'),
-        # auth_header=Depends(auth_handler.check_current_user_tokens)
+        auth_header=Depends(auth_handler.check_current_user_tokens)
 
 ):
     """
     Get product list by brand
     """
-    # customer_type = auth_header[0].get("customer_type")
-    customer_type = "B2B"
+    customer_type = auth_header[0].get("customer_type")
     rpc.response_len_setter(response_len=1)
     product_result = rpc.publish(
         message={
@@ -543,13 +544,12 @@ def get_product_list_by_system_code(
 @app.get("/get_category_list", tags=["Product"])
 def get_category_list(
         response: Response,
-        # auth_header=Depends(auth_handler.check_current_user_tokens)
+        auth_header=Depends(auth_handler.check_current_user_tokens)
 ):
     """
     Get category list
     """
-    # customer_type = auth_header[0].get("customer_type")
-    customer_type = "B2B"
+    customer_type = auth_header[0].get("customer_type")
     rpc.response_len_setter(response_len=1)
     product_result = rpc.publish(
         message={
@@ -604,6 +604,7 @@ def get_category_list(
                         detail={"error": product_result.get("error", "Something went wrong")})
 
 
+'''
 @app.get("/get_product_list", tags=["Product"])
 def get_product_list(
         response: Response,
@@ -666,3 +667,4 @@ def get_product_list(
         return convert_case(message_product, 'camel')
     raise HTTPException(status_code=product_result.get("status_code", 500),
                         detail={"error": product_result.get("error", "Something went wrong")})
+'''
