@@ -42,7 +42,7 @@ def validation_exception_handler(request, exc):
     return responses.JSONResponse(exc.detail, status_code=exc.status_code)
 
 
-app.mount("/gallery_files/", StaticFiles(directory=settings.GALLERY_dir), name="gallery_files")
+app.mount("/gallery_files/", StaticFiles(directory=settings.GALLERY_DIR), name="gallery_files")
 
 app.include_router(files_controller, tags=['Files'])
 app.include_router(file_type_controller, tags=['File Types'])
