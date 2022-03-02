@@ -36,7 +36,7 @@ app.mount("/pricing", pricing_app)
 
 app.mount("/quantity", quantity_app)
 
-app.mount("/product/api/v1/docs/", product_app)
+app.mount("/product/api/v1/", product_app)
 
 app.mount("/customer", customer_app)
 
