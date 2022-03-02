@@ -2,6 +2,7 @@ import logging
 
 import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
 from source.routers.cart.app import app as cart_app
@@ -15,10 +16,18 @@ from source.routers.payment.app import app as payment_app
 from source.routers.coupon.app import app as coupon_app
 from source.routers.gallery.app import app as gallery_app
 
+
 app = FastAPI(title="API Gateway",
               description="Backend for frontend aka. API Gateway!",
               version="0.0.1")
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # ----------------------------------------- Mount all services here -------------------------------------------------- #
 
 app.mount("/cart", cart_app)
