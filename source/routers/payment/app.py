@@ -1,7 +1,6 @@
 from fastapi import FastAPI, HTTPException, Response, responses, Request
 from starlette.exceptions import HTTPException as starletteHTTPException
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-
 from source.config import settings
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.payment.validators import payment
@@ -13,6 +12,7 @@ TAGS = [
         "description": "Payment Application Endpoints"
     }
 ]
+
 app = FastAPI(
     title="Payment API",
     description="This is Payment gateway MicroService",
