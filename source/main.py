@@ -28,6 +28,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 # ----------------------------------------- Mount all services here -------------------------------------------------- #
 
 app.mount("/cart", cart_app)
