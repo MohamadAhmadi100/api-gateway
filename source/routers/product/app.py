@@ -65,7 +65,7 @@ def get_parent_configs(response: Response,
                         detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@app.get("/product/parent/", tags=["Product"])
+@app.get("/parent/", tags=["Product"])
 def create_parent_schema():
     """
     Get create parent json schema
@@ -73,7 +73,7 @@ def create_parent_schema():
     return CreateParent.schema().get("properties")
 
 
-@app.post("/product/parent/", tags=["Product"])
+@app.post("/parent/", tags=["Product"])
 def create_parent(
         item: CreateParent, response: Response
 ) -> dict:
@@ -95,7 +95,7 @@ def create_parent(
                         detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@app.get("/product/{systemCode}/items", tags=["Product"])
+@app.get("/{systemCode}/items", tags=["Product"])
 def suggest_product(response: Response,
                     system_code: str = Path(..., min_length=11, max_length=11, alias='systemCode')) -> dict:
     """
@@ -121,7 +121,7 @@ def suggest_product(response: Response,
                         detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@app.get("/product/child/", tags=["Product"])
+@app.get("/child/", tags=["Product"])
 def create_child_schema():
     """
     Get create child json schema
@@ -129,7 +129,7 @@ def create_child_schema():
     return CreateChild.schema().get("properties")
 
 
-@app.post("/product/child/", tags=["Product"])
+@app.post("/child/", tags=["Product"])
 def create_child(
         item: CreateChild, response: Response
 ) -> dict:
@@ -155,7 +155,7 @@ def create_child(
                         detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@app.get("/product/attributes/", tags=["Product"])
+@app.get("/attributes/", tags=["Product"])
 def add_attributes_schema():
     """
     Get add attributes json schema
@@ -163,7 +163,7 @@ def add_attributes_schema():
     return AddAtributes.schema().get("properties")
 
 
-@app.post("/product/attributes/", tags=["Product"])
+@app.post("/attributes/", tags=["Product"])
 def add_attributes(response: Response,
                    item: AddAtributes = Body(..., example={
                        "systemCode": "100104021006",
@@ -213,7 +213,7 @@ def add_attributes(response: Response,
                         detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@app.get("/product/{systemCode}/{lang}", tags=["Product"])
+@app.get("/{systemCode}/{lang}", tags=["Product"])
 def get_product_by_system_code(
         response: Response,
         system_code: str = Path(..., min_length=11, max_length=11, alias='systemCode'),
@@ -284,7 +284,7 @@ def get_product_by_system_code(
         return convert_case(final_result, 'camel')
 
 
-@app.delete("/product/{systemCode}", tags=["Product"])
+@app.delete("/{systemCode}", tags=["Product"])
 def delete_product(
         response: Response,
         system_code: str = Path(..., min_length=12, max_length=12, alias='systemCode')
@@ -312,7 +312,7 @@ def delete_product(
                         detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@app.get("/product/update_attribute_collection/", tags=["Product"])
+@app.get("/update_attribute_collection/", tags=["Product"])
 def update_attribute_collection(response: Response) -> dict:
     """
     Update the attribute collection in database.
