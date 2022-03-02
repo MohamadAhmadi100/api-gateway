@@ -24,6 +24,7 @@ build:
     - echo SENDER=$SENDER >> .env
     - echo RECIPIENTS=$RECIPIENTS >> .env
     - echo TEMPLATE=$TEMPLATE >> .env
+    - echo GALLERY_DIR=$GALLERY_DIR >> .env
     - docker login 200.100.100.219:80 -u registry -p $REGPASS 
     - docker build -t api-gateway:0.0.1 .
 
@@ -46,6 +47,7 @@ dev_deploy:
     - echo SENDER=$SENDER >> .env
     - echo RECIPIENTS=$RECIPIENTS >> .env
     - echo TEMPLATE=$TEMPLATE >> .env
+    - echo GALLERY_DIR=$GALLERY_DIR >> .env
     - docker login 200.100.100.219:80 -u registry -p $REGPASS
     - docker-compose -f docker-compose.yaml up -d --build
 
