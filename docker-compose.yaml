@@ -13,16 +13,3 @@ services:
         build: .
         ports:
           - 8000:80
-
-    rabbitmq:
-        image: rabbitmq
-        container_name: rabbitmq
-        volumes:
-            - "./enabled_plugins:/etc/rabbitmq/enabled_plugins"
-        environment:
-            RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
-            RABBITMQ_DEFAULT_USER: rbtmq
-            RABBITMQ_DEFAULT_PASS: rbtmq@RBTMQ
-        ports:
-            - 5672:5672
-            - 15672:15672
