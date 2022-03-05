@@ -18,8 +18,7 @@ services:
         image: rabbitmq
         container_name: rabbitmq
         volumes:
-            - ./.docker/rabbitmq/data/:/var/lib/rabbitmq/
-            - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
+            - "./enabled_plugins:/etc/rabbitmq/enabled_plugins"
         environment:
             RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
             RABBITMQ_DEFAULT_USER: rbtmq
