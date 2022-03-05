@@ -20,7 +20,7 @@ from source.routers.gallery.app import app as gallery_app
 app = FastAPI(title="API Gateway",
               description="Backend for frontend aka. API Gateway!",
               version="0.0.1")
-
+'''
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -28,7 +28,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+'''
 # ----------------------------------------- Mount all services here -------------------------------------------------- #
 
 app.mount("/cart", cart_app)
