@@ -44,7 +44,7 @@ class RabbitRPC:
                 host=self.host,
                 port=self.port,
                 credentials=credentials,
-#                 heartbeat=0,
+                heartbeat=0,
                 blocked_connection_timeout=86400  # 86400 seconds = 24 hours
             )
         )
