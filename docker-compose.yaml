@@ -1,6 +1,17 @@
 version: "3"
 
 services:
+    zabix:
+      image: rabbitmq:3-management-alpine
+      ports:
+        - 5672:5672
+        - 15672:15672
+      volumes:
+        - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+        - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+      networks:
+        - rabbitmq_net
+    
     web:
         build: nginx
         ports:
@@ -13,3 +24,7 @@ services:
         build: .
         ports:
           - 8000:80
+
+networks:
+  rabbitmq_net:
+    driver: bridge
