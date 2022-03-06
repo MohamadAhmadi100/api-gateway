@@ -88,7 +88,7 @@ class RabbitRPC:
             return result
 #         except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed, 
 #                 pika.exceptions.ChannelWrongStateError) as error:
-        except Exception:
+        except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed) as error:
             time.sleep(0.5)
             self.reconnect()
 
