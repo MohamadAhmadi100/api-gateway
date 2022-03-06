@@ -92,7 +92,7 @@ class RabbitRPC:
 #         except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed, 
 #                 pika.exceptions.ChannelWrongStateError) as error:
         except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed, pika.exceptions.ChannelWrongStateError) as error:
-            time.sleep(0.5)
+            self.connection.sleep(1)
             self.connect()
 
     def on_response(self, channel, method, properties, body):
