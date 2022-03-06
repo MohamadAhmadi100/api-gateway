@@ -5,10 +5,8 @@ from fastapi import HTTPException
 from pydantic import BaseModel, validator,Field
 
 
-VALID_COUPON_TYPE = (
-    'customer', 'public', 'product', 'event', 'customer-public', 'customer-event', 'customer-product', 'public-event',
-    'public-product', 'event-product', 'customer-public-event', 'customer-product-event', 'public-event-product',
-    'customer-public-product', 'customer-public-event-product')
+VALID_COUPON_TYPE = [
+    'customer', 'public', 'product', 'event', 'customer-event', 'customer-product','event-product', 'customer-product-event']
 
 
 class Coupon(BaseModel):

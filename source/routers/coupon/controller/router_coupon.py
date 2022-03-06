@@ -97,11 +97,9 @@ def create_coupon(response: Response,
         message={
             "coupon": {
                 "action": "create_coupon",
-<<<<<<< HEAD
-                "body": dict(data)
-=======
+                "body": dict(data),
                 "body": {"coupon": dict(data)}
->>>>>>> 1cf33d6bd157f3db23156c00f1f21d54f539859d
+
             }
         },
         headers={'coupon': True}
