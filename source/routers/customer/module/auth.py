@@ -1,15 +1,17 @@
 from datetime import timedelta, datetime
-from typing import Union, Dict, Any, Optional
+from typing import Union, Any, Optional
 
 import jwt
 from fastapi import HTTPException, Header
 from jwt import exceptions as jwt_exceptions
 from passlib.context import CryptContext
 
+from source.config import settings
+
 
 class AuthHandler:
     pwd_context = CryptContext(schemes=['bcrypt'], deprecated="auto")
-    SECRET_KEY = "a5cad81912ad25eb12920bf6357d799773887f77291fec95c345fd136078bf2c"
+    SECRET_KEY = settings.SECRET_KEY
     refresh_exp = timedelta(days=1)
     access_exp = timedelta(days=0, minutes=20)
 
@@ -90,25 +92,25 @@ class AuthHandler:
             raise HTTPException(status_code=401, detail={"error": "مجددا وارد شوید", "redirect": "login"})
 
         if access_tok_payload:
-            user_name = access_tok_payload.get("sub")
+            user_data = access_tok_payload.get("sub")
             tokens = {
                 "access_token_payload": access_tok_payload,
                 "refresh_token_payload": refresh_tok_payload,
                 "access_token": access,
                 "refresh_token": refresh,
             }
-            return user_name, tokens
+            return user_data, tokens
 
         elif access_tok_payload is None and refresh_tok_payload:
-            user_name = refresh_tok_payload.get("sub")
-            new_access_token = self.encode_access_token(user_name.get("user_id"), user_name.get("customer_type"))
+            user_data = refresh_tok_payload.get("sub")
+            new_access_token = self.encode_access_token(user_data)
             tokens = {
                 "access_token_payload": access_tok_payload,
                 "refresh_token_payload": refresh_tok_payload,
                 "access_token": new_access_token,
                 "refresh_token": refresh,
             }
-            return user_name, tokens
+            return user_data, tokens
 
         else:
             raise HTTPException(status_code=401, detail={"error": "مجددا وارد شوید", "redirect": "login"})
