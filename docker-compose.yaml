@@ -2,13 +2,12 @@ version: "3"
 
 services:
     zabix:
-      image: rabbitmq:3-management
+      image: rabbitmq
       ports:
         - 5672:5672
         - 15672:15672
       volumes:
-        - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
-        - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+        - "./enabled_plugins:/etc/rabbitmq/enabled_plugins"
       networks:
         - rabbitmq_net
     
