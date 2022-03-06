@@ -2,8 +2,7 @@ version: "3"
 
 services:
     rabbitmq:
-      image: rabbitmq
-      container_name: rabbitmq
+      build : rabbitmq
       volumes:
           - "./enabled_plugins:/etc/rabbitmq/enabled_plugins"
       environment:
