@@ -20,6 +20,8 @@ class RabbitRPC:
         self.user = settings.RABBITMQ_USER
         self.password = settings.RABBITMQ_PASS
         self.exchange_name = exchange_name
+        self.connection = None
+        self.channel = None
         self.connect()
         queue_result = self.channel.queue_declare(queue="", exclusive=True)
         self.callback_queue = queue_result.method.queue
