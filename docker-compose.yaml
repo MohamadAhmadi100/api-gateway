@@ -13,7 +13,3 @@ services:
         build: .
         ports:
           - 8000:80
-
-networks:
-  rabbitmq_net:
-    driver: bridge
