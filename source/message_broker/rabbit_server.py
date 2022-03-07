@@ -50,7 +50,7 @@ class RabbitRPC:
                     blocked_connection_timeout=86400  # 86400 seconds = 24 hours
                 )
             )
-            self.connection.sleep(1)
+            # self.connection.sleep(1)
             self.channel = self.connection.channel()
             self.channel.exchange_declare(exchange=self.exchange_name, exchange_type='headers')
             
