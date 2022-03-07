@@ -1,6 +1,6 @@
 fastapi==0.73.0
 uvicorn==0.17.0
-pika==1.2.0
+pika==1.0.0b1
 pydantic[dotenv]==1.9.0
 requests==2.27.1
 pyjwt==2.3.0
