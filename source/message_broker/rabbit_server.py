@@ -50,6 +50,7 @@ class RabbitRPC:
                     blocked_connection_timeout=86400  # 86400 seconds = 24 hours
                 )
             )
+            self.connection.sleep(1)
             self.channel = self.connection.channel()
             self.channel.exchange_declare(exchange=self.exchange_name, exchange_type='headers')
             
@@ -92,7 +93,6 @@ class RabbitRPC:
 #         except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed, 
 #                 pika.exceptions.ChannelWrongStateError) as error:
         except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed, pika.exceptions.ChannelWrongStateError) as error:
-            self.connection.sleep()
             self.connect()
 
     def on_response(self, channel, method, properties, body):
