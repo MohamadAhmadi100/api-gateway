@@ -2,7 +2,6 @@ import json
 import signal
 import uuid
 import time
-import threading 
 
 import pika
 
@@ -11,7 +10,6 @@ from source.helpers.exception_handler import ExceptionHandler
 
 
 class RabbitRPC:
-    internal_lock = threading.Lock()
     def __init__(
             self,
             exchange_name: str,
@@ -73,23 +71,21 @@ class RabbitRPC:
     def publish(self, message: dict, headers: dict, extra_data: str = None):
         # publish message with given message and headers
         try:
-            with self.internal_lock:
-                self.channel.basic_publish(
-                    exchange=self.exchange_name,
-                    routing_key='',
-                    properties=pika.BasicProperties(
-                        reply_to=self.callback_queue,
-                        correlation_id=self.corr_id,
-                        delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE,
-                        headers=headers
-                    ),
-                    body=json.dumps(message)
-                )
-                print("message sent...")
+            self.channel.basic_publish(
+                exchange=self.exchange_name,
+                routing_key='',
+                properties=pika.BasicProperties(
+                    reply_to=self.callback_queue,
+                    correlation_id=self.corr_id,
+                    delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE,
+                    headers=headers
+                ),
+                body=json.dumps(message)
+            )
+            print("message sent...")
             signal.alarm(self.timeout)
             while len(self.broker_response) < self.response_len:
-                with self.internal_lock:
-                    self.connection.process_data_events()
+                self.connection.process_data_events()
             signal.alarm(0)
             result = self.broker_response.copy()
             self.broker_response.clear()
