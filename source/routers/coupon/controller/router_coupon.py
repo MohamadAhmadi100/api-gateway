@@ -38,7 +38,7 @@ def get_all_coupons(
         },
         headers={'coupon': True}
     )
-    coupon_result = coupon_result.get("coupon")
+    coupon_result = coupon_result.get("coupon", {})
     print(coupon_result)
     if coupon_result.get("success"):
         response.status_code = coupon_result.get("status_code", 200)
@@ -97,7 +97,9 @@ def create_coupon(response: Response,
         message={
             "coupon": {
                 "action": "create_coupon",
+                "body": dict(data),
                 "body": {"coupon": dict(data)}
+
             }
         },
         headers={'coupon': True}
