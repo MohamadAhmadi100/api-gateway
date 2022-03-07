@@ -27,9 +27,6 @@ class RabbitRPC:
         self.connect()
         queue_result = self.channel.queue_declare(queue="", exclusive=True)
         self.callback_queue = queue_result.method.queue
-        thread = threading.Thread(target=self._process_data_events)
-        thread.setDaemon(True)
-        thread.start()
         self.broker_response = dict()
         self.corr_id = None
         self.response_len = 0
