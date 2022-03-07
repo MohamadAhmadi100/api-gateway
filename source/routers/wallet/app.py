@@ -38,7 +38,7 @@ rpc.consume()
 
 
 # --------------------------------- start back-office endpoints -------------------------------------- #
-@app.post("/", tags=["back office side"])
+@app.post("/", tags=["back-office side"])
 def create_wallet(data: Wallet, response: Response) -> None:
     rpc.response_len_setter(response_len=1)
     wallet_response = rpc.publish(
@@ -59,7 +59,7 @@ def create_wallet(data: Wallet, response: Response) -> None:
                         detail={"error": wallet_response.get("error", "Wallet service Internal error")})
 
 
-@app.get("/", tags=["back office side"])
+@app.get("/", tags=["back-office side"])
 def get_wallet(customerId: int, response: Response):
     rpc.response_len_setter(response_len=1)
     wallet_response = rpc.publish(
@@ -84,7 +84,7 @@ def get_wallet(customerId: int, response: Response):
 auth_handler = AuthHandler()
 
 
-@app.put("/update_wallet", tags=["back office side"])
+@app.put("/update_wallet", tags=["back-office side"])
 def update_wallet(data: UpdateData, response: Response,):
     rpc.response_len_setter(response_len=1)
     wallet_response = rpc.publish(
@@ -106,8 +106,9 @@ def update_wallet(data: UpdateData, response: Response,):
                         detail={"error": wallet_response.get("error", "Wallet service Internal error")})
 
 
-@app.post("/transactions", tags=["back office side"])
-def get_transactions(data: Transaction, response: Response):
+@app.get("/transactions", tags=["back-office side"])
+def get_transactions(response: Response, data: Transaction = Depends(),
+                     auth_header=Depends(auth_handler.check_current_user_tokens)):
     rpc.response_len_setter(response_len=1)
     wallet_response = rpc.publish(
         message={
@@ -129,16 +130,22 @@ def get_transactions(data: Transaction, response: Response):
 
 # --------------------------------- end back-office endpoints -------------------------------------- #
 # ---------------------------------- start customer endpoints -------------------------------------- #
+auth = AuthHandler()
+
 
 @app.get("/transaction", tags=["customer side"])
-def get_transaction(data: Transaction, response: Response):
+def get_transaction(response: Response, data: Transaction = Depends()):
+    auth_header = AuthHandler()
+    phone_number, token_dict = auth_header
     rpc.response_len_setter(response_len=1)
     wallet_response = rpc.publish(
         message={
             "wallet": {
                 "action": "customer_get_transaction",
                 "body": {
-                    "data": dict(data)
+                    "data": data,
+                    "customer":
+                        {"customer_id": "customer_id", "phone_number": phone_number}
                 }
             }
         },
@@ -152,16 +159,14 @@ def get_transaction(data: Transaction, response: Response):
 
 
 # ----------------------------------- end customer endpoints --------------------------------------- #
-auth = AuthHandler()
 
 
-@app.get("/get-wallet", tags=["get_wallet"])
+@app.get("/get-wallet", tags=["customer side"])
 def get_wallet_by_customer_id(
         response: Response,
         auth_header=Depends(auth.check_current_user_tokens)
 ):
     customer_id, token_dict = auth_header
-
     response.headers["accessToken"] = token_dict.get("access_token")
     response.headers["refreshToken"] = token_dict.get("refresh_token")
     rpc.response_len_setter(response_len=1)
@@ -182,6 +187,8 @@ def get_wallet_by_customer_id(
         return wallet_response
     raise HTTPException(status_code=wallet_response.get("status_code", 500),
                         detail={"error": wallet_response.get("error", "Wallet service Internal error")})
+
+# ----------------------------------- end customer endpoints --------------------------------------- #
 
 
 
