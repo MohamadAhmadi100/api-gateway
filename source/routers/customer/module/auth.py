@@ -12,7 +12,7 @@ from source.config import settings
 class AuthHandler:
     pwd_context = CryptContext(schemes=['bcrypt'], deprecated="auto")
     SECRET_KEY = settings.SECRET_KEY
-    refresh_exp = timedelta(days=1)
+    refresh_exp = timedelta(days=20)
     access_exp = timedelta(days=0, minutes=20)
 
     def generate_hash_password(self, password: str) -> str:

@@ -92,8 +92,8 @@ class RabbitRPC:
             result = self.broker_response.copy()
             self.broker_response.clear()
             return result
-        except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed) as error:
-            time.sleep(5)
+        except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed,
+                pika.exceptions.ChannelWrongStateError) as error:
             self.reconnect()
 
     def on_response(self, channel, method, properties, body):

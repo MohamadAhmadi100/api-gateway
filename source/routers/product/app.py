@@ -155,6 +155,32 @@ def create_child(
                         detail={"error": product_result.get("error", "Something went wrong")})
 
 
+@app.get("/get_product_attributes/{systemCode}/", tags=["Product"])
+def get_product_attributes(response: Response,
+                           system_code: str = Path(..., min_length=11, max_length=11, alias='systemCode')) -> dict:
+    """
+    Get product attributes
+    """
+    rpc.response_len_setter(response_len=1)
+    product_result = rpc.publish(
+        message={
+            "product": {
+                "action": "get_product_attributes",
+                "body": {
+                    "system_code": system_code
+                }
+            }
+        },
+        headers={'product': True}
+    )
+    product_result = product_result.get("product", {})
+    if product_result.get("success"):
+        response.status_code = product_result.get("status_code", 200)
+        return convert_case(product_result.get("message"), 'camel')
+    raise HTTPException(status_code=product_result.get("status_code", 500),
+                        detail={"error": product_result.get("error", "Something went wrong")})
+
+
 @app.get("/product/attributes/", tags=["Product"])
 def add_attributes_schema():
     """
@@ -484,13 +510,14 @@ def get_product_list_by_system_code(
         system_code: int = Path(..., alias='systemCode'),
         page: int = Query(1, alias='page'),
         per_page: int = Query(10, alias='perPage'),
-        auth_header=Depends(auth_handler.check_current_user_tokens)
+        # auth_header=Depends(auth_handler.check_current_user_tokens)
 
 ):
     """
     Get product list by brand
     """
-    customer_type = auth_header[0].get("customer_type")
+    # customer_type = auth_header[0].get("customer_type")
+    customer_type = "B2B"
     rpc.response_len_setter(response_len=1)
     product_result = rpc.publish(
         message={
@@ -536,6 +563,9 @@ def get_product_list_by_system_code(
             product["price"] = price
             product["special_price"] = special_price
         response.status_code = product_result.get("status_code", 200)
+        for i in message_product.keys():
+            for j in message_product[i]:
+                j['image'] = "default.png"
         return convert_case(message_product, 'camel')
     raise HTTPException(status_code=product_result.get("status_code", 500),
                         detail={"error": product_result.get("error", "Something went wrong")})
@@ -544,13 +574,15 @@ def get_product_list_by_system_code(
 @app.get("/get_category_list", tags=["Product"])
 def get_category_list(
         response: Response,
-        auth_header=Depends(auth_handler.check_current_user_tokens)
+        # auth_header=Depends(auth_handler.check_current_user_tokens)
 ):
     """
     Get category list
     """
-    customer_type = auth_header[0].get("customer_type")
+    # customer_type = auth_header[0].get("customer_type")
+    customer_type = "B2B"
     rpc.response_len_setter(response_len=1)
+
     product_result = rpc.publish(
         message={
             "product": {
@@ -561,52 +593,51 @@ def get_category_list(
         headers={'product': True}
     )
     product_result = product_result.get("product", {})
-    message_product = product_result.get("message", {})
-    product_list = list()
-    for key in message_product.keys():
-        if key != "latest_product":
-            for obj in message_product[key]:
-                obj['image'] = "default.png"
-    for product in message_product['latest_product']:
-        product['image'] = "/default_product.png"
-        pricing_result = rpc.publish(
-            message={
-                "pricing": {
-                    "action": "get_price",
-                    "body": {
-                        "system_code": product.get("system_code")
-                    }
-                }
-            },
-            headers={'pricing': True}
-        )
-        pricing_result = pricing_result.get("pricing", {})
-        price_tuples = list()
-        if pricing_result.get("success"):
-            for system_code, prices in pricing_result.get("message", {}).get("products", {}).items():
-                customer_type_price = prices.get("customer_type", {}).get(customer_type, {})
-                price_tuples.append((customer_type_price.get("regular"), customer_type_price.get("special")))
-                for storage, storage_prices in prices.get("storages", {}).items():
-                    price_tuples.append((storage_prices.get("regular"), storage_prices.get("special")))
-
-            price_tuples.sort(key=lambda x: x[1])
-            price, special_price = (None, None)
-            if price_tuples:
-                price, special_price = price_tuples[0]
-            product["price"] = price
-            product["special_price"] = special_price
-            product_list.append(product)
-    message_product['latest_product'] = product_list
     if product_result.get("success"):
+        message_product = product_result.get("message", {})
+        product_list = list()
+        for key in message_product.keys():
+            if key != "latest_product":
+                for obj in message_product[key]['items']:
+                    obj['image'] = "default.png"
+        for product in message_product['latest_product']:
+            product['image'] = "/default_product.png"
+            pricing_result = rpc.publish(
+                message={
+                    "pricing": {
+                        "action": "get_price",
+                        "body": {
+                            "system_code": product.get("system_code")
+                        }
+                    }
+                },
+                headers={'pricing': True}
+            )
+            pricing_result = pricing_result.get("pricing", {})
+            price_tuples = list()
+            if pricing_result.get("success"):
+                for system_code, prices in pricing_result.get("message", {}).get("products", {}).items():
+                    customer_type_price = prices.get("customer_type", {}).get(customer_type, {})
+                    price_tuples.append((customer_type_price.get("regular"), customer_type_price.get("special")))
+                    for storage, storage_prices in prices.get("storages", {}).items():
+                        price_tuples.append((storage_prices.get("regular"), storage_prices.get("special")))
+
+                price_tuples.sort(key=lambda x: x[1])
+                price, special_price = (None, None)
+                if price_tuples:
+                    price, special_price = price_tuples[0]
+                product["price"] = price
+                product["special_price"] = special_price
+                product_list.append(product)
+        message_product['latest_product'] = product_list
         response.status_code = product_result.get("status_code", 200)
         return convert_case(message_product, 'camel')
     raise HTTPException(status_code=product_result.get("status_code", 500),
                         detail={"error": product_result.get("error", "Something went wrong")})
 
 
-'''
-@app.get("/get_product_list", tags=["Product"])
-def get_product_list(
+@app.get("/get_product_list_back_office", tags=["Product"])
+def get_product_list_back_office(
         response: Response,
         # auth_header=Depends(auth_handler.check_current_user_tokens)
 ):
@@ -618,14 +649,14 @@ def get_product_list(
     rpc.response_len_setter(response_len=1)
     product_result = rpc.publish(
         message={
-            "product": {
+            "productt": {
                 "action": "get_product_list_back_office",
                 "body": {}
             }
         },
-        headers={'product': True}
+        headers={'productt': True}
     )
-    product_result = product_result.get("product", {})
+    product_result = product_result.get("productt", {})
     message_product = product_result.get("message", {})
     # product_list = list()
     # for key in message_product.keys():
@@ -667,4 +698,3 @@ def get_product_list(
         return convert_case(message_product, 'camel')
     raise HTTPException(status_code=product_result.get("status_code", 500),
                         detail={"error": product_result.get("error", "Something went wrong")})
-'''
