@@ -33,9 +33,9 @@ app.add_middleware(
 
 app.mount("/cart", cart_app)
 
-app.mount("/pricing", pricing_app)
+app.mount("/pricing/api/v1", pricing_app)
 
-app.mount("/quantity", quantity_app)
+app.mount("/quantity/api/v1", quantity_app)
 
 app.mount("/product/api/v1", product_app)
 
