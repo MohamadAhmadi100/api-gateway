@@ -31,7 +31,7 @@ app.add_middleware(
 
 # ----------------------------------------- Mount all services here -------------------------------------------------- #
 
-app.mount("/cart", cart_app)
+app.mount("/cart/api/v1", cart_app)
 
 app.mount("/pricing/api/v1", pricing_app)
 
@@ -43,7 +43,7 @@ app.mount("/customer", customer_app)
 
 app.mount("/wallet", wallet_app)
 
-app.mount("/attributes", attribute_app)
+app.mount("/attributes/api/v1", attribute_app)
 
 app.mount("/payment", payment_app)
 
