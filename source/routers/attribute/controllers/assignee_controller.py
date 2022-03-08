@@ -12,7 +12,7 @@ rpc.connect()
 rpc.consume()
 
 
-@router.post("/api/v1/assignee/attr/{attr_name}", tags=["assignee"], status_code=201)
+@router.post("/assignee/attr/{attr_name}", tags=["assignee"], status_code=201)
 def add_attribute_to_assignee(
         response: Response,
         item: Assignee,
@@ -43,7 +43,7 @@ def add_attribute_to_assignee(
         return {"message": attribute_result.get("message", [])}
 
 
-@router.get("/api/v1/assignee/{name}/attrs/", tags=["assignee"], status_code=200)
+@router.get("/assignee/{name}/attrs/", tags=["assignee"], status_code=200)
 def get_all_attributes_by_assignee(
         response: Response,
         name: str = Path(..., min_length=3, max_length=255)
@@ -72,7 +72,7 @@ def get_all_attributes_by_assignee(
         return {"message": attribute_result.get("message", [])}
 
 
-@router.delete("/api/v1/assignee/{name}/attr/{attr_name}", tags=["assignee"], status_code=200)
+@router.delete("/assignee/{name}/attr/{attr_name}", tags=["assignee"], status_code=200)
 def delete_attribute_from_assignee(
         response: Response,
         attr_name: str = Path(..., min_length=3, max_length=255),
@@ -103,7 +103,7 @@ def delete_attribute_from_assignee(
         return {"message": attribute_result.get("message", [])}
 
 
-@router.get("/api/v1/assignees/", tags=["assignee"], status_code=200)
+@router.get("/assignees/", tags=["assignee"], status_code=200)
 def get_all_assignees(
         response: Response
 ) -> dict:
