@@ -17,8 +17,8 @@ app = FastAPI(
     description="This is Pricing gateway MicroService",
     version="0.1.0",
     openapi_tags=TAGS,
-    docs_url="/api/v1/docs/",
-    redoc_url="/api/v1/redoc/",
+    docs_url="/docs/",
+    redoc_url="/redoc/",
     debug=settings.DEBUG_MODE
 )
 
