@@ -35,7 +35,7 @@ rpc.connect()
 rpc.consume()
 
 
-@app.post("/api/v1/product/quantity/", tags=["Quantity"])
+@app.post("/product/quantity/", tags=["Quantity"])
 def set_product_quantity(item: Quantity, response: Response) -> dict:
     """
     set product(12 digits) quantity according to customer type and warehouse
@@ -75,7 +75,7 @@ def set_product_quantity(item: Quantity, response: Response) -> dict:
                         detail={"error": quantity_result.get("error", "Something went wrong")})
 
 
-@app.get("/api/v1/product/quantity/{systemCode}/", tags=["Quantity"])
+@app.get("/product/quantity/{systemCode}/", tags=["Quantity"])
 def get_product_quantity(response: Response,
                          system_code: str = Path(..., min_length=11, max_length=11, alias="systemCode")) -> dict:
     """
@@ -101,7 +101,7 @@ def get_product_quantity(response: Response,
                         detail={"error": quantity_result.get("error", "Something went wrong")})
 
 
-@app.get("/api/v1/product/{systemCode}/stock/", tags=["Quantity"])
+@app.get("/product/{systemCode}/stock/", tags=["Quantity"])
 def get_product_stock(response: Response,
                       system_code: str = Path(..., min_length=12, max_length=12, alias="systemCode")) -> dict:
     """
