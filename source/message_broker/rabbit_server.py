@@ -87,6 +87,7 @@ class RabbitRPC:
             return result
         except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed, pika.exceptions.ChannelWrongStateError) as error:
             self.connect()
+            self.publish(message=message, headers=headers, extra_data=extra_data)
 
     def on_response(self, channel, method, properties, body):
         if self.corr_id == properties.correlation_id:
