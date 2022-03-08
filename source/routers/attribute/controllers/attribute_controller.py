@@ -45,7 +45,7 @@ def main_page(
         return convert_case(attribute_result.get("message", []), "camel")
 
 
-@router.post("/api/v1/attr/", tags=["attribute"], status_code=201)
+@router.post("/attr/", tags=["attribute"], status_code=201)
 def add_attribute(
         response: Response,
         item: Attribute
@@ -86,7 +86,7 @@ def add_attribute(
         return {"message": attribute_result.get("message", [])}
 
 
-@router.get("/api/v1/attrs/{page}", tags=["attribute"], status_code=200)
+@router.get("/attrs/{page}", tags=["attribute"], status_code=200)
 def get_attributes(
         response: Response,
         page: int = Path(1, ge=1, le=1000),
@@ -118,7 +118,7 @@ def get_attributes(
         return {"message": convert_case(attribute_result.get("message", []), "camel")}
 
 
-@router.get("/api/v1/attr/{attribute_name}", tags=["attribute"], status_code=200)
+@router.get("/attr/{attribute_name}", tags=["attribute"], status_code=200)
 def get_attribute_by_name(
         response: Response,
         attribute_name: str = Path(..., min_length=3, max_length=255)
@@ -147,7 +147,7 @@ def get_attribute_by_name(
         return {"message": convert_case(attribute_result.get("message", []), "camel")}
 
 
-@router.put("/api/v1/attr/", tags=["attribute"], status_code=202)
+@router.put("/attr/", tags=["attribute"], status_code=202)
 def update_attribute(
         response: Response,
         item: Attribute,
@@ -176,7 +176,7 @@ def update_attribute(
         return {"message": attribute_result.get("message", [])}
 
 
-@router.delete("/api/v1/attr/{attribute_name}", tags=["attribute"], status_code=200)
+@router.delete("/attr/{attribute_name}", tags=["attribute"], status_code=200)
 def delete_attribute(
         response: Response,
         attribute_name: str = Path(..., min_length=3, max_length=255)
