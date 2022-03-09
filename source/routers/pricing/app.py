@@ -57,6 +57,7 @@ def set_product_price(item: Price, response: Response) -> dict:
         },
         headers={'pricing': True}
     )
+    print(pricing_result)
     pricing_result = pricing_result.get("pricing", {})
     if pricing_result.get("success"):
         rpc.publish(

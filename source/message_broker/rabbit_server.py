@@ -19,10 +19,10 @@ class RabbitRPC:
         self.port = settings.RABBITMQ_PORT
         self.user = settings.RABBITMQ_USER
         self.password = settings.RABBITMQ_PASS
-        self.connection = self.connect()
-        self.channel = self.connection.channel()
         self.exchange_name = exchange_name
-        self.channel.exchange_declare(exchange=self.exchange_name, exchange_type='headers')
+        self.connection = None
+        self.channel = None
+        self.connect()
         queue_result = self.channel.queue_declare(queue="", exclusive=True)
         self.callback_queue = queue_result.method.queue
         self.broker_response = dict()
@@ -32,29 +32,27 @@ class RabbitRPC:
         signal.signal(signal.SIGALRM, self.timeout_handler)
 
     def reconnect(self):
-        self.connection = self.connect()
-        self.channel = self.connection.channel()
-        self.channel.exchange_declare(exchange=self.exchange_name, exchange_type='headers')
-        queue_result = self.channel.queue_declare(queue="", exclusive=True)
-        self.callback_queue = queue_result.method.queue
-        self.broker_response = dict()
-        self.corr_id = None
-        self.response_len = 0
-        signal.signal(signal.SIGALRM, self.timeout_handler)
+        if not self.connection or self.connection.is_closed:
+            self.connection = self.connect()
+            self.channel = self.connection.channel()
+            self.channel.exchange_declare(exchange=self.exchange_name, exchange_type='headers')
 
     def connect(self):
         # connect to rabbit with defined credentials
-        credentials = pika.PlainCredentials(self.user, self.password)
-        connection = pika.BlockingConnection(
-            pika.ConnectionParameters(
-                host=self.host,
-                port=self.port,
-                credentials=credentials,
-                heartbeat=0,
-                blocked_connection_timeout=86400  # 86400 seconds = 24 hours
+        if not self.connection or self.connection.is_closed:
+            credentials = pika.PlainCredentials(self.user, self.password)
+            self.connection = pika.BlockingConnection(
+                pika.ConnectionParameters(
+                    host=self.host,
+                    port=self.port,
+                    credentials=credentials,
+                    # heartbeat=0,
+                    # blocked_connection_timeout=86400  # 86400 seconds = 24 hours
+                )
             )
-        )
-        return connection
+            # self.connection.sleep(1)
+            self.channel = self.connection.channel()
+            self.channel.exchange_declare(exchange=self.exchange_name, exchange_type='headers')
 
     def fanout_publish(self, exchange_name: str, message: dict):
         # publish to all services
@@ -91,10 +89,10 @@ class RabbitRPC:
             signal.alarm(0)
             result = self.broker_response.copy()
             self.broker_response.clear()
-            return result
+            return result if result else {}
         except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed,
                 pika.exceptions.ChannelWrongStateError) as error:
-            self.reconnect()
+            self.connect()
 
     def on_response(self, channel, method, properties, body):
         if self.corr_id == properties.correlation_id:

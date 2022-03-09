@@ -1,3 +1,5 @@
+from typing import Optional, List, Tuple
+
 from fastapi import FastAPI, HTTPException, Response, responses, Path, Body, Query, Depends
 from starlette.exceptions import HTTPException as starletteHTTPException
 
@@ -548,20 +550,15 @@ def get_product_list_by_system_code(
                 headers={'pricing': True}
             )
             pricing_result = pricing_result.get("pricing", {})
-            price_tuples = list()
-            if pricing_result.get("success"):
-                for system_code, prices in pricing_result.get("message", {}).get("products", {}).items():
-                    customer_type_price = prices.get("customer_type", {}).get(customer_type, {})
-                    price_tuples.append((customer_type_price.get("regular"), customer_type_price.get("special")))
-                    for storage, storage_prices in prices.get("storages", {}).items():
-                        price_tuples.append((storage_prices.get("regular"), storage_prices.get("special")))
 
-            price_tuples.sort(key=lambda x: x[1])
-            price, special_price = (None, None)
-            if price_tuples:
-                price, special_price = price_tuples[0]
-            product["price"] = price
-            product["special_price"] = special_price
+            if pricing_result.get("success"):
+                for system_code, prices in pricing_result.get("message", {}).get("pricing", {}).items():
+                    product["price"] = prices.get("regular", 0)
+                    product["special_price"] = prices.get("special", 0)
+            else:
+                product["price"] = 0
+                product["special_price"] = 0
+
         response.status_code = product_result.get("status_code", 200)
         for i in message_product.keys():
             for j in message_product[i]:
@@ -635,66 +632,92 @@ def get_category_list(
     raise HTTPException(status_code=product_result.get("status_code", 500),
                         detail={"error": product_result.get("error", "Something went wrong")})
 
+#
+# @app.get("/get_product_list_back_office", tags=["Product"])
+# def get_product_list_back_office(
+#         response: Response,
+#         brands: Optional[List[str]] = Query(None),
+#         warehouses: Optional[List[str]] = Query(None),
+#         price: Optional[Tuple[str, str]] = Query(None),
+#         sellers: Optional[List[str]] = Query(None),
+#         colors: Optional[List[str]] = Query(None),
+#         quantity: Optional[Tuple[str, str]] = Query(None),
+#         date: Optional[Tuple[str, str]] = Query(None),
+#         guarantees: Optional[List[str]] = Query(None),
+#         steps: Optional[List[str]] = Query(None),
+#         visible_in_site: Optional[bool] = Query(None, alias='visibleInSite'),
+#         approved: Optional[bool] = Query(None),
+#         available: Optional[bool] = Query(None),
+#         page: Optional[int] = Query(1),
+#         per_page: Optional[int] = Query(15),
+#         # auth_header=Depends(auth_handler.check_current_user_tokens)
+# ):
+#     """
+#     Get product list
+#     """
+#     # customer_type = auth_header[0].get("customer_type")
+#     customer_type = "B2B"
+#     rpc.response_len_setter(response_len=1)
+#     product_result = rpc.publish(
+#         message={
+#             "producttt": {
+#                 "action": "get_product_list_back_office",
+#                 "body": {
+#                     "brands": brands,
+#                     "warehouses": warehouses,
+#                     "price": price,
+#                     "sellers": sellers,
+#                     "colors": colors,
+#                     "quantity": quantity,
+#                     "date": date,
+#                     "guarantees": guarantees,
+#                     "steps": steps,
+#                     "visible_in_site": visible_in_site,
+#                     "approved": approved,
+#                     "available": available,
+#                     "page": page,
+#                     "per_page": per_page,
+#                 }
+#             }
+#         },
+#         headers={'producttt': True}
+#     )
+#     product_result = product_result.get("producttt", {})
+#     message_product = product_result.get("message", {})
+#     product_list = list()
+#     for product in message_product['products']:
+#         product['image'] = "/default_product.png"
+#         pricing_result = rpc.publish(
+#             message={
+#                 "pricing": {
+#                     "action": "get_price",
+#                     "body": {
+#                         "system_code": product.get("system_code")
+#                     }
+#                 }
+#             },
+#             headers={'pricing': True}
+#         )
+#         pricing_result = pricing_result.get("pricing", {})
+#         price_tuples = list()
+#         if pricing_result.get("success"):
+#             for system_code, prices in pricing_result.get("message", {}).get("products", {}).items():
+#                 customer_type_price = prices.get("customer_type", {}).get(customer_type, {})
+#                 price_tuples.append((customer_type_price.get("regular"), customer_type_price.get("special")))
+#                 for storage, storage_prices in prices.get("storages", {}).items():
+#                     price_tuples.append((storage_prices.get("regular"), storage_prices.get("special")))
+#
+#                 price_tuples.sort(key=lambda x: x[1])
+#                 price, special_price = (None, None)
+#                 if price_tuples:
+#                     price, special_price = price_tuples[0]
+#                 product["price"] = price
+#                 product["special_price"] = special_price
+#                 product_list.append(product)
+#         message_product['latest_product'] = product_list
+#     if product_result.get("success"):
+#         response.status_code = product_result.get("status_code", 200)
+#         return convert_case(message_product, 'camel')
+#     raise HTTPException(status_code=product_result.get("status_code", 500),
+#                         detail={"error": product_result.get("error", "Something went wrong")})
 
-@app.get("/get_product_list_back_office", tags=["Product"])
-def get_product_list_back_office(
-        response: Response,
-        # auth_header=Depends(auth_handler.check_current_user_tokens)
-):
-    """
-    Get product list
-    """
-    # customer_type = auth_header[0].get("customer_type")
-    customer_type = "B2B"
-    rpc.response_len_setter(response_len=1)
-    product_result = rpc.publish(
-        message={
-            "productt": {
-                "action": "get_product_list_back_office",
-                "body": {}
-            }
-        },
-        headers={'productt': True}
-    )
-    product_result = product_result.get("productt", {})
-    message_product = product_result.get("message", {})
-    # product_list = list()
-    # for key in message_product.keys():
-    #     if key != "latest_product":
-    #         for obj in message_product[key]:
-    #             obj['image'] = "default.png"
-    # for product in message_product['latest_product']:
-    #     product['image'] = "/default_product.png"
-    #     pricing_result = rpc.publish(
-    #         message={
-    #             "pricing": {
-    #                 "action": "get_price",
-    #                 "body": {
-    #                     "system_code": product.get("system_code")
-    #                 }
-    #             }
-    #         },
-    #         headers={'pricing': True}
-    #     )
-    #     pricing_result = pricing_result.get("pricing", {})
-    #     price_tuples = list()
-    #     if pricing_result.get("success"):
-    #         for system_code, prices in pricing_result.get("message", {}).get("products", {}).items():
-    #             customer_type_price = prices.get("customer_type", {}).get(customer_type, {})
-    #             price_tuples.append((customer_type_price.get("regular"), customer_type_price.get("special")))
-    #             for storage, storage_prices in prices.get("storages", {}).items():
-    #                 price_tuples.append((storage_prices.get("regular"), storage_prices.get("special")))
-    #
-    #             price_tuples.sort(key=lambda x: x[1])
-    #             price, special_price = (None, None)
-    #             if price_tuples:
-    #                 price, special_price = price_tuples[0]
-    #             product["price"] = price
-    #             product["special_price"] = special_price
-    #             product_list.append(product)
-    #     message_product['latest_product'] = product_list
-    if product_result.get("success"):
-        response.status_code = product_result.get("status_code", 200)
-        return convert_case(message_product, 'camel')
-    raise HTTPException(status_code=product_result.get("status_code", 500),
-                        detail={"error": product_result.get("error", "Something went wrong")})
