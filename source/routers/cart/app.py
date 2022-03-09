@@ -19,8 +19,8 @@ app = FastAPI(
     description="This is Cart gateway MicroService",
     version="0.1.0",
     openapi_tags=TAGS,
-    docs_url="/api/v1/docs/",
-    redoc_url="/api/v1/redoc/",
+    docs_url="/docs/",
+    redoc_url="/redoc/",
     debug=settings.DEBUG_MODE
 )
 
@@ -39,7 +39,7 @@ rpc.consume()
 auth_handler = AuthHandler()
 
 
-@app.put("/api/v1/cart/", tags=["Cart"])
+@app.put("/cart/", tags=["Cart"])
 def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(auth_handler.check_current_user_tokens)
                          ) -> dict:
     """
@@ -144,7 +144,7 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
             return {"message": cart_result.get("message")}
 
 
-@app.get("/api/v1/cart/", tags=["Cart"])
+@app.get("/cart/", tags=["Cart"])
 def get_cart(response: Response, auth_header=Depends(auth_handler.check_current_user_tokens)) -> dict:
     """
     get user cart
@@ -171,7 +171,7 @@ def get_cart(response: Response, auth_header=Depends(auth_handler.check_current_
         return convert_case(cart_result.get("message"), 'camel')
 
 
-@app.delete("/api/v1/cart/{systemCode}/{storageId}", status_code=200, tags=["Cart"])
+@app.delete("/cart/{systemCode}/{storageId}", status_code=200, tags=["Cart"])
 def remove_product_from_cart(response: Response, auth_header=Depends(auth_handler.check_current_user_tokens),
                              storage_id: str = Path(..., min_length=1, max_length=2, alias='storageId'),
                              system_code: str = Path(..., min_length=12, max_length=12, alias='systemCode')) -> dict:

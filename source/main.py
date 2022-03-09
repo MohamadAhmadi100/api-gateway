@@ -32,19 +32,19 @@ app.add_middleware(
 
 # ----------------------------------------- Mount all services here -------------------------------------------------- #
 
-app.mount("/cart", cart_app)
+app.mount("/cart/api/v1", cart_app)
 
-app.mount("/pricing", pricing_app)
+app.mount("/pricing/api/v1", pricing_app)
 
-app.mount("/quantity", quantity_app)
+app.mount("/quantity/api/v1", quantity_app)
 
-app.mount("/product", product_app)
+app.mount("/product/api/v1", product_app)
 
 app.mount("/customer", customer_app)
 
 app.mount("/wallet", wallet_app)
 
-app.mount("/attributes", attribute_app)
+app.mount("/attributes/api/v1", attribute_app)
 
 app.mount("/payment", payment_app)
 
@@ -81,7 +81,7 @@ def shutdown_event() -> None:
 
 @app.get("/")
 def main():
-    return [{"path": "http://" + settings.UVICORN_HOST + ":" + str(settings.UVICORN_PORT) + route.path + "/api/v1/docs"}
+    return [{"path": "https://devapi.aasood.com" + route.path + "/docs/"}
             for route in app.routes][4:-1]
 
 

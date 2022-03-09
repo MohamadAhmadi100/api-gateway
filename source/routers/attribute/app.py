@@ -19,7 +19,7 @@ app = FastAPI(title="Custom Attribute",
               description="A microservice to create custom attribute for other microservices!",
               version="0.1.0",
               openapi_tags=TAGS_META,
-              docs_url="/api/v1/docs")
+              docs_url="/docs")
 
 app.include_router(assignee_router)
 app.include_router(attribute_router)

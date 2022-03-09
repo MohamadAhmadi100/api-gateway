@@ -1,7 +1,6 @@
 # from fastapi import APIRouter, Depends
 # from fastapi import Response, status
 # from source.message_broker.rabbit_server import RabbitRPC
-#
 # from source.routers.customer.module.auth import AuthHandler
 # from source.routers.customer.validators import validation_profile, validation_auth
 #
@@ -9,7 +8,6 @@
 #     prefix="/profile",
 #     tags=["profile"]
 # )
-#
 # custom_attribute = {
 #     "customerFirstName": {
 #         "name": "customerFirstName",
@@ -472,7 +470,6 @@
 #         response: Response,
 #         value: validation_profile.EditProfile,
 #         auth_header=Depends(auth_handler.check_current_user_tokens),
-#
 # ):
 #     customer_phone_number, header = auth_header
 #     if customer_phone_number:

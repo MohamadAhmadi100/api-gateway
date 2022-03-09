@@ -7,9 +7,9 @@ stages:
 build:
   stage: build
   only:
-    - temp
+    - dev
   tags:
-    - pay
+    - ci-jon
   script:
     - ls
     - echo APP_NAME=$APP_NAME >> .env
@@ -25,15 +25,16 @@ build:
     - echo RECIPIENTS=$RECIPIENTS >> .env
     - echo TEMPLATE=$TEMPLATE >> .env
     - echo GALLERY_DIR=$GALLERY_DIR >> .env
+    - echo SECRET_KEY=$SECRET_KEY >> .env
     - docker login 200.100.100.219:80 -u registry -p $REGPASS 
     - docker build -t api-gateway:0.0.1 .
 
 dev_deploy:
   stage: deploy
   only:
-    - temp
+    - dev
   tags:
-    - pay
+    - ci-jon
   script:
     - echo APP_NAME=$APP_NAME >> .env
     - echo DEBUG_MODE=$DEBUG_MODE >> .env
@@ -48,6 +49,7 @@ dev_deploy:
     - echo RECIPIENTS=$RECIPIENTS >> .env
     - echo TEMPLATE=$TEMPLATE >> .env
     - echo GALLERY_DIR=$GALLERY_DIR >> .env
+    - echo SECRET_KEY=$SECRET_KEY >> .env
     - docker login 200.100.100.219:80 -u registry -p $REGPASS
     - docker-compose -f docker-compose.yaml up -d --build
 
@@ -56,7 +58,7 @@ push:
   only:
     - master
   tags:
-    - pay
+    - ci-jon
   script:
     - docker login 200.100.100.219:80 -u registry -p $REGPASS
     - docker build -t api-gateway:0.0.1 . -t 200.100.100.219:80/backend/web-api-gateway:$CI_COMMIT_SHORT_SHA
@@ -67,7 +69,7 @@ master_deploy:
   only:
     - master
   tags:
-    - pay
+    - ci-jon
   script:
     - docker login 200.100.100.219:80 -u registry -p $REGPASS
     - docker run -p 8000:80 api-gateway:0.0.1

@@ -17,8 +17,8 @@ app = FastAPI(
     description="This is Pricing gateway MicroService",
     version="0.1.0",
     openapi_tags=TAGS,
-    docs_url="/api/v1/docs/",
-    redoc_url="/api/v1/redoc/",
+    docs_url="/docs/",
+    redoc_url="/redoc/",
     debug=settings.DEBUG_MODE
 )
 
@@ -35,7 +35,7 @@ rpc.connect()
 rpc.consume()
 
 
-@app.post("/api/v1/product/price/", tags=["Pricing"])
+@app.post("/product/price/", tags=["Pricing"])
 def set_product_price(item: Price, response: Response) -> dict:
     """
     set product(12 digits) price according to customer type and warehouse
@@ -77,7 +77,7 @@ def set_product_price(item: Price, response: Response) -> dict:
                         detail={"error": pricing_result.get("error", "Something went wrong")})
 
 
-@app.get("/api/v1/product/price/{systemCode}/", tags=["Pricing"])
+@app.get("/product/price/{systemCode}/", tags=["Pricing"])
 def get_product_price(response: Response,
                       system_code: str = Path(..., min_length=11, max_length=11, alias='systemCode')) -> dict:
     """
