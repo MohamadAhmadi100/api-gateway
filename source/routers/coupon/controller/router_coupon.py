@@ -1,11 +1,10 @@
 from fastapi import Response, Depends, HTTPException, Path, Body, Query
 from fastapi import status, APIRouter
 from source.helpers.case_converter import convert_case
-from fastapi.openapi.models import RequestBody
 
 from source.message_broker.rabbit_server import RabbitRPC
 
-from source.routers.coupon.validators.coupon import Coupon
+from source.routers.coupon.validators.coupon import Coupon, RequestBody
 
 # from customer.mudoles import log
 
@@ -39,7 +38,6 @@ def get_all_coupons(
         headers={'coupon': True}
     )
     coupon_result = coupon_result.get("coupon", {})
-    print(coupon_result)
     if coupon_result.get("success"):
         response.status_code = coupon_result.get("status_code", 200)
         return convert_case(coupon_result.get("message"), 'camel')
@@ -49,62 +47,25 @@ def get_all_coupons(
 
 @router.post("/create", tags=["coupon_create"])
 def create_coupon(response: Response,
-                  data: Coupon = Body(..., example={
-
-                      "title": "yalda",
-                      "code_length": 4,
-                      "created_time": "1400-11-27",
-                      "started_at": "1400-11-27",
-                      "expire_time": "1400-12-15",
-                      "has_expire": False,
-                      "count": 1000,
-                      "assign_customers": [
-                          1234, 1258, 1584
-                      ],
-                      "user_limit": 10,
-                      "assign_customer_groups": [
-                          1234, 1258, 1584
-                      ],
-                      "min_order_price": 500,
-                      "min_order": 200,
-                      "item_count": 20,
-                      "value": 20,
-                      "max_value": 200,
-                      "value_type": "percent",
-                      "is_enabled": True,
-                      "coupon_codes": [
-                          {"coupon_ID": "GE-123", "used": 0}, {"coupon_ID": "RF-456", "used": 1}
-                      ],
-                      "prefix": "GE",
-                      "suffix": "RE",
-                      "assigned_product": [
-                          "mobile", "notebook", "headset"
-                      ],
-                      "assigned_events": [
-                          "yalda", "nouruz"
-                      ],
-                      "coupon_types": 5,
-                      "used_count": {'customer_id': 1234, "use_count": 0},
-
-                      "fixed_name": True
-                  })
+                  coupon: Coupon
                   ):
     """
     Generate a coupon and add to coupon collection in database with this information:
     """
     rpc.response_len_setter(response_len=1)
-    coupon_result = rpc.publish(
+    result = rpc.publish(
         message={
             "coupon": {
                 "action": "create_coupon",
-                "body": dict(data),
-                "body": {"coupon": dict(data)}
+                "body": {
+                    "item": coupon.dict()
+                }
 
             }
         },
         headers={'coupon': True}
     )
-    coupon_result = coupon_result.get("coupon", {})
+    coupon_result = result.get("coupon", {})
     if coupon_result.get("success"):
         response.status_code = coupon_result.get("status_code", 200)
         return convert_case(coupon_result.get("message"), 'camel')
@@ -112,14 +73,14 @@ def create_coupon(response: Response,
                         detail={"error": coupon_result.get("error", "Coupon service Internal error")})
 
 
-@router.get('/{coupon_types}')
+@router.get('/lists/{coupon_types}')
 def get_coupons_by_filter(response: Response, coupon_types: int = Path(..., )):
     """
     Get coupons with filter
     """
 
     rpc.response_len_setter(response_len=1)
-    coupon_result = rpc.publish(
+    result = rpc.publish(
         message={
             "coupon": {
                 "action": "get_coupons_by_filter",
@@ -130,7 +91,7 @@ def get_coupons_by_filter(response: Response, coupon_types: int = Path(..., )):
         },
         headers={"coupon": True}
     )
-    coupon_result = coupon_result.get("coupon", {})
+    coupon_result = result.get("coupon", {})
     if coupon_result.get("success"):
         response.status_code = coupon_result.get("status_code", 200)
         return convert_case(coupon_result.get("message"), 'camel')
@@ -138,33 +99,50 @@ def get_coupons_by_filter(response: Response, coupon_types: int = Path(..., )):
                         detail={"error": coupon_result.get("error", "Coupon service Internal error")})
 
 
-@router.get('/list/{codes}', status_code=200)
-def get_code_list():
+@router.get('/lists/', status_code=200)
+def get_code_list(response: Response):
     """
      Get list of coupon codes
      """
-    coupon = Coupon.construct()
-    return coupon.get_list_coupon_code()
+    rpc.response_len_setter(response_len=1)
+    result = rpc.publish(
+        message={
+            "coupon": {
+                "action": "get_code_list",
+                "body": {
+
+                }
+            }
+        },
+        headers={"coupon": True}
+    )
+    coupon_result = result.get("coupon", {})
+    if coupon_result.get("success"):
+        response.status_code = coupon_result.get("status_code", 200)
+        return convert_case(coupon_result.get("message"), 'camel')
+    raise HTTPException(status_code=coupon_result.get("status_code", 500),
+                        detail={"error": coupon_result.get("error", "Coupon service Internal error")})
 
 
-@router.get('/coupon_id/{coupon_id}')
-def get_by_coupon_id(response: Response, coupon_id: int):
+@router.get('/coupons/{coupon_id}')
+def get_by_coupon_id(response: Response, coupon_id: str):
     """
      Get coupon_id
      """
     rpc.response_len_setter(response_len=1)
-    coupon_result = rpc.publish(
+    result = rpc.publish(
         message={
             "coupon": {
                 "action": "get_by_coupon_id",
-                "body": {"coupon_id": coupon_id
-                         }
+                "body": {
+                    "coupon_id": coupon_id
+                }
             }
 
         },
         headers={'coupon': True}
     )
-    coupon_result = coupon_result.get("product", {})
+    coupon_result = result.get("coupon", {})
     if coupon_result.get("success"):
         response.status_code = coupon_result.get("status_code", 200)
         return convert_case(coupon_result.get("message"), 'camel')
@@ -173,23 +151,24 @@ def get_by_coupon_id(response: Response, coupon_id: int):
 
 
 @router.put('/{coupon_id}')
-def update_coupon(coupon_id: str, response: Response):
+def update_coupon(coupon_id: str, coupon: Coupon, response: Response):
     """
     Update the coupon_id in database.
     """
     rpc.response_len_setter(response_len=1)
-    product_result = rpc.publish(
+    result = rpc.publish(
         message={
             "coupon": {
                 "action": "update_coupon",
                 "body": {
-                    "coupon_id": coupon_id
+                    "coupon_id": coupon_id,
+                    "coupon": coupon.dict()
                 }
             }
         },
         headers={'coupon': True}
     )
-    coupon_result = product_result.get("coupon", {})
+    coupon_result = result.get("coupon", {})
     if coupon_result.get("success"):
         response.status_code = coupon_result.get("status_code", 200)
         return convert_case(coupon_result.get("message"), 'camel')
@@ -203,7 +182,7 @@ def disable_coupon(coupon_id: str, response: Response):
     disable coupon_id
     """
     rpc.response_len_setter(response_len=1)
-    product_result = rpc.publish(
+    result = rpc.publish(
         message={
             "coupon": {
                 "action": "disable_coupon",
@@ -214,7 +193,7 @@ def disable_coupon(coupon_id: str, response: Response):
         },
         headers={'coupon': True}
     )
-    coupon_result = product_result.get("coupon", {})
+    coupon_result = result.get("coupon", {})
     if coupon_result.get("success"):
         response.status_code = coupon_result.get("status_code", 200)
         return convert_case(coupon_result.get("message"), 'camel')
@@ -223,8 +202,44 @@ def disable_coupon(coupon_id: str, response: Response):
 
 
 @router.post('/request', status_code=200)
-def check_request(request: RequestBody):
-    message, success = request.check_request()
-    if success:
-        return message
-    raise HTTPException(status_code=417, detail=message)
+def check_request(request: RequestBody, response: Response):
+    rpc.response_len_setter(response_len=1)
+    result = rpc.publish(
+        message={
+            "coupon": {
+                "action": "check_request",
+                "body": {
+                    "request": request.dict()
+                }
+            }
+        },
+        headers={"coupon": True}
+    )
+    coupon_result = result.get('coupon', {})
+    if coupon_result.get("success"):
+        response.status_code = coupon_result.get("status_code", 200)
+        return convert_case(coupon_result.get("message"), 'camel')
+    raise HTTPException(status_code=coupon_result.get("status_code", 500),
+                        detail={"error": coupon_result.get("error", "Something went wrong")})
+
+
+@router.get('/request/{customer_ID}', status_code=200)
+def get_customer_info(customer_ID: int, response: Response):
+    rpc.response_len_setter(response_len=1)
+    result = rpc.publish(
+        message={
+            "coupon": {
+                "action": "get_customer_info",
+                "body": {
+                    'customer_ID': customer_ID
+                }
+            }
+        },
+        headers={"coupon": True}
+    )
+    coupon_result = result.get('coupon', {})
+    if coupon_result.get("success"):
+        response.status_code = coupon_result.get("status_code", 200)
+        return convert_case(coupon_result.get("message"), 'camel')
+    raise HTTPException(status_code=coupon_result.get("status_code", 500),
+                        detail={"error": coupon_result.get("error", "Something went wrong")})
