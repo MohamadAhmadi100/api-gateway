@@ -159,7 +159,7 @@ def create_child(
 
 @app.get("/get_product_attributes/{systemCode}/", tags=["Product"])
 def get_product_attributes(response: Response,
-                           system_code: str = Path(..., min_length=11, max_length=11, alias='systemCode')) -> dict:
+                           system_code: str = Path(..., min_length=12, max_length=12, alias='systemCode')) -> dict:
     """
     Get product attributes
     """
