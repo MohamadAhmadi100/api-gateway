@@ -32,7 +32,7 @@ class RabbitRPC:
 
     def connect(self):
         # connect to rabbit with defined credentials
-        if not self.connection:
+        if not self.connection or self.connection.is_closed:
             credentials = pika.PlainCredentials(self.user, self.password)
             self.connection = pika.BlockingConnection(
                 pika.ConnectionParameters(
