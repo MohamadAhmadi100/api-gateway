@@ -18,8 +18,8 @@ app = FastAPI(
     description="This is Payment gateway MicroService",
     version="0.1.0",
     openapi_tags=TAGS,
-    docs_url="/api/v1/docs/",
-    redoc_url="/api/v1/redoc/",
+    docs_url="/docs/",
+    redoc_url="/redoc/",
     debug=settings.DEBUG_MODE
 )
 
@@ -158,11 +158,11 @@ async def set_callback(request: Request, response: Response):
         message={
             check_verify.get("message", {}).get("service", {}).get("service_name"):
                 {
-                "action": check_verify.get("message", {}).get("service", {}).get("service_function"),
-                "body": {
-                    "data":  check_verify.get("message")
+                    "action": check_verify.get("message", {}).get("service", {}).get("service_function"),
+                    "body": {
+                        "data": check_verify.get("message")
+                    }
                 }
-            }
         },
         headers={check_verify.get("message", {}).get("service", {}).get("service_name"): True}
     )
