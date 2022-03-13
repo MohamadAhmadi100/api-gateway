@@ -596,7 +596,7 @@ def get_category_list(
             if key != "latest_product":
                 for obj in message_product[key]['items']:
                     obj['image'] = "default.png"
-        for product in message_product['latest_product']['items']:
+        for product in message_product['product']['items']:
             product['image'] = "/default_product.png"
             pricing_result = rpc.publish(
                 message={
@@ -625,7 +625,7 @@ def get_category_list(
                 product["price"] = price
                 product["special_price"] = special_price
                 product_list.append(product)
-        message_product['latest_product']['items'] = product_list
+        message_product['product']['items'] = product_list
         response.status_code = product_result.get("status_code", 200)
         return convert_case(message_product, 'camel')
     raise HTTPException(status_code=product_result.get("status_code", 500),
