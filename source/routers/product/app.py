@@ -246,12 +246,11 @@ def get_product_by_system_code(
         response: Response,
         system_code: str = Path(..., min_length=11, max_length=11, alias='systemCode'),
         lang: str = Path("fa_ir", min_length=2, max_length=8),
-        auth_header=Depends(auth_handler.check_current_user_tokens)
 ) -> dict:
     """
     Get a product by system_code in main collection in database.
     """
-    customer_type = auth_header[0].get("customer_type")
+    customer_type = "B2B"
     rpc.response_len_setter(response_len=3)
     result = rpc.publish(
         message={
@@ -582,14 +581,14 @@ def get_category_list(
 
     product_result = rpc.publish(
         message={
-            "product": {
+            "productt": {
                 "action": "get_category_list",
                 "body": {}
             }
         },
-        headers={'product': True}
+        headers={'productt': True}
     )
-    product_result = product_result.get("product", {})
+    product_result = product_result.get("productt", {})
     if product_result.get("success"):
         message_product = product_result.get("message", {})
         product_list = list()
@@ -597,7 +596,7 @@ def get_category_list(
             if key != "latest_product":
                 for obj in message_product[key]['items']:
                     obj['image'] = "default.png"
-        for product in message_product['latest_product']:
+        for product in message_product['latest_product']['items']:
             product['image'] = "/default_product.png"
             pricing_result = rpc.publish(
                 message={
@@ -626,7 +625,7 @@ def get_category_list(
                 product["price"] = price
                 product["special_price"] = special_price
                 product_list.append(product)
-        message_product['latest_product'] = product_list
+        message_product['latest_product']['items'] = product_list
         response.status_code = product_result.get("status_code", 200)
         return convert_case(message_product, 'camel')
     raise HTTPException(status_code=product_result.get("status_code", 500),
