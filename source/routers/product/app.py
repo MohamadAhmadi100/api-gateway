@@ -159,7 +159,7 @@ def create_child(
 
 @app.get("/get_product_attributes/{systemCode}/", tags=["Product"])
 def get_product_attributes(response: Response,
-                           system_code: str = Path(..., min_length=11, max_length=11, alias='systemCode')) -> dict:
+                           system_code: str = Path(..., min_length=12, max_length=12, alias='systemCode')) -> dict:
     """
     Get product attributes
     """
@@ -181,7 +181,6 @@ def get_product_attributes(response: Response,
         return convert_case(product_result.get("message"), 'camel')
     raise HTTPException(status_code=product_result.get("status_code", 500),
                         detail={"error": product_result.get("error", "Something went wrong")})
-
 
 
 @app.get("/attributes/", tags=["Product"])
@@ -721,4 +720,3 @@ def get_category_list(
 #         return convert_case(message_product, 'camel')
 #     raise HTTPException(status_code=product_result.get("status_code", 500),
 #                         detail={"error": product_result.get("error", "Something went wrong")})
-
