@@ -11,16 +11,14 @@ from source.routers.customer.controllers.router_register import router_register
 
 app = FastAPI(
     version="0.1.0",
-    docs_url="/api/v1/docs/",
     title="Customer API",
     description="This is Customer gateway MicroService",
-    redoc_url="/api/v1/redoc/",
+    docs_url="/docs/",
+    redoc_url="/redoc/",
     debug=settings.DEBUG_MODE
 )
 
 app.include_router(router_auth)
-
-
 app.include_router(router_register)
 # app.include_router(router_profile)
 

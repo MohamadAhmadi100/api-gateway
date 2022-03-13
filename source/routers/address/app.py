@@ -16,8 +16,8 @@ app = FastAPI(
     description="This is Address gateway MicroService",
     version="0.1.0",
     openapi_tags=TAGS,
-    docs_url="/api/v1/docs/",
-    redoc_url="/api/v1/redoc/",
+    docs_url="/docs/",
+    redoc_url="/redoc/",
     debug=settings.DEBUG_MODE
 )
 
@@ -52,7 +52,6 @@ def states(response: Response):
                         detail={"error": address_response.get("error", "Address service Internal error")})
 
 
-
 @app.get("/cities", tags=["City and States"])
 def cities(CityId: str, response: Response):
     rpc.response_len_setter(response_len=1)
@@ -73,7 +72,6 @@ def cities(CityId: str, response: Response):
         return address_response
     raise HTTPException(status_code=address_response.get("status_code", 500),
                         detail={"error": address_response.get("error", "Address service Internal error")})
-
 
 
 @app.post("/create", tags=["Address"])
@@ -98,8 +96,6 @@ def create_address(data: Address, response: Response):
                         detail={"error": address_response.get("error", "Address service Internal error")})
 
 
-
-
 @app.put("/update_fields", tags=["Address"])
 def update_address(data: UpdateAddress, response: Response):
     rpc.response_len_setter(response_len=1)
@@ -122,7 +118,6 @@ def update_address(data: UpdateAddress, response: Response):
                         detail={"error": address_response.get("error", "Address service Internal error")})
 
 
-
 @app.get("/customer_addresses", tags=["Address"])
 def cities(customerId: str, response: Response):
     rpc.response_len_setter(response_len=1)
@@ -143,6 +138,3 @@ def cities(customerId: str, response: Response):
         return address_response
     raise HTTPException(status_code=address_response.get("status_code", 500),
                         detail={"error": address_response.get("error", "Address service Internal error")})
-
-
-

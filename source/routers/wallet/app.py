@@ -9,7 +9,6 @@ from source.routers.customer.module.auth import AuthHandler
 from source.routers.wallet.validators.charge_wallet import Charge
 from source.routers.payment.modules import payment_modules
 
-
 TAGS = [
     {
         "name": "Wallet",
@@ -21,8 +20,8 @@ app = FastAPI(
     description="This is Wallet gateway MicroService",
     version="0.1.0",
     openapi_tags=TAGS,
-    docs_url="/api/v1/docs/",
-    redoc_url="/api/v1/redoc/",
+    docs_url="/docs/",
+    redoc_url="/redoc/",
     debug=settings.DEBUG_MODE
 )
 
@@ -85,7 +84,7 @@ auth_handler = AuthHandler()
 
 
 @app.put("/update_wallet", tags=["back-office side"])
-def update_wallet(data: UpdateData, response: Response,):
+def update_wallet(data: UpdateData, response: Response):
     rpc.response_len_setter(response_len=1)
     wallet_response = rpc.publish(
         message={
@@ -188,8 +187,8 @@ def get_wallet_by_customer_id(
     raise HTTPException(status_code=wallet_response.get("status_code", 500),
                         detail={"error": wallet_response.get("error", "Wallet service Internal error")})
 
-# ----------------------------------- end customer endpoints --------------------------------------- #
 
+# ----------------------------------- end customer endpoints --------------------------------------- #
 
 
 @app.put("/charge_wallet", tags=["charge wallet amount"])

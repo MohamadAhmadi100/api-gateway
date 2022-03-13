@@ -40,19 +40,19 @@ app.mount("/quantity/api/v1", quantity_app)
 
 app.mount("/product/api/v1", product_app)
 
-app.mount("/customer", customer_app)
+app.mount("/customer/api/v1", customer_app)
 
-app.mount("/wallet", wallet_app)
+app.mount("/wallet/api/v1", wallet_app)
 
 app.mount("/attributes/api/v1", attribute_app)
 
-app.mount("/payment", payment_app)
+app.mount("/payment/api/v1", payment_app)
 
 app.mount("/coupon", coupon_app)
 
-app.mount("/gallery", gallery_app)
+app.mount("/gallery/api/v1", gallery_app)
 
-app.mount("/address", address_app)
+app.mount("/address/api/v1", address_app)
 
 
 # ----------------------------------------- Start logging features  -------------------------------------------------- #

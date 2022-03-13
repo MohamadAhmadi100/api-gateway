@@ -30,8 +30,8 @@ app = FastAPI(
     title="Gallery API",
     description="This is Gallery MicroService for managing uploads",
     version="0.1.0",
-    docs_url="/api/v1/docs/",
-    redoc_url="/api/v1/redoc/",
+    docs_url="/docs/",
+    redoc_url="/redoc/",
     openapi_tags=TAGS
 )
 
