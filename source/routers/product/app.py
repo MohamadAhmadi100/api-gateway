@@ -581,14 +581,14 @@ def get_category_list(
 
     product_result = rpc.publish(
         message={
-            "productt": {
+            "product": {
                 "action": "get_category_list",
                 "body": {}
             }
         },
-        headers={'productt': True}
+        headers={'product': True}
     )
-    product_result = product_result.get("productt", {})
+    product_result = product_result.get("product", {})
     if product_result.get("success"):
         message_product = product_result.get("message", {})
         product_list = list()
