@@ -183,7 +183,6 @@ def get_product_attributes(response: Response,
                         detail={"error": product_result.get("error", "Something went wrong")})
 
 
-
 @app.get("/attributes/", tags=["Product"])
 def add_attributes_schema():
     """
@@ -721,4 +720,3 @@ def get_category_list(
 #         return convert_case(message_product, 'camel')
 #     raise HTTPException(status_code=product_result.get("status_code", 500),
 #                         detail={"error": product_result.get("error", "Something went wrong")})
-
