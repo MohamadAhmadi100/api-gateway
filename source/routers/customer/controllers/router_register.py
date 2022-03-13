@@ -52,14 +52,5 @@ def register(
             status_code=customer_result.get("status_code", 500),
             detail={"error": customer_result.get("error", "Something went wrong")}
         )
-    else:
-        customer_info = customer_result.get("message").get('data')
-        sub_dict = {
-            "user_id": customer_info.get('customerID'),
-            "customer_type": customer_info.get('customerType'),
-            "phone_number": customer_info.get('customerPhoneNumber'),
-        }
-        response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
-        response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
-        response.status_code = customer_result.get("status_code", 200)
-        return customer_result
+    response.status_code = customer_result.get("status_code", 200)
+    return customer_result.get("message")
