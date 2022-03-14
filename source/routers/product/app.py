@@ -1,6 +1,6 @@
 from typing import Optional, List, Tuple
 
-from fastapi import FastAPI, HTTPException, Response, responses, Path, Body, Query, Depends
+from fastapi import FastAPI, HTTPException, Response, responses, Path, Body, Query, Depends, Header
 from starlette.exceptions import HTTPException as starletteHTTPException
 
 from source.config import settings
@@ -246,11 +246,16 @@ def get_product_by_system_code(
         response: Response,
         system_code: str = Path(..., min_length=11, max_length=11, alias='systemCode'),
         lang: str = Path("fa_ir", min_length=2, max_length=8),
+        access_token: Optional[str] = Header(None),
+        refresh_token: Optional[str] = Header(None)
 ) -> dict:
     """
     Get a product by system_code in main collection in database.
     """
     customer_type = "B2B"
+    if access_token or refresh_token:
+        user_data, tokens = auth_handler.check_current_user_tokens(access_token, refresh_token)
+        customer_type = user_data.get("customer_type", "B2B")
     rpc.response_len_setter(response_len=3)
     result = rpc.publish(
         message={

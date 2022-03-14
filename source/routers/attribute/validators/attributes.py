@@ -43,7 +43,27 @@ class Attribute(BaseModel):
                 "regexPattern": "^[a-zA-Z0-9]*$",
                 "parent": "100101",
                 "defaultValue": "white",
-                "values": ["white", "black", "red", "green", "blue"],
+                "values": [{
+                    "value": "white",
+                    "label": "سفید"
+                },
+                    {
+                        "value": "black",
+                        "label": "سیاه"
+                    },
+                    {
+                        "value": "red",
+                        "label": "قرمز"
+                    },
+                    {
+                        "value": "green",
+                        "label": "سبز"
+                    },
+                    {
+                        "value": "blue",
+                        "label": "آبی"
+                    }
+                ],
                 "setToNodes": False
             }
         }
@@ -164,12 +184,8 @@ class Attribute(BaseModel):
         elif len(value) > 128:
             raise ValueError('values must be between 0 and 128 items')
         for item in value:
-            if (isinstance(item, int) or isinstance(item, float)) and len(str(item)) > 20:
-                raise ValueError('number values must be under 20 character')
-            elif isinstance(item, list) or isinstance(item, dict) or isinstance(item, tuple):
-                raise ValueError('value must be character, number or boolean')
-            elif 3 > len(item) or len(value) > 256:
-                raise ValueError('default value must be between 3 and 256 characters')
+            if isinstance(item, dict):
+                raise ValueError('values must be a list of dictionaries')
         return value
 
     @validator('set_to_nodes')
