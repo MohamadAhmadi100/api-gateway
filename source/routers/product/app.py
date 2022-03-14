@@ -521,7 +521,7 @@ def update_kowsar_collection(
 @app.get("/get_product_list_by_system_code/{systemCode}/", tags=["Product"])
 def get_product_list_by_system_code(
         response: Response,
-        system_code: int = Path(..., alias='systemCode'),
+        system_code: str = Path(..., alias='systemCode'),
         page: int = Query(1, alias='page'),
         per_page: int = Query(10, alias='perPage'),
         access: Optional[str] = Header(None),
