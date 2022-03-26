@@ -73,9 +73,10 @@ class RabbitRPC:
                     reply_to=self.callback_queue,
                     correlation_id=self.corr_id,
                     delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE,
+                    content_type=extra_data,
                     headers=headers
                 ),
-                body=json.dumps(message)
+                body=json.dumps(message) if isinstance(message, dict) else message
             )
             print("message sent...")
             signal.alarm(self.timeout)
