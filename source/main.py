@@ -3,6 +3,7 @@ import logging
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.staticfiles import StaticFiles
 
 from config import settings
 from source.routers.cart.app import app as cart_app
@@ -16,7 +17,6 @@ from source.routers.payment.app import app as payment_app
 from source.routers.coupon.app import app as coupon_app
 from source.routers.gallery.app import app as gallery_app
 from source.routers.address.app import app as address_app
-
 
 app = FastAPI(title="API Gateway",
               description="Backend for frontend aka. API Gateway!",
@@ -51,6 +51,8 @@ app.mount("/payment/api/v1", payment_app)
 app.mount("/coupon", coupon_app)
 
 app.mount("/gallery/api/v1", gallery_app)
+
+app.mount("/gallery_files/", StaticFiles(directory=settings.GALLERY_DIR), name="gallery_files")
 
 app.mount("/address/api/v1", address_app)
 
