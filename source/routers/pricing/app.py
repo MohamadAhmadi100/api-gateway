@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import FastAPI, HTTPException, Response, responses, Path
 from starlette.exceptions import HTTPException as starletteHTTPException
 
@@ -33,6 +35,43 @@ def validation_exception_handler(request, exc):
 rpc = RabbitRPC(exchange_name='headers_exchange', timeout=5)
 rpc.connect()
 rpc.consume()
+
+
+@app.get("/product/price_page/{systemCode}/", tags=["Pricing"])
+def get_product_price_page(response: Response,
+                           system_code: str = Path(..., alias="systemCode", max_length=12, min_length=12),
+                           lang: Optional[str] = "fa_ir"):
+    """
+    get product price page
+    """
+    rpc.response_len_setter(response_len=2)
+    price_page = rpc.publish(
+        message={
+            "product": {
+                "action": "get_product_child",
+                "body": {
+                    "system_code": system_code,
+                    "lang": lang
+                }
+            }, "pricing": {
+                "action": "get_price_child",
+                "body": {
+                    "system_code": system_code
+                }
+            }}
+        ,
+        headers={"product": True, "pricing": True}
+    )
+    product_result = price_page.get("product", {})
+    pricing_result = price_page.get("pricing", {})
+    if product_result.get("success"):
+        response.status_code = product_result.get("status_code", 200)
+        return convert_case({
+            "product": product_result.get("message"),
+            "pricing": pricing_result.get("message", {}).get("products", {}).get(system_code, None)
+        }, 'camel')
+    raise HTTPException(status_code=product_result.get("status_code", 500),
+                        detail=product_result.get("error", "something went wrong"))
 
 
 @app.post("/product/price/", tags=["Pricing"])
