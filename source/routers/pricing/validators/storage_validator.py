@@ -8,6 +8,8 @@ class StoragesModel(BaseModel):
     storage_id: str = Field(..., alias="storageId")
     regular: int
     special: Optional[int] = None
+    special_from_date: str = Field(..., alias='specialFromDate')
+    special_to_date: str = Field(..., alias='specialToDate')
 
     @validator("storage_id")
     def storage_id_validator(cls, value):
@@ -33,9 +35,29 @@ class StoragesModel(BaseModel):
             raise HTTPException(status_code=422, detail={"error": "special must be between 1 and 100_000_000_000_000"})
         return value
 
+    @validator("special_from_date")
+    def special_from_date_validator(cls, value):
+        if not isinstance(value, str):
+            raise HTTPException(status_code=422, detail={"error": "special_from_date must be str"})
+        elif 100000000000000 < len(value) or len(value) < 1:
+            raise HTTPException(status_code=422,
+                                detail={"error": "special_from_date must be between 1 and 100000000000000"})
+        return value
+
+    @validator("special_to_date")
+    def special_to_date_validator(cls, value):
+        if not isinstance(value, str):
+            raise HTTPException(status_code=422, detail={"error": "special_to_date must be str"})
+        elif 100000000000000 < len(value) or len(value) < 1:
+            raise HTTPException(status_code=422,
+                                detail={"error": "special_to_date must be between 1 and 100000000000000"})
+        return value
+
     def get(self) -> dict:
         return {
             'storage_id': self.storage_id,
             'regular': self.regular,
-            'special': self.special
+            'special': self.special,
+            'special_from_date': self.special_from_date,
+            'special_to_date': self.special_to_date
         }
