@@ -149,7 +149,7 @@ class CustomerRegister(BaseModel):
         isRquired=False,
     )
 
-    customer_password: Optional[str] = Field(
+    customer_password: str = Field(
         title="رمز عبور",
         alias="customerPassword",
         name="customerPassword",
