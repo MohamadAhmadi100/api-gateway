@@ -1,13 +1,14 @@
-# from fastapi import APIRouter, Depends
-# from fastapi import Response, status
-# from source.message_broker.rabbit_server import RabbitRPC
-# from source.routers.customer.module.auth import AuthHandler
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi import Response, status
+from source.message_broker.rabbit_server import RabbitRPC
+from source.routers.customer.module.auth import AuthHandler
+
 # from source.routers.customer.validators import validation_profile, validation_auth
-#
-# router_profile = APIRouter(
-#     prefix="/profile",
-#     tags=["profile"]
-# )
+
+router_profile = APIRouter(
+    prefix="/profile",
+    tags=["profile"]
+)
 # custom_attribute = {
 #     "customerFirstName": {
 #         "name": "customerFirstName",
@@ -425,46 +426,64 @@
 #         "set_to_nodes": False,
 #     }
 # }
-#
-# auth_handler = AuthHandler()
-#
-# rpc = RabbitRPC(exchange_name='headers_exchange', timeout=5)
-# rpc.connect()
-# rpc.consume()
-#
-#
-# @router_profile.get("/")
-# def get_profile(
-#         response: Response,
-#         auth_header=Depends(auth_handler.check_current_user_tokens),
-# ):
-#     customer_phone_number, header = auth_header
-#     rpc.response_len_setter(response_len=1)
-#     result = rpc.publish(
-#         message={
-#             "customer": {
-#                 "action": "get_profile",
-#                 "body": {
-#                     "customer_phone_number": customer_phone_number,
-#                 }
-#             }
-#         },
-#         headers={'customer': True}
-#     )
-#     customer_result = result.get("customer", {})
-#     if result.get("success"):
-#         for attr, value in result.items():
-#             if custom_attribute.get(attr):
-#                 custom_attribute[attr]["value"] = value
-#         response.status_code = status.HTTP_200_OK
-#         response.headers["accessToken"] = header.get("access_token")
-#         response.headers["refresh_token"] = header.get("refresh_token")
-#         return custom_attribute
-#     response.status_code = status.HTTP_404_NOT_FOUND
-#     message = {"massage": "اطلاعاتی برای کاربر مورد نظر وجود ندارد"}
-#     return message
-#
-#
+
+auth_handler = AuthHandler()
+
+rpc = RabbitRPC(exchange_name='headers_exchange', timeout=5)
+rpc.connect()
+rpc.consume()
+
+
+@router_profile.get("/")
+def get_profile(
+        response: Response,
+        auth_header=Depends(auth_handler.check_current_user_tokens),
+):
+    user_data, header = auth_header
+    rpc.response_len_setter(response_len=1)
+    result = rpc.publish(
+        message={
+            "customer": {
+                "action": "get_profile",
+                "body": {
+                    "customer_phone_number": user_data,
+                }
+            }
+        },
+        headers={'customer': True}
+    )
+    customer_result = result.get("customer", {})
+    if customer_result.get("success"):
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
+            message={
+                "attribute": {
+                    "action": "get_all_attributes_by_assignee",
+                    "body": {
+                        "name": "customer"
+                    }
+                }
+            },
+            headers={'attribute': True}
+        )
+        attribute_result = result.get("attribute", {})
+        if not attribute_result.get("success"):
+            raise HTTPException(status_code=attribute_result.get("status_code", 500),
+                                detail={"error": attribute_result.get("error", "Something went wrong")})
+
+        attributes = attribute_result.get("message", [])
+        for attr, value in customer_result.get("success").items():
+            # [ for attr_name in attributes if attr_name==attr]
+            if attributes.get(attr):
+                attributes[attr]["value"] = value
+        response.status_code = status.HTTP_200_OK
+        response.headers["accessToken"] = header.get("access_token")
+        response.headers["refresh_token"] = header.get("refresh_token")
+        # return custom_attribute
+    response.status_code = status.HTTP_404_NOT_FOUND
+    message = {"massage": "اطلاعاتی برای کاربر مورد نظر وجود ندارد"}
+    return message
+
 # @router_profile.put("/")
 # def edit_profile_data(
 #         response: Response,

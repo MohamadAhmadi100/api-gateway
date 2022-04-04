@@ -88,7 +88,7 @@ def send_otp_code(value: validation_auth.CustomerAuth, response: Response):
 
 
 @router_auth.post("/verify-otp/")
-def verify_otp_cod(value: validation_auth.CustomerVerifyOTP, response: Response):
+def verify_otp_code(value: validation_auth.CustomerVerifyOTP, response: Response):
     # TODO fixed status code
     rpc.response_len_setter(response_len=1)
     result = rpc.publish(
@@ -172,8 +172,7 @@ def checking_login_otp_code(
 
 @router_auth.get("/login/password/")
 def otp_form_generator():
-    form = validation_auth.CustomerVerifyPassword.schema().get("properties").copy()
-    return {"fields": json.dumps(form)}
+    return validation_auth.CustomerVerifyPassword.schema().get("properties").copy()
 
 
 @router_auth.post("/login/password/")
@@ -254,3 +253,31 @@ def save_logout(
     else:
         response.status_code = customer_result.get("status_code", 202)
         return customer_result.get("message")
+
+
+@router_auth.post("/forget-password/")
+def forget_password(
+        data: validation_auth.CustomerForgetPassword,
+        auth_header=Depends(auth_handler.check_current_user_tokens),
+):
+    user_info, token_dict = auth_header
+    rpc.response_len_setter(response_len=1)
+    result = rpc.publish(
+        message={
+            "customer": {
+                "action": "forget_password",
+                "body": {
+                    "customer_phone_number": user_info.get("phone_number"),
+                    "password": data.customer_password
+                }
+            }
+        },
+        headers={'customer': True}
+    )
+    customer_result = result.get("customer", {})
+    if not customer_result.get("success"):
+        raise HTTPException(
+            status_code=customer_result.get("status_code", 500),
+            detail={"error": customer_result.get("error", "Something went wrong")}
+        )
+    return customer_result.get("message")

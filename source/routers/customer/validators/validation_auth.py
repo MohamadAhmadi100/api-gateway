@@ -82,3 +82,27 @@ class CustomerVerifyPassword(CustomerAuth):
         if not match:
             raise HTTPException(status_code=422, detail={"error": "رمز وارد شده صحیح نمی باشد"})
         return code
+
+
+class CustomerForgetPassword(BaseModel):
+    customer_password: str = Field(
+        title="رمز عبور",
+        alias="customerPassword",
+        name="customerPassword",
+        placeholder="qwer1234QWER",
+        description="password must be string and len between 8 and 32 character",
+        minLength=8,
+        maxLength=32,
+        dataType="string",
+        type="password",
+        isRquired=True,
+        regexPattern="^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,32}$",
+    )
+
+    @validator("customer_password")
+    def validate_password(cls, code):
+        pattern = r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,32}$"
+        match = re.fullmatch(pattern, code)
+        if not match:
+            raise HTTPException(status_code=422, detail={"error": "رمز وارد شده صحیح نمی باشد"})
+        return code
