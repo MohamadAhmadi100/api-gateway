@@ -257,7 +257,7 @@ def save_logout(
 
 @router_auth.post("/forget-password/")
 def forget_password(
-        data: validation_auth.CustomerVerifyPassword,
+        data: validation_auth.CustomerForgetPassword,
         auth_header=Depends(auth_handler.check_current_user_tokens),
 ):
     user_info, token_dict = auth_header
