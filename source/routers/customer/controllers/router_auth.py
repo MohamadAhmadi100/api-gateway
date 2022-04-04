@@ -201,7 +201,7 @@ def checking_login_password(
             detail={"error": customer_result.get("error", "Something went wrong")}
         )
     else:
-        customer_info = customer_result.get("message").get('data')
+        customer_info = customer_result.get('data')
         sub_dict = {
             "user_id": customer_info.get('customerID'),
             "customer_type": customer_info.get('customerType'),
