@@ -159,7 +159,7 @@ class CustomerRegister(BaseModel):
         maxLength=32,
         dataType="string",
         type="password",
-        isRquired=False,
+        isRquired=True,
         regexPattern="^^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,32}$",
     )
 
@@ -173,7 +173,7 @@ class CustomerRegister(BaseModel):
         maxLength=32,
         dataType="string",
         type="password",
-        isRquired=False,
+        isRquired=True,
         regexPattern="^^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,32}$",
     )
 
