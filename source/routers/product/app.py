@@ -296,7 +296,7 @@ def get_product_by_system_code(
         final_result = product_result.get("message").copy()
         for product in final_result.get("products", []):
             if customer_type:
-                product["warehouse"] = list()
+                product['config']["warehouse"] = list()
                 for quantity_key, quantity in quantity_result.get("message", {}).get("products", {}).get(
                         product.get("system_code")).get("customer_types").get(customer_type).get("storages",
                                                                                                  {}).items():
@@ -317,7 +317,7 @@ def get_product_by_system_code(
                             item["warehouse_city_id"] = quantity.get("warehouse_city_id")
                             item["warehouse_label"] = quantity.get("warehouse_label")
                             item["attribute_label"] = quantity.get("attribute_label")
-                            product["warehouse"].append(item)
+                            product['config']["warehouse"].append(item)
             else:
                 product["price"] = pricing_result.get("message", {}).get("products", {}).get(product.get("system_code"),
                                                                                              {}).get("regular")
