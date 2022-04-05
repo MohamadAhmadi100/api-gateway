@@ -45,10 +45,8 @@ class RabbitRPC:
             )
             # self.connection.sleep(1)
             self.channel = self.connection.channel()
-            self.channel.exchange_declare(exchange=self.exchange_name, exchange_type='headers', passive=False,
-                                          durable=False, auto_delete=False)  # todo: UgLy
-            self.queue_result = self.channel.queue_declare(queue="", exclusive=True, auto_delete=True)
-            self.queue_bind = self.channel.queue_bind(queue="", exchange=self.exchange_name, routing_key="")
+            self.channel.exchange_declare(exchange=self.exchange_name, exchange_type='headers')
+            self.queue_result = self.channel.queue_declare(queue="", exclusive=True)
             self.callback_queue = self.queue_result.method.queue
 
     def fanout_publish(self, exchange_name: str, message: dict):
