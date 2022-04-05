@@ -7,6 +7,7 @@ import pika
 
 from source.config import settings
 from source.helpers.exception_handler import ExceptionHandler
+from pika.exceptions import StreamLostError
 
 
 class RabbitRPC:
@@ -87,7 +88,7 @@ class RabbitRPC:
             self.broker_response.clear()
             return result
         except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed,
-                pika.exceptions.ChannelWrongStateError) as error:
+                pika.exceptions.ChannelWrongStateError, StreamLostError) as error:
             self.connect()
             self.publish(message=message, headers=headers, extra_data=extra_data)
 
