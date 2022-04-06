@@ -40,7 +40,7 @@ def set_files_api(response: Response, file_type: str, path: str, file_id: Option
     gallery_result = result.get("gallery", {})
     if gallery_result.get("success"):
         response.status_code = gallery_result.get("status_code", 200)
-        return {"message": gallery_result.get("message")}
+        return gallery_result.get("message")
     raise HTTPException(status_code=gallery_result.get("status_code", 500),
                         detail={"error": gallery_result.get("error", "Something went wrong")})
 
