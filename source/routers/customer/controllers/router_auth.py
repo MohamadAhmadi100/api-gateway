@@ -58,7 +58,6 @@ def check_is_registered(
         )
     else:
         response.status_code = customer_result.get("status_code", 200)
-        print(customer_result)
         return customer_result.get("message")
 
 
