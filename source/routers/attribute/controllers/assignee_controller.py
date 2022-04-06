@@ -42,9 +42,9 @@ def add_attribute_to_assignee(
         product_result = rpc.publish(
             message={
                 "product": {
-                    "action": "update_attribute_collection",
+                    "action": "update_attributes",
                     "body": {
-                        "attributes": [attribute_result.get("attribute")]
+                        "attributes": attribute_result.get("attribute")
                     }
                 }
             },
@@ -110,6 +110,17 @@ def delete_attribute_from_assignee(
         raise HTTPException(status_code=attribute_result.get("status_code", 500),
                             detail={"error": attribute_result.get("error", "Something went wrong")})
     else:
+        product_result = rpc.publish(
+            message={
+                name: {
+                    "action": "delete_attributes",
+                    "body": {
+                        "name": attr_name
+                    }
+                }
+            },
+            headers={name: True}
+        )
         response.status_code = attribute_result.get("status_code", 200)
         return {"message": attribute_result.get("message", [])}
 

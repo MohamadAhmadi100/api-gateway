@@ -172,6 +172,19 @@ def update_attribute(
         raise HTTPException(status_code=attribute_result.get("status_code", 500),
                             detail={"error": attribute_result.get("error", "Something went wrong")})
     else:
+        for collection in attribute_result.get("collections", []):
+            rpc.publish(
+                message={
+                    collection: {
+                        "action": "update_attributes",
+                        "body": {
+                            "attributes": attribute_result.get("attribute")
+                        }
+                    }
+                },
+                headers={collection: True}
+            )
+
         response.status_code = attribute_result.get("status_code", 200)
         return {"message": attribute_result.get("message", [])}
 
@@ -201,5 +214,29 @@ def delete_attribute(
         raise HTTPException(status_code=attribute_result.get("status_code", 500),
                             detail={"error": attribute_result.get("error", "Something went wrong")})
     else:
+
+        # for collection in attribute_result.get("collections", []):
+        #     rpc.publish(
+        #         message={
+        #             collection: {
+        #                 "action": "delete_attributes",
+        #                 "body": {
+        #                     "name": attribute_name
+        #                 }
+        #             }
+        #         },
+        #         headers={collection: True}
+        #     )
+        rpc.publish(
+            message={
+                "product": {
+                    "action": "delete_attributes",
+                    "body": {
+                        "name": attribute_name
+                    }
+                }
+            },
+            headers={"product": True}
+        )
         response.status_code = attribute_result.get("status_code", 200)
         return {"message": attribute_result.get("message", [])}
