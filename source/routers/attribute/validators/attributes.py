@@ -184,7 +184,7 @@ class Attribute(BaseModel):
         elif len(value) > 128:
             raise ValueError('values must be between 0 and 128 items')
         for item in value:
-            if isinstance(item, dict):
+            if not isinstance(item, dict):
                 raise ValueError('values must be a list of dictionaries')
         return value
 
