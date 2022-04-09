@@ -14,7 +14,6 @@ class CreateParent(BaseModel):
     )
     url_name: Optional[str] = Field(..., title="لینک", minLength=3, maxLength=256, isRequired=True,
                                     alias="urlName")
-    visible_in_site: bool = Field(..., title="نمایش در سایت", isRequired=True, alias="visibleInSite")
 
     @validator('system_code')
     def system_code_validator(cls, value):
@@ -44,15 +43,6 @@ class CreateParent(BaseModel):
             })
         return value
 
-    @validator('visible_in_site')
-    def visible_in_site_validator(cls, value):
-        if not isinstance(value, bool):
-            raise HTTPException(status_code=417, detail={
-                "error": 'visible_in_site must be a boolean',
-                "label": "نمایش در سایت باید از نوع بولی باشد"
-            })
-        return value
-
     @validator('url_name')
     def url_name_validator(cls, value):
         if not isinstance(value, str):
@@ -77,7 +67,6 @@ class CreateChild(BaseModel):
         ..., title="شناسه محصول", maxLength=12, minLength=12, placeholder="100104021006", isRequired=True,
         alias="systemCode"
     )
-    visible_in_site: bool = Field(..., title="نمایش در سایت", isRequired=True, alias="visibleInSite")
 
     @validator('system_code')
     def system_code_validator(cls, value):
@@ -90,15 +79,6 @@ class CreateChild(BaseModel):
             raise HTTPException(status_code=417, detail={
                 "error": "system_code must be 12 characters",
                 "label": "طول شناسه محصول باید ۱۲ کاراکتر باشد"
-            })
-        return value
-
-    @validator('visible_in_site')
-    def visible_in_site_validator(cls, value):
-        if not isinstance(value, bool):
-            raise HTTPException(status_code=417, detail={
-                "error": 'visible_in_site must be a boolean',
-                "label": "نمایش در سایت باید از نوع بولی باشد"
             })
         return value
 
