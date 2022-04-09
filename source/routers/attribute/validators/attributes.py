@@ -76,8 +76,8 @@ class Attribute(BaseModel):
             raise ValueError('number values must be under 20 character')
         elif isinstance(value, list) or isinstance(value, dict) or isinstance(value, tuple):
             raise ValueError('value must be character, number or boolean')
-        elif isinstance(value, str) and (3 > len(value) or len(value) > 256):
-            raise ValueError('default value must be between 3 and 256 characters')
+        elif isinstance(value, str) and (len(value) > 256):
+            raise ValueError('default value must be less than 256 characters')
         else:
             return value
 
