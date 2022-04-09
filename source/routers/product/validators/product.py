@@ -12,6 +12,8 @@ class CreateParent(BaseModel):
     name: Optional[str] = Field(
         None, title="نام", minLength=3, maxLength=256, placeholder="ردمی ۹ سی", isRequired=False
     )
+    url_name: Optional[str] = Field(..., title="لینک", minLength=3, maxLength=256, isRequired=True,
+                                    alias="urlName")
     visible_in_site: bool = Field(..., title="نمایش در سایت", isRequired=True, alias="visibleInSite")
 
     @validator('system_code')
@@ -51,13 +53,29 @@ class CreateParent(BaseModel):
             })
         return value
 
+    @validator('url_name')
+    def url_name_validator(cls, value):
+        if not isinstance(value, str):
+            raise HTTPException(status_code=417, detail={
+                "error": 'url_name must be a string',
+                "label": "لینک باید از نوع رشته باشد"
+            })
+        elif len(value) < 3 or len(value) > 256:
+            raise HTTPException(status_code=417, detail={
+                "error": "url_name must be between 3 and 256 characters",
+                "label": "طول لینک باید میان ۳ تا ۲۵۶ کاراکتر باشد"
+            })
+        return value
+
 
 class CreateChild(BaseModel):
     parent_system_code: str = Field(
-        ..., title="شناسه اصلی محصول", maxLength=11, minLength=11, placeholder="10010402101", isRequired=True, alias="parentSystemCode"
+        ..., title="شناسه اصلی محصول", maxLength=11, minLength=11, placeholder="10010402101", isRequired=True,
+        alias="parentSystemCode"
     )
     system_code: str = Field(
-        ..., title="شناسه محصول", maxLength=12, minLength=12, placeholder="100104021006", isRequired=True, alias="systemCode"
+        ..., title="شناسه محصول", maxLength=12, minLength=12, placeholder="100104021006", isRequired=True,
+        alias="systemCode"
     )
     visible_in_site: bool = Field(..., title="نمایش در سایت", isRequired=True, alias="visibleInSite")
 
@@ -87,6 +105,7 @@ class CreateChild(BaseModel):
 
 class AddAtributes(BaseModel):
     system_code: str = Field(
-        ..., title="شناسه محصول", maxLength=12, minLength=12, placeholder="100104021006", isRequired=True, alias="systemCode"
+        ..., title="شناسه محصول", maxLength=12, minLength=12, placeholder="100104021006", isRequired=True,
+        alias="systemCode"
     )
     attributes: dict
