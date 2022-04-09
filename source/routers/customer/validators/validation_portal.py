@@ -1,11 +1,12 @@
 import re
+from typing import Optional
 
 from fastapi import HTTPException
 from pydantic import BaseModel, validator, Field
 
 
 class StaffAuth(BaseModel):
-    filters: dict = Field(
+    filters: Optional[dict] = Field(
         title="فیلترها",
         alias="filters",
         name="filters",

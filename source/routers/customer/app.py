@@ -3,7 +3,7 @@ from fastapi import responses
 from starlette.exceptions import HTTPException as starletteHTTPException
 
 from source.config import settings
-from source.routers.customer.controllers.router_portal import router_portal
+from source.routers.customer.controllers.router_backoffice import router_portal
 from source.routers.customer.controllers.router_auth import router_auth
 
 from source.routers.customer.controllers.router_register import router_register
