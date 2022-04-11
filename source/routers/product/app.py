@@ -209,9 +209,9 @@ def add_attributes(response: Response,
     attribute_result = rpc.publish(
         message={
             "product": {
-                "action": "get_kowsar",
+                "action": "get_product_attributes",
                 "body": {
-                    "system_code": item.system_code,
+                    "system_code": item.system_code
                 }
             }
         },
@@ -354,58 +354,6 @@ def delete_product(
                         detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@app.get("/update_attribute_collection/", tags=["Product"])
-def update_attribute_collection(response: Response) -> dict:
-    """
-    Update the attribute collection in database.
-    """
-    # TODO: Later, it should be moved to add attribute from attribute service
-    attributes = [
-        {
-            "required": True,
-            "use_in_filter": False,
-            "use_for_sort": False,
-            "default_value": None,
-            "values": None,
-            "set_to_nodes": False,
-            "name": "year",
-            "label": "سال",
-            "input_type": "Number",
-            "parent": "100104021006"
-        },
-        {
-            "required": False,
-            "use_in_filter": False,
-            "use_for_sort": False,
-            "default_value": "/src/default.png",
-            "values": None,
-            "set_to_nodes": True,
-            "name": "image",
-            "label": "عکس",
-            "input_type": "Media Image",
-            "parent": "1001"
-        }
-    ]
-    rpc.response_len_setter(response_len=1)
-    product_result = rpc.publish(
-        message={
-            "product": {
-                "action": "update_attribute_collection",
-                "body": {
-                    "attributes": attributes
-                }
-            }
-        },
-        headers={'product': True}
-    )
-    product_result = product_result.get("product", {})
-    if product_result.get("success"):
-        response.status_code = product_result.get("status_code", 200)
-        return convert_case(product_result.get("message"), 'camel')
-    raise HTTPException(status_code=product_result.get("status_code", 500),
-                        detail={"error": product_result.get("error", "Something went wrong")})
-
-
 @app.get("/categories/{systemCode}/", tags=["Product"])
 def get_all_categories(
         response: Response,
@@ -425,87 +373,6 @@ def get_all_categories(
                     "page": page,
                     "per_page": per_page
                 }
-            }
-        },
-        headers={'product': True}
-    )
-    product_result = product_result.get("product", {})
-    if product_result.get("success"):
-        response.status_code = product_result.get("status_code", 200)
-        return convert_case(product_result.get("message"), 'camel')
-    raise HTTPException(status_code=product_result.get("status_code", 500),
-                        detail={"error": product_result.get("error", "Something went wrong")})
-
-
-@app.get("/{systemCode}/", tags=["Kowsar"])
-def get_kowsar(
-        response: Response,
-        system_code: str = Path(..., min_length=2, max_length=12, alias='systemCode')
-):
-    """
-    Get kowsar item by system code
-    """
-    rpc.response_len_setter(response_len=1)
-    product_result = rpc.publish(
-        message={
-            "product": {
-                "action": "get_kowsar",
-                "body": {
-                    "system_code": system_code
-                }
-            }
-        },
-        headers={'product': True}
-    )
-    product_result = product_result.get("product", {})
-    if product_result.get("success"):
-        response.status_code = product_result.get("status_code", 200)
-        return convert_case(product_result.get("message"), 'camel')
-    raise HTTPException(status_code=product_result.get("status_code", 500),
-                        detail={"error": product_result.get("error", "Something went wrong")})
-
-
-@app.get("/{systemCode}/items/", tags=["Kowsar"])
-def get_kowsar_items(
-        response: Response,
-        system_code: str = Path(..., min_length=2, max_length=9, alias='systemCode')
-):
-    """
-    Get children of kowsar item
-    """
-    rpc.response_len_setter(response_len=1)
-    product_result = rpc.publish(
-        message={
-            "product": {
-                "action": "get_kowsar_items",
-                "body": {
-                    "system_code": system_code
-                }
-            }
-        },
-        headers={'product': True}
-    )
-    product_result = product_result.get("product", {})
-    if product_result.get("success"):
-        response.status_code = product_result.get("status_code", 200)
-        return convert_case(product_result.get("message"), 'camel')
-    raise HTTPException(status_code=product_result.get("status_code", 500),
-                        detail={"error": product_result.get("error", "Something went wrong")})
-
-
-@app.get("/update_collection", tags=["Kowsar"])
-def update_kowsar_collection(
-        response: Response
-):
-    """
-    Update kowsar collection based on given file
-    """
-    rpc.response_len_setter(response_len=1)
-    product_result = rpc.publish(
-        message={
-            "product": {
-                "action": "update_kowsar_collection",
-                "body": {}
             }
         },
         headers={'product': True}
@@ -688,14 +555,11 @@ def get_product_list_back_office(
         approved: Optional[bool] = Query(None),
         available: Optional[bool] = Query(None),
         page: Optional[int] = Query(1),
-        per_page: Optional[int] = Query(15),
-        # auth_header=Depends(auth_handler.check_current_user_tokens)
+        per_page: Optional[int] = Query(15)
 ):
     """
     Get product list
     """
-    # customer_type = auth_header[0].get("customer_type")
-    customer_type = "B2B"
     rpc.response_len_setter(response_len=1)
     product_result = rpc.publish(
         message={
@@ -762,12 +626,94 @@ def get_product_list_back_office(
                 if quantity_result.get("success"):
                     system_code = config.get("system_code")
                     config['quantity'] = quantity_result.get("message", {}).get("products", {}).get(system_code,
-                                                                                                    {}).get("total_stock_for_sale")
+                                                                                                    {}).get(
+                        "total_stock_for_sale")
 
         product_list.append(product)
     message_product['products'] = product_list
     if product_result.get("success"):
         response.status_code = product_result.get("status_code", 200)
         return convert_case(message_product, 'camel')
+    raise HTTPException(status_code=product_result.get("status_code", 500),
+                        detail={"error": product_result.get("error", "Something went wrong")})
+
+
+@app.get("/{systemCode}/", tags=["Kowsar"])
+def get_kowsar(
+        response: Response,
+        system_code: str = Path(..., min_length=2, max_length=12, alias='systemCode')
+):
+    """
+    Get kowsar item by system code
+    """
+    rpc.response_len_setter(response_len=1)
+    product_result = rpc.publish(
+        message={
+            "product": {
+                "action": "get_kowsar",
+                "body": {
+                    "system_code": system_code
+                }
+            }
+        },
+        headers={'product': True}
+    )
+    product_result = product_result.get("product", {})
+    if product_result.get("success"):
+        response.status_code = product_result.get("status_code", 200)
+        return convert_case(product_result.get("message"), 'camel')
+    raise HTTPException(status_code=product_result.get("status_code", 500),
+                        detail={"error": product_result.get("error", "Something went wrong")})
+
+
+@app.get("/{systemCode}/items/", tags=["Kowsar"])
+def get_kowsar_items(
+        response: Response,
+        system_code: str = Path(..., min_length=2, max_length=9, alias='systemCode')
+):
+    """
+    Get children of kowsar item
+    """
+    rpc.response_len_setter(response_len=1)
+    product_result = rpc.publish(
+        message={
+            "product": {
+                "action": "get_kowsar_items",
+                "body": {
+                    "system_code": system_code
+                }
+            }
+        },
+        headers={'product': True}
+    )
+    product_result = product_result.get("product", {})
+    if product_result.get("success"):
+        response.status_code = product_result.get("status_code", 200)
+        return convert_case(product_result.get("message"), 'camel')
+    raise HTTPException(status_code=product_result.get("status_code", 500),
+                        detail={"error": product_result.get("error", "Something went wrong")})
+
+
+@app.get("/update_collection", tags=["Kowsar"])
+def update_kowsar_collection(
+        response: Response
+):
+    """
+    Update kowsar collection based on given file
+    """
+    rpc.response_len_setter(response_len=1)
+    product_result = rpc.publish(
+        message={
+            "product": {
+                "action": "update_kowsar_collection",
+                "body": {}
+            }
+        },
+        headers={'product': True}
+    )
+    product_result = product_result.get("product", {})
+    if product_result.get("success"):
+        response.status_code = product_result.get("status_code", 200)
+        return convert_case(product_result.get("message"), 'camel')
     raise HTTPException(status_code=product_result.get("status_code", 500),
                         detail={"error": product_result.get("error", "Something went wrong")})
