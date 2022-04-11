@@ -84,8 +84,6 @@ def set_product_quantity(item: Quantity, response: Response) -> dict:
     3. Stock for sale of all
     """
     rpc.response_len_setter(response_len=1)
-    b = item.get()
-    a = convert_case(item.get(), action='snake')
     quantity_result = rpc.publish(
         message={
             "quantity": {
@@ -97,17 +95,18 @@ def set_product_quantity(item: Quantity, response: Response) -> dict:
     )
     quantity_result = quantity_result.get("quantity", {})
     if quantity_result.get("success"):
-        rpc.publish(
-            message={
-                "product": {
-                    "action": "step_up_product",
-                    "body": {
-                        "system_code": item.system_code
+        if quantity_result.get("message", {}) == 'quantity set successfully':
+            rpc.publish(
+                message={
+                    "product": {
+                        "action": "step_up_product",
+                        "body": {
+                            "system_code": item.system_code
+                        }
                     }
-                }
-            },
-            headers={"product": True}
-        )
+                },
+                headers={"product": True}
+            )
         response.status_code = quantity_result.get("status_code", 200)
         return {"message": quantity_result.get("message")}
     raise HTTPException(status_code=quantity_result.get("status_code", 500),
