@@ -725,7 +725,6 @@ def get_product_list_back_office(
     message_product = product_result.get("message", {})
     product_list = list()
     for product in message_product['products']:
-        product['image'] = "/default_product.png"
         pricing_result = rpc.publish(
             message={
                 "pricing": {
