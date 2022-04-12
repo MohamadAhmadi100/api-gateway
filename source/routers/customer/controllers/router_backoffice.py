@@ -3,6 +3,7 @@ from typing import Optional
 
 from fastapi import Response, Depends, HTTPException
 from fastapi import status, APIRouter
+from fastapi.responses import JSONResponse
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.customer.validators import validation_portal
@@ -56,20 +57,17 @@ def get_customers_data(
             "customer": {
                 "action": "get_customers_grid_data",
                 "body": {
-                    "data": dict(value)
+                    "data": value.json()
                 }
             }
         },
         headers={'customer': True}
     )
     customer_result = result.get("customer", {})
-    customer_result = {}
     if not customer_result.get("success"):
         raise HTTPException(
             status_code=customer_result.get("status_code", 500),
             detail={"error": customer_result.get("error", "Something went wrong")}
         )
-    else:
-        response.status_code = customer_result.get("status_code", 200)
-        print(customer_result)
-        return customer_result.get("message")
+    response.status_code = customer_result.get("status_code", 200)
+    return JSONResponse(customer_result.get("message"))
