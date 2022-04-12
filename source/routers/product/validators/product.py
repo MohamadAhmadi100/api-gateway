@@ -89,3 +89,16 @@ class AddAtributes(BaseModel):
         alias="systemCode"
     )
     attributes: dict
+
+
+class EditProduct(BaseModel):
+    visible_in_site: bool = Field(..., title="نمایش در سایت", isRequired=True, alias="visibleInSite")
+
+    @validator('visible_in_site')
+    def visible_in_site_validator(cls, value):
+        if not isinstance(value, bool):
+            raise HTTPException(status_code=417, detail={
+                "error": "visible_in_site must be a boolean",
+                "label": "نمایش در سایت باید از نوع بولین باشد"
+            })
+        return value

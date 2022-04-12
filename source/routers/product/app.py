@@ -7,7 +7,7 @@ from source.config import settings
 from source.helpers.case_converter import convert_case
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
-from source.routers.product.validators.product import CreateChild, AddAtributes, CreateParent
+from source.routers.product.validators.product import CreateChild, AddAtributes, CreateParent, EditProduct
 from source.helpers.create_class import CreateClass
 
 TAGS = [
@@ -341,6 +341,36 @@ def delete_product(
                 "action": "delete_product",
                 "body": {
                     "system_code": system_code
+                }
+            }
+        },
+        headers={'product': True}
+    )
+    product_result = product_result.get("product", {})
+    if product_result.get("success"):
+        response.status_code = product_result.get("status_code", 200)
+        return convert_case(product_result.get("message"), 'camel')
+    raise HTTPException(status_code=product_result.get("status_code", 500),
+                        detail={"error": product_result.get("error", "Something went wrong")})
+
+
+@app.post("/edit_product/{systemCode}", tags=["Product"])
+def edit_product(
+        response: Response,
+        system_code: str = Path(..., min_length=11, max_length=12, alias='systemCode'),
+        item: EditProduct = Body(...)
+) -> dict:
+    """
+    Edit a product by name in main collection in database.
+    """
+    rpc.response_len_setter(response_len=1)
+    product_result = rpc.publish(
+        message={
+            "product": {
+                "action": "edit_product",
+                "body": {
+                    "system_code": system_code,
+                    "item": dict(item)
                 }
             }
         },
