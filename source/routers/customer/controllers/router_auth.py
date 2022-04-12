@@ -56,9 +56,8 @@ def check_is_registered(
             status_code=customer_result.get("status_code", 500),
             detail={"error": customer_result.get("error", "Something went wrong")}
         )
-    else:
-        response.status_code = customer_result.get("status_code", 200)
-        return customer_result.get("message")
+    response.status_code = customer_result.get("status_code", 200)
+    return customer_result.get("message")
 
 
 @router_auth.post("/send-otp/")
@@ -81,9 +80,8 @@ def send_otp_code(value: validation_auth.CustomerAuth, response: Response):
             status_code=customer_result.get("status_code", 500),
             detail={"error": customer_result.get("error", "Something went wrong")}
         )
-    else:
-        response.status_code = customer_result.get("status_code", 200)
-        return customer_result.get("message")
+    response.status_code = customer_result.get("status_code", 200)
+    return customer_result.get("message")
 
 
 @router_auth.post("/verify-otp/")
@@ -108,21 +106,20 @@ def verify_otp_code(value: validation_auth.CustomerVerifyOTP, response: Response
             status_code=customer_result.get("status_code", 500),
             detail={"error": customer_result.get("error", "Something went wrong")}
         )
-    else:
-        customer_info = customer_result.get("message").get('data')
-        sub_dict = {
-            "user_id": customer_info.get('customerID'),
-            "customer_type": customer_info.get('customerType'),
-            "phone_number": customer_info.get('customerPhoneNumber'),
-        }
-        response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
-        response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
-        response.status_code = customer_result.get("status_code", 200)
-        try:
-            del customer_result.get("message")["data"]
-        except KeyError:
-            ...
-        return customer_result.get("message")
+    customer_info = customer_result.get("message").get('data')
+    sub_dict = {
+        "user_id": customer_info.get('customerID'),
+        "customer_type": customer_info.get('customerType'),
+        "phone_number": customer_info.get('customerPhoneNumber'),
+    }
+    response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
+    response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
+    response.status_code = customer_result.get("status_code", 200)
+    try:
+        del customer_result.get("message")["data"]
+    except KeyError:
+        ...
+    return customer_result.get("message")
 
 
 @router_auth.get("/login/otp/")
@@ -155,18 +152,17 @@ def checking_login_otp_code(
             status_code=customer_result.get("status_code", 500),
             detail={"error": customer_result.get("error", "Something went wrong")}
         )
-    else:
-        customer_info = customer_result.get("message").get('data')
-        sub_dict = {
-            "user_id": customer_info.get('customerID'),
-            "customer_type": customer_info.get('customerType'),
-            "phone_number": customer_info.get('customerPhoneNumber'),
-        }
-        response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
-        response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
+    customer_info = customer_result.get("message").get('data')
+    sub_dict = {
+        "user_id": customer_info.get('customerID'),
+        "customer_type": customer_info.get('customerType'),
+        "phone_number": customer_info.get('customerPhoneNumber'),
+    }
+    response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
+    response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
 
-        response.status_code = customer_result.get("status_code", 200)
-        return customer_result.get("message")
+    response.status_code = customer_result.get("status_code", 200)
+    return customer_result.get("message")
 
 
 @router_auth.get("/login/password/")
@@ -199,17 +195,16 @@ def checking_login_password(
             status_code=customer_result.get("status_code", 500),
             detail={"error": customer_result.get("error", "Something went wrong")}
         )
-    else:
-        customer_info = customer_result.get('data')
-        sub_dict = {
-            "user_id": customer_info.get('customerID'),
-            "customer_type": customer_info.get('customerType'),
-            "phone_number": customer_info.get('customerPhoneNumber'),
-        }
-        response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
-        response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
-        response.status_code = customer_result.get("status_code", 200)
-        return customer_result
+    customer_info = customer_result.get('data')
+    sub_dict = {
+        "user_id": customer_info.get('customerID'),
+        "customer_type": customer_info.get('customerType'),
+        "phone_number": customer_info.get('customerPhoneNumber'),
+    }
+    response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
+    response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
+    response.status_code = customer_result.get("status_code", 200)
+    return customer_result
 
 
 @router_auth.post("/check-token/")
@@ -249,9 +244,8 @@ def save_logout(
             status_code=customer_result.get("status_code", 500),
             detail={"error": customer_result.get("error", "Something went wrong")}
         )
-    else:
-        response.status_code = customer_result.get("status_code", 202)
-        return customer_result.get("message")
+    response.status_code = customer_result.get("status_code", 202)
+    return customer_result.get("message")
 
 
 @router_auth.post("/forget-password/")

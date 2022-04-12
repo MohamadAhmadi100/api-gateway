@@ -26,7 +26,7 @@ class RabbitRPC:
         self.connection = None
         self.channel = None
         self.connect()
-        self.broker_response = dict()
+        self.broker_response = {}
         self.corr_id = None
         self.response_len = 0
         self.timeout = timeout

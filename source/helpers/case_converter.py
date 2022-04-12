@@ -9,8 +9,7 @@ def snake_to_camel(snake_str):
 
 # convert camelCase to snake_case
 def camel_to_snake(camel_str):
-    name = re.sub(r'(?<!^)(?=[A-Z])', '_', camel_str).lower()
-    return name
+    return re.sub(r'(?<!^)(?=[A-Z])', '_', camel_str).lower()
 
 
 # converting all keys of dict to camelCase or sanke_case

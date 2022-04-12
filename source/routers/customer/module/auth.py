@@ -55,10 +55,7 @@ class AuthHandler:
             return False
 
         else:
-            if payload.get("scope") == "access":
-                return payload
-            else:
-                return False
+            return payload if payload.get("scope") == "access" else False
 
     def decode_refresh_token(self, token: str):
         try:
@@ -77,10 +74,7 @@ class AuthHandler:
             return False
 
         else:
-            if payload.get("scope") == "refresh":
-                return payload
-            else:
-                return False
+            return payload if payload.get("scope") == "refresh" else False
 
     def check_current_user_tokens(self, access: str = Header(...), refresh: str = Header(...)):
 
