@@ -1,5 +1,6 @@
 import json
 import signal
+import sys
 import uuid
 import time
 
@@ -25,7 +26,7 @@ class RabbitRPC:
         self.connection = None
         self.channel = None
         self.connect()
-        self.broker_response = dict()
+        self.broker_response = {}
         self.corr_id = None
         self.response_len = 0
         self.timeout = timeout
@@ -89,6 +90,17 @@ class RabbitRPC:
             return result
         except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed,
                 pika.exceptions.ChannelWrongStateError, StreamLostError) as error:
+            sys.stdout.write("\033[1;31m")
+            print("        !!! ERROR !!!       =================== Pika Exception raised: ", end="")
+            sys.stdout.write("\033[;1m\033[1;31m")
+            print(error, " ========================     ")
+            self.connect()
+            self.publish(message=message, headers=headers, extra_data=extra_data)
+        except Exception as e:
+            sys.stdout.write("\033[1;31m")
+            print("        !!! ERROR !!!       =================== Unknown Exception raised: ", end="")
+            sys.stdout.write("\033[;1m\033[1;31m")
+            print(e, " ========================     ")
             self.connect()
             self.publish(message=message, headers=headers, extra_data=extra_data)
 

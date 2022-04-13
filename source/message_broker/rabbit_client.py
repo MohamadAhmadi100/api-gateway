@@ -27,10 +27,7 @@ class RabbitRPCClient:
         self.callback = callback
         self.fanout_callback = None
         self.headers = headers
-        if headers_match_all:
-            self.headers["x-match"] = "all"
-        else:
-            self.headers["x-match"] = "any"
+        self.headers["x-match"] = "all" if headers_match_all else "any"
         self.channel.queue_bind(
             exchange=exchange_name,
             queue=self.receiving_queue,
@@ -41,16 +38,9 @@ class RabbitRPCClient:
     def connect(self):
         # connect to rabbit with defined credentials
         credentials = pika.PlainCredentials(self.user, self.password)
-        connection = pika.BlockingConnection(
-            pika.ConnectionParameters(
-                host=self.host,
-                port=self.port,
-                credentials=credentials,
-                heartbeat=5,
-                blocked_connection_timeout=86400  # 86400 seconds = 24 hours
-            )
-        )
-        return connection
+        return pika.BlockingConnection(
+            pika.ConnectionParameters(host=self.host, port=self.port, credentials=credentials, heartbeat=5,
+                                      blocked_connection_timeout=86400))  # 86400 seconds = 24 hours
 
     def publish(self, channel, method, properties, body):
         # publish result of messages
@@ -99,6 +89,8 @@ if __name__ == "__main__":
                           headers={'service': True}, headers_match_all=False)
     rpc.connect()
     rpc.consume()
+
+
     # ----------------------------------------------------------------------
 
     def fanout_callback(message: dict):

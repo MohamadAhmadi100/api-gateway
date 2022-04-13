@@ -191,7 +191,7 @@ def get_wallet_by_customer_id(
 # ----------------------------------- end customer endpoints --------------------------------------- #
 
 
-@app.put("/charge_wallet", tags=["charge wallet amount"])
+@app.put("/charge_wallet", tags=["customer side"])
 def charge_wallet(
         charge_data: Charge,
         response: Response,
