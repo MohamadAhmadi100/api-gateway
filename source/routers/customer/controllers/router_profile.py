@@ -263,7 +263,7 @@ router_profile = APIRouter(
 #         "values_label": None,
 #         "set_to_nodes": False
 #     },
-#     "customerCrateTime": {
+#     "customerCreateTime": {
 #         "name": "customerCrateTime",
 #         "label": "تاریخ ثبت نام",
 #         "customer_type": "any",
@@ -453,36 +453,40 @@ def get_profile(
         headers={'customer': True}
     )
     customer_result = result.get("customer", {})
-    if customer_result.get("success"):
-        rpc.response_len_setter(response_len=1)
-        result = rpc.publish(
-            message={
-                "attribute": {
-                    "action": "get_all_attributes_by_assignee",
-                    "body": {
-                        "name": "customer"
-                    }
-                }
-            },
-            headers={'attribute': True}
+    if not customer_result.get("success"):
+        raise HTTPException(
+            status_code=customer_result.get("status_code", 500),
+            detail={"error": customer_result.get("error", "Something went wrong")}
         )
-        attribute_result = result.get("attribute", {})
-        if not attribute_result.get("success"):
-            raise HTTPException(status_code=attribute_result.get("status_code", 500),
-                                detail={"error": attribute_result.get("error", "Something went wrong")})
-
-        attributes = attribute_result.get("message", [])
-        for attr, value in customer_result.get("success").items():
-            # [ for attr_name in attributes if attr_name==attr]
-            if attributes.get(attr):
-                attributes[attr]["value"] = value
-        response.status_code = status.HTTP_200_OK
-        response.headers["accessToken"] = header.get("access_token")
-        response.headers["refresh_token"] = header.get("refresh_token")
-        # return custom_attribute
-    response.status_code = status.HTTP_404_NOT_FOUND
-    message = {"massage": "اطلاعاتی برای کاربر مورد نظر وجود ندارد"}
-    return message
+    rpc.response_len_setter(response_len=1)
+    result = rpc.publish(
+        message={
+            "attribute": {
+                "action": "get_all_attributes_by_assignee",
+                "body": {
+                    "name": "customer"
+                }
+            }
+        },
+        headers={'attribute': True}
+    )
+    attribute_result = result.get("attribute", {})
+    if not attribute_result.get("success"):
+        raise HTTPException(status_code=attribute_result.get("status_code", 500),
+                            detail={"error": attribute_result.get("error", "Something went wrong")})
+    customer_data = customer_result.get("message", {})
+    attributes = attribute_result.get("message", [])
+    print(customer_data)
+    print(attributes)
+    valid_attrs = []
+    for attr in attributes:
+        if customer_data.get(attr.get("name")) or customer_data.get(attr.get("name")) is None:
+            attr["value"] = customer_data.get(attr.get("name"))
+            valid_attrs.append(attr)
+    response.status_code = status.HTTP_200_OK
+    response.headers["accessToken"] = header.get("access_token")
+    response.headers["refresh_token"] = header.get("refresh_token")
+    return valid_attrs
 
 # @router_profile.put("/")
 # def edit_profile_data(
