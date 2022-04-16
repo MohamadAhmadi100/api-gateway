@@ -78,6 +78,8 @@ class AuthHandler:
 
     def check_current_user_tokens(self, access: str = Header(...), refresh: str = Header(...)):
 
+        access = access.replace(" ", "")
+        refresh = refresh.replace(" ", "")
         access_tok_payload = self.decode_access_token(access)
         refresh_tok_payload = self.decode_refresh_token(refresh)
 

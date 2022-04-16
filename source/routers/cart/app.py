@@ -48,7 +48,7 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
     """
     # get user from token
     user, token_dict = auth_header
-    customer_type = user.get("customer_type")
+    customer_type = user.get("customer_type")[0]
     # check if all will have response(timeout)
     rpc.response_len_setter(response_len=3)
     result = rpc.publish(
@@ -79,9 +79,9 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
     if not product_result.get("success"):
         raise HTTPException(status_code=product_result.get("status_code", 500),
                             detail={"error": product_result.get("error", "Something went wrong")})
-    elif not pricing_result.get("success"):
-        raise HTTPException(status_code=pricing_result.get("status_code", 500),
-                            detail={"error": pricing_result.get("error", "Something went wrong")})
+    # elif not pricing_result.get("success"):
+    #     raise HTTPException(status_code=pricing_result.get("status_code", 500),
+    #                         detail={"error": pricing_result.get("error", "Something went wrong")})
     elif not quantity_result.get("success"):
         raise HTTPException(status_code=quantity_result.get("status_code", 500),
                             detail={"error": quantity_result.get("error", "Something went wrong")})
@@ -91,6 +91,7 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
         final_result["user_info"] = {"user_id": user.get("user_id")}
         for product in product_result.get("products", []):
             if product.get("system_code") == item.system_code:
+                product['name'] = product_result.get("name")
                 final_result["product"] = product
                 break
 
@@ -124,13 +125,7 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
             message={
                 "cart": {
                     "action": "add_and_edit_product_in_cart",
-                    "body": {
-                        "user_info": final_result.get("user_info"),
-                        "product": final_result.get("product"),
-                        "price": final_result.get("price"),
-                        "count": final_result.get("count"),
-                        "storage_id": final_result.get("storage_id")
-                    }
+                    "body": final_result
                 }
             },
             headers={'cart': True}
