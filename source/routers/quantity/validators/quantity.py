@@ -61,11 +61,17 @@ class Quantity(BaseModel):
                                 "storageId": "0",
                                 "stock": 400,
                                 "stockForSale": 200,
+                                "minQty": 1,
+                                "maxQty": 100,
+                                "orderLimit": 5
                             },
                             {
                                 "storageId": "1",
                                 "stock": 100,
                                 "stockForSale": 50,
+                                "minQty": 1,
+                                "maxQty": 100,
+                                "orderLimit": 5
                             }
                         ]
                     }

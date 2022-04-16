@@ -6,6 +6,9 @@ class Storage(BaseModel):
     storage_id: str = Field(..., alias="storageId")
     stock: int
     stock_for_sale: int = Field(..., alias="stockForSale")
+    min_qty: int = Field(..., alias="minQty")
+    max_qty: int = Field(..., alias="maxQty")
+    order_limit: int = Field(..., alias="orderLimit")
 
     @validator("storage_id")
     def storage_id_validator(cls, value):
@@ -30,6 +33,33 @@ class Storage(BaseModel):
         elif 100_000_000_000_000 < value or value < 1:
             raise HTTPException(status_code=422,
                                 detail={"error": "stock_for_sale must be between 1 and 100_000_000_000_000"})
+        return value
+
+    @validator("min_qty")
+    def min_qty_validator(cls, value):
+        if not isinstance(value, int):
+            raise HTTPException(status_code=422, detail={"error": "min_qty must be int"})
+        elif 100_000_000_000_000 < value or value < 1:
+            raise HTTPException(status_code=422,
+                                detail={"error": "min_qty must be between 1 and 100_000_000_000_000"})
+        return value
+
+    @validator("max_qty")
+    def max_qty_validator(cls, value):
+        if not isinstance(value, int):
+            raise HTTPException(status_code=422, detail={"error": "max_qty must be int"})
+        elif 100_000_000_000_000 < value or value < 1:
+            raise HTTPException(status_code=422,
+                                detail={"error": "max_qty must be between 1 and 100_000_000_000_000"})
+        return value
+
+    @validator("order_limit")
+    def order_limit_validator(cls, value):
+        if not isinstance(value, int):
+            raise HTTPException(status_code=422, detail={"error": "order_limit must be int"})
+        elif 100_000_000_000_000 < value or value < 1:
+            raise HTTPException(status_code=422,
+                                detail={"error": "order_limit must be between 1 and 100_000_000_000_000"})
         return value
 
     def get(self):
