@@ -8,6 +8,7 @@ class Quantity(BaseModel):
     parent_system_code: str = Field(..., alias="parentSystemCode")
     system_code: str = Field(..., alias="systemCode")
     stock: int
+    reserved = 0
     total_stock_for_sale: int = Field(..., alias="totalStockForSale")
     customer_types: CustomerTypeModel = Field({}, alias="customerTypes")
 
@@ -85,6 +86,7 @@ class Quantity(BaseModel):
             "parent_system_code": self.parent_system_code,
             "system_code": self.system_code,
             "stock": self.stock,
+            "reserved": self.reserved,
             "total_stock_for_sale": self.total_stock_for_sale,
             "customer_types": self.customer_types.dict()
         }

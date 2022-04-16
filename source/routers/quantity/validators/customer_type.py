@@ -9,6 +9,7 @@ from source.routers.quantity.validators.storage import Storage
 class CustomerType(BaseModel):
     type: str
     stock_for_sale: int = Field(..., alias='stockForSale')
+    reserved = 0
     storages: List[Storage]
 
     @validator("type")
