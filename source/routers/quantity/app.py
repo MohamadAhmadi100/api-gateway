@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, Response, responses, Path
+from fastapi import FastAPI, HTTPException, Response, responses, Path, Query
 from starlette.exceptions import HTTPException as starletteHTTPException
 
 from source.config import settings
@@ -196,5 +196,37 @@ def get_product_stock(response: Response,
     if quantity_result.get("success"):
         response.status_code = quantity_result.get("status_code", 200)
         return convert_case(quantity_result.get("message"), action='camel')
+    raise HTTPException(status_code=quantity_result.get("status_code", 500),
+                        detail={"error": quantity_result.get("error", "Something went wrong")})
+
+
+@app.delete("/product/{systemCode}/{customerType}/{storage}/", tags=["Quantity"])
+def delete_quantity(response: Response,
+                    system_code: str = Path(..., min_length=12, max_length=12, alias="systemCode"),
+                    customer_type: str = Path(..., alias="customerType"),
+                    storage: str = Path(..., alias="storage")) -> dict:
+    """
+    delete product stock
+    """
+    rpc.response_len_setter(response_len=1)
+    quantity_result = rpc.publish(
+        message={
+            "quantity": {
+                "action": "delete_quantity",
+                "body": {
+                    "system_code": system_code,
+                    "customer_type": customer_type,
+                    "storage": storage
+                }
+            }
+        },
+        headers={'quantity': True}
+    )
+    quantity_result = quantity_result.get("quantity", {})
+    if quantity_result.get("success"):
+        response.status_code = quantity_result.get("status_code", 200)
+        return convert_case({
+            "message": quantity_result.get("message", "Quantity deleted successfully"),
+        }, action='camel')
     raise HTTPException(status_code=quantity_result.get("status_code", 500),
                         detail={"error": quantity_result.get("error", "Something went wrong")})
