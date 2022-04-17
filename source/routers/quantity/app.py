@@ -205,7 +205,7 @@ def get_product_stock(response: Response,
                         detail={"error": quantity_result.get("error", "Something went wrong")})
 
 
-@app.delete("/product/{systemCode}/{customerType}/{storage}/", tags=["Quantity"])
+@app.delete("/product/{systemCode}/{customerType}/{storageId}/", tags=["Quantity"])
 def delete_quantity(response: Response,
                     system_code: str = Path(..., min_length=12, max_length=12, alias="systemCode"),
                     customer_type: str = Path(..., alias="customerType"),
