@@ -75,38 +75,43 @@ def get_product_quantity_page(response: Response,
     pricing_result = price_page.get("pricing", {})
     if product_result.get("success"):
         response.status_code = product_result.get("status_code", 200)
-        if quantity_result.get("success"):
-            quantity = quantity_result.get("message", {}).get("products", {}).get(system_code, None)
-            quantity['price'] = pricing_result.get("message", {}).get("products", {}).get(system_code, {}).get(
-                "regular", None)
-            quantity['special'] = pricing_result.get("message", {}).get("products", {}).get(system_code, {}).get(
-                "special", None)
+        if product_result.get("message", {}).get("product", {}).get("step") >= 4:
+            if quantity_result.get("success"):
+                quantity = quantity_result.get("message", {}).get("products", {}).get(system_code, None)
+                quantity['price'] = pricing_result.get("message", {}).get("products", {}).get(system_code, {}).get(
+                    "regular", None)
+                quantity['special'] = pricing_result.get("message", {}).get("products", {}).get(system_code, {}).get(
+                    "special", None)
 
-            for key, value in quantity["customer_types"].items():
-                quantity["customer_types"][key]['price'] = pricing_result.get("message", {}).get("products", {}).get(
-                    system_code, {}).get("customer_type", {}).get(key, {}).get("regular", None)
-                quantity["customer_types"][key]['special'] = pricing_result.get("message", {}).get("products", {}).get(
-                    system_code, {}).get("customer_type", {}).get(key, {}).get("special", None)
-                if value.get("storages"):
-                    for key2, value2 in value["storages"].items():
-                        value["storages"][key2]['price'] = pricing_result.get("message", {}).get(
-                            "products", {}).get(system_code, {}).get("customer_type", {}).get(key, {}).get(
-                            "storages", {}).get(key2, {}).get("regular", None)
-                        value["storages"][key2]['special'] = pricing_result.get("message", {}).get(
-                            "products", {}).get(system_code, {}).get("customer_type", {}).get(key, {}).get(
-                            "storages", {}).get(key2, {}).get("special", None)
+                for key, value in quantity["customer_types"].items():
+                    quantity["customer_types"][key]['price'] = pricing_result.get("message", {}).get("products",
+                                                                                                     {}).get(
+                        system_code, {}).get("customer_type", {}).get(key, {}).get("regular", None)
+                    quantity["customer_types"][key]['special'] = pricing_result.get("message", {}).get("products",
+                                                                                                       {}).get(
+                        system_code, {}).get("customer_type", {}).get(key, {}).get("special", None)
+                    if value.get("storages"):
+                        for key2, value2 in value["storages"].items():
+                            value["storages"][key2]['price'] = pricing_result.get("message", {}).get(
+                                "products", {}).get(system_code, {}).get("customer_type", {}).get(key, {}).get(
+                                "storages", {}).get(key2, {}).get("regular", None)
+                            value["storages"][key2]['special'] = pricing_result.get("message", {}).get(
+                                "products", {}).get(system_code, {}).get("customer_type", {}).get(key, {}).get(
+                                "storages", {}).get(key2, {}).get("special", None)
+
+                return convert_case({
+                    "product": product_result.get("message"),
+                    "quantity": quantity
+                }, "camel")
 
             return convert_case({
                 "product": product_result.get("message"),
-                "quantity": quantity
-            }, "camel")
+                "quantity": None
+            }, 'camel')
+        raise HTTPException(status_code=409, detail={"error": "Product is not in the correct step"})
 
-        return convert_case({
-            "product": product_result.get("message"),
-            "quantity": None
-        }, 'camel')
     raise HTTPException(status_code=product_result.get("status_code", 500),
-                        detail=product_result.get("error", "something went wrong"))
+                        detail={"error": product_result.get("error", "something went wrong")})
 
 
 @app.post("/product/quantity/", tags=["Quantity"])

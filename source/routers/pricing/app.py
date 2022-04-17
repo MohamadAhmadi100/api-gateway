@@ -66,12 +66,15 @@ def get_product_price_page(response: Response,
     pricing_result = price_page.get("pricing", {})
     if product_result.get("success"):
         response.status_code = product_result.get("status_code", 200)
-        return convert_case({
-            "product": product_result.get("message"),
-            "pricing": pricing_result.get("message", {}).get("products", {}).get(system_code, None)
-        }, 'camel')
+        if product_result.get("message", {}).get("product", {}).get("step") >= 3:
+            return convert_case({
+                "product": product_result.get("message"),
+                "pricing": pricing_result.get("message", {}).get("products", {}).get(system_code, None)
+            }, 'camel')
+        raise HTTPException(status_code=409, detail={"error": "Product is not in the correct step"})
+
     raise HTTPException(status_code=product_result.get("status_code", 500),
-                        detail=product_result.get("error", "something went wrong"))
+                        detail={"error": product_result.get("error", "something went wrong")})
 
 
 @app.post("/product/price/", tags=["Pricing"])
