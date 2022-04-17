@@ -99,7 +99,7 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
 
         main_price = pricing_result.get("message", {}).get("products", {}).get(item.system_code, {})
         customer_type_price = main_price.get("customer_type", {}).get(customer_type, {})
-        storage_price = customer_type_price.get("storage", {})
+        storage_price = customer_type_price.get("storages", {}).get(item.storage_id, {})
 
         price = storage_price if storage_price else customer_type_price if customer_type_price else main_price
 
@@ -113,7 +113,7 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
 
         quantity = storage_quantity if storage_quantity else cusomer_type_quantity if cusomer_type_quantity else main_quantity
 
-        if quantity.get("stock_for_sale") >= item.count:
+        if quantity.get("stock_for_sale", 0) >= item.count:
             final_result["count"] = item.count
             final_result["storage_id"] = item.storage_id
         else:
