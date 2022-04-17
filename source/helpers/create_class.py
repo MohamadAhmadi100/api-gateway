@@ -27,14 +27,14 @@ class CreateClass:
         self._class_parent: object = parent
         self._class_name: str = class_name
         self._attributes_dict: dict = attributes
-        self._class_attributes_dict: dict = dict()
-        self._class_validator_dict: dict = dict()
+        self._class_attributes_dict: dict = {}
+        self._class_validator_dict: dict = {}
         self._key = None
 
     def make_class_attributes(self) -> None:
         for key, value in self._attributes_dict.items():
             self._class_attributes_dict[key] = Field(**value)
-            if value.get("required"):
+            if value.get("required") or value.get("is_required"):
                 self._class_attributes_dict[key] = (str, Field(**value))
             else:
                 self._class_attributes_dict[key] = (Optional[str], Field(**value))
@@ -42,7 +42,7 @@ class CreateClass:
     def make_validator_dict(self):
         for key, value in self._class_attributes_dict.items():
             self._key = key
-            self._class_validator_dict[key + "_validate"] = validator(key, allow_reuse=True)(
+            self._class_validator_dict[f'{key}_validate'] = validator(key, allow_reuse=True)(
                 self.make_validator_function)
 
     def make_validator_function(self, value: any) -> any:
@@ -50,7 +50,8 @@ class CreateClass:
         regex_pattern = self._attributes_dict.get(self._key, {}).get("regex_pattern")
         max_length = self._attributes_dict.get(self._key, {}).get("maxlength")
         min_length = self._attributes_dict.get(self._key, {}).get("minlength")
-
+        keys: list = list(self._attributes_dict.keys())
+        print(self._attributes_dict)
         if regex_pattern:
             match = re.fullmatch(regex_pattern, value)
             if not match:
@@ -80,5 +81,3 @@ class CreateClass:
         self.make_validator_dict()
         self.make_class()
         return self.__class
-
-
