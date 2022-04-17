@@ -204,7 +204,7 @@ def get_product_stock(response: Response,
 def delete_quantity(response: Response,
                     system_code: str = Path(..., min_length=12, max_length=12, alias="systemCode"),
                     customer_type: str = Path(..., alias="customerType"),
-                    storage: str = Path(..., alias="storage")) -> dict:
+                    storage_id: str = Path(..., alias="storageId")) -> dict:
     """
     delete product stock
     """
@@ -216,7 +216,7 @@ def delete_quantity(response: Response,
                 "body": {
                     "system_code": system_code,
                     "customer_type": customer_type,
-                    "storage": storage
+                    "storage": storage_id
                 }
             }
         },
