@@ -79,9 +79,9 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
     if not product_result.get("success"):
         raise HTTPException(status_code=product_result.get("status_code", 500),
                             detail={"error": product_result.get("error", "Something went wrong")})
-    # elif not pricing_result.get("success"):
-    #     raise HTTPException(status_code=pricing_result.get("status_code", 500),
-    #                         detail={"error": pricing_result.get("error", "Something went wrong")})
+    elif not pricing_result.get("success"):
+        raise HTTPException(status_code=pricing_result.get("status_code", 500),
+                            detail={"error": pricing_result.get("error", "Something went wrong")})
     elif not quantity_result.get("success"):
         raise HTTPException(status_code=quantity_result.get("status_code", 500),
                             detail={"error": quantity_result.get("error", "Something went wrong")})

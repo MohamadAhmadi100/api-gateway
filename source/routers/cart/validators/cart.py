@@ -49,8 +49,8 @@ class AddCart(BaseCart):
     def count_validator(cls, value):
         if not isinstance(value, int):
             raise HTTPException(status_code=400, detail="count must be a string")
-        if value < 1 or value > 10000:
-            raise HTTPException(status_code=400, detail="count must be between 1 and 10000")
+        if value > 10000:
+            raise HTTPException(status_code=400, detail="count must be less than 10000")
         return value
 
     class Config:
