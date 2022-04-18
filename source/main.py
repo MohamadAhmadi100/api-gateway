@@ -87,8 +87,7 @@ def shutdown_event() -> None:
 
 @app.get("/")
 def main():
-    return [{"path": "https://devapi.aasood.com" + route.path + "/docs/"}
-            for route in app.routes][4:-1]
+    return [{"path": f"https://devapi.aasood.com{route.path}/docs/"} for route in app.routes][4:-1]
 
 
 if __name__ == "__main__":
