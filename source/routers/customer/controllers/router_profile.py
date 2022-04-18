@@ -1,7 +1,6 @@
 import json
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi import Response, status
-from aiohttp import ClientSession
 from pydantic.error_wrappers import ValidationError
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
