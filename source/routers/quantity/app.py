@@ -1,12 +1,12 @@
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, Response, responses, Path, Query
+from fastapi import FastAPI, HTTPException, Response, responses, Path
 from starlette.exceptions import HTTPException as starletteHTTPException
 
 from source.config import settings
 from source.helpers.case_converter import convert_case
 from source.message_broker.rabbit_server import RabbitRPC
-from source.routers.quantity.validators.quantity import Quantity
+from source.routers.quantity.validators.quantity import Quantity, UpdateQuantity
 
 TAGS = [
     {
@@ -147,6 +147,26 @@ def set_product_quantity(item: Quantity, response: Response) -> dict:
                 },
                 headers={"product": True}
             )
+        response.status_code = quantity_result.get("status_code", 200)
+        return {"message": quantity_result.get("message")}
+    raise HTTPException(status_code=quantity_result.get("status_code", 500),
+                        detail={"error": quantity_result.get("error", "Something went wrong")})
+
+
+@app.put("/product/quantity/", tags=["Quantity"])
+def update_product_quantity(item: UpdateQuantity, response: Response) -> dict:
+    rpc.response_len_setter(response_len=1)
+    quantity_result = rpc.publish(
+        message={
+            "quantity": {
+                "action": "update_quantity",
+                "body": item.__dict__
+            }
+        },
+        headers={'quantity': True}
+    )
+    quantity_result = quantity_result.get("quantity", {})
+    if quantity_result.get("success"):
         response.status_code = quantity_result.get("status_code", 200)
         return {"message": quantity_result.get("message")}
     raise HTTPException(status_code=quantity_result.get("status_code", 500),
