@@ -50,7 +50,7 @@ class Address(BaseModel):
         pattern = r"^[0-9]{2,6}$"
         match = re.fullmatch(pattern, state_id)
         if not match:
-            raise HTTPException(status_code=422, detail={"error": "Please enter a valid customer id"})
+            raise HTTPException(status_code=422, detail={"error": "Please enter a valid"})
         return state_id
 
     @validator("city_id")
@@ -58,7 +58,7 @@ class Address(BaseModel):
         pattern = r"^[0-9]{2,6}$"
         match = re.fullmatch(pattern, city_id)
         if not match:
-            raise HTTPException(status_code=422, detail={"error": "Please enter a valid customer id"})
+            raise HTTPException(status_code=422, detail={"error": "Please enter "})
         return city_id
 
     @validator("city_name")
@@ -66,7 +66,7 @@ class Address(BaseModel):
         pattern = r"[ ]{0,1}[\u0600-\u06FF]{2,32}$"
         match = re.findall(pattern, city_name)
         if not match:
-            raise HTTPException(status_code=422, detail={"error": "Please enter a valid customer id"})
+            raise HTTPException(status_code=422, detail={"error": "Please "})
         return city_name
 
     @validator("street")
@@ -87,7 +87,7 @@ class Address(BaseModel):
 
     @validator("plaque")
     def validate_plaque(cls, plaque):
-        pattern = r"^[0-9]{2,6}$"
+        pattern = r"^[0-9]{1,6}$"
         match = re.fullmatch(pattern, plaque)
         if not match:
             raise HTTPException(status_code=422, detail={"error": "Please enter a valid plaque"})
@@ -107,3 +107,4 @@ class Address(BaseModel):
         match = re.fullmatch(pattern, tel)
         if not match:
             raise HTTPException(status_code=422, detail={"error": "Please enter a valid tel"})
+
