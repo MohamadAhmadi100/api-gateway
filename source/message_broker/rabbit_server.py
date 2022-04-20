@@ -89,7 +89,8 @@ class RabbitRPC:
             self.broker_response.clear()
             return result
         except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed,
-                pika.exceptions.ChannelWrongStateError, StreamLostError) as error:
+                pika.exceptions.ChannelWrongStateError, StreamLostError, pika.exceptions.AMQPHeartbeatTimeout,
+                pika.exceptions.AMQPConnectionError) as error:
             sys.stdout.write("\033[1;31m")
             print("        !!! ERROR !!!       =================== Pika Exception raised: ", end="")
             sys.stdout.write("\033[;1m\033[1;31m")
