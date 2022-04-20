@@ -76,10 +76,29 @@ def get_product_quantity_page(response: Response,
     if product_result.get("success"):
         response.status_code = product_result.get("status_code", 200)
         if product_result.get("message", {}).get("product", {}).get("step") >= 4:
+            quantity_obj = quantity_result.get("message", {}).get("products", {}).get(system_code)
+            pricing_obj = pricing_result.get("message", {}).get("products", {}).get(system_code)
+
+            for customer_type, value in pricing_obj.get("customer_type", {}).items():
+                for storage, value2 in value.get("storages", {}).items():
+                    pricing_obj['customer_type'][customer_type]['storages'][storage]['stock'] = quantity_obj.get(
+                        "customer_types", {}).get(customer_type, {}).get("storages", {}).get(storage, {}).get(
+                        "stock", 0)
+                    pricing_obj['customer_type'][customer_type]['storages'][storage][
+                        'stock_for_sale'] = quantity_obj.get(
+                        "customer_types", {}).get(customer_type, {}).get("storages", {}).get(storage, {}).get(
+                        "stock_for_sale", 0)
+                    pricing_obj['customer_type'][customer_type]['storages'][storage]['min_qty'] = quantity_obj.get(
+                        "customer_types", {}).get(customer_type, {}).get("storages", {}).get(storage, {}).get(
+                        "min_qty", 0)
+                    pricing_obj['customer_type'][customer_type]['storages'][storage]['max_qty'] = quantity_obj.get(
+                        "customer_types", {}).get(customer_type, {}).get("storages", {}).get(storage, {}).get(
+                        "max_qty", 0)
+
             return convert_case({
                 "product": product_result.get("message"),
-                "quantity": quantity_result.get("message", {}).get("products", {}).get(system_code),
-                "pricing": pricing_result.get("message", {}).get("products", {}).get(system_code)
+                "quantity": quantity_obj,
+                "pricing": pricing_obj
             }, 'camel')
         raise HTTPException(status_code=409, detail={"error": "Product is not in the correct step"})
 
