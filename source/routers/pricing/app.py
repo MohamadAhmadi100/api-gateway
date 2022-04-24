@@ -173,3 +173,35 @@ def get_product_price(response: Response,
         return convert_case(pricing_result.get("message"), 'camel')
     raise HTTPException(status_code=pricing_result.get("status_code", 500),
                         detail={"error": pricing_result.get("error", "Something went wrong")})
+
+
+@app.delete("/product/{systemCode}/{customerType}/{storageId}/", tags=["Pricing"])
+def delete_price(response: Response,
+                 system_code: str = Path(..., min_length=12, max_length=12, alias="systemCode"),
+                 customer_type: str = Path(..., alias="customerType"),
+                 storage_id: str = Path(..., alias="storageId")) -> dict:
+    """
+    delete product price
+    """
+    rpc.response_len_setter(response_len=1)
+    pricing_result = rpc.publish(
+        message={
+            "pricing": {
+                "action": "delete_price",
+                "body": {
+                    "system_code": system_code,
+                    "customer_type": customer_type,
+                    "storage": storage_id
+                }
+            }
+        },
+        headers={'pricing': True}
+    )
+    pricing_result = pricing_result.get("pricing", {})
+    if pricing_result.get("success"):
+        response.status_code = pricing_result.get("status_code", 200)
+        return convert_case({
+            "message": pricing_result.get("message", "Price deleted successfully"),
+        }, action='camel')
+    raise HTTPException(status_code=pricing_result.get("status_code", 500),
+                        detail={"error": pricing_result.get("error", "Something went wrong")})
