@@ -303,7 +303,7 @@ def get_product_by_system_code(
 
                     for price_key, price in pricing_result.get("message", {}).get("products", {}).get(
                             product.get("system_code"), {}).get("customer_type", {}).get(customer_type, {}).get(
-                            "storages", {}).items():
+                        "storages", {}).items():
 
                         if quantity.get("storage_id") == price.get("storage_id"):
                             item = dict()
@@ -662,6 +662,8 @@ def get_product_list_back_office(
                                                                                                     {}).get(
                         "total_stock_for_sale")
 
+        product_system_code = product.get("system_code")
+        product['system_code'] = product_system_code[:9] + "-" + product_system_code[9:]
         product_list.append(product)
     message_product['products'] = product_list
     if product_result.get("success"):

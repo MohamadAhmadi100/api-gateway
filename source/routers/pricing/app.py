@@ -6,7 +6,7 @@ from starlette.exceptions import HTTPException as starletteHTTPException
 from source.config import settings
 from source.helpers.case_converter import convert_case
 from source.message_broker.rabbit_server import RabbitRPC
-from source.routers.pricing.validators.pricing_validator import Price
+from source.routers.pricing.validators.pricing_validator import Price, UpdatePrice
 
 TAGS = [
     {
@@ -119,6 +119,36 @@ def set_product_price(item: Price, response: Response) -> dict:
                         detail={"error": pricing_result.get("error", "Something went wrong")})
 
 
+@app.put("/product/price/", tags=["Pricing"])
+def update_product_price(item: UpdatePrice, response: Response) -> dict:
+    """
+    update product(12 digits) price according to customer type and warehouse
+    priority of each price is like this:
+    1. Special price of warehouse
+    2. Price of warehouse
+    3. Special price of customer type
+    4. Price of customer type
+    5. Special price of all
+    6. Price of all
+    """
+    rpc.response_len_setter(response_len=1)
+    pricing_result = rpc.publish(
+        message={
+            "pricing": {
+                "action": "update_price",
+                "body": item.__dict__
+            }
+        },
+        headers={'pricing': True}
+    )
+    pricing_result = pricing_result.get("pricing", {})
+    if pricing_result.get("success"):
+        response.status_code = pricing_result.get("status_code", 200)
+        return {"message": pricing_result.get("message")}
+    raise HTTPException(status_code=pricing_result.get("status_code", 500),
+                        detail={"error": pricing_result.get("error", "Something went wrong")})
+
+
 @app.get("/product/price/{systemCode}/", tags=["Pricing"])
 def get_product_price(response: Response,
                       system_code: str = Path(..., min_length=11, max_length=11, alias='systemCode')) -> dict:
@@ -141,5 +171,37 @@ def get_product_price(response: Response,
     if pricing_result.get("success"):
         response.status_code = pricing_result.get("status_code", 200)
         return convert_case(pricing_result.get("message"), 'camel')
+    raise HTTPException(status_code=pricing_result.get("status_code", 500),
+                        detail={"error": pricing_result.get("error", "Something went wrong")})
+
+
+@app.delete("/product/{systemCode}/{customerType}/{storageId}/", tags=["Pricing"])
+def delete_price(response: Response,
+                 system_code: str = Path(..., min_length=12, max_length=12, alias="systemCode"),
+                 customer_type: str = Path(..., alias="customerType"),
+                 storage_id: str = Path(..., alias="storageId")) -> dict:
+    """
+    delete product price
+    """
+    rpc.response_len_setter(response_len=1)
+    pricing_result = rpc.publish(
+        message={
+            "pricing": {
+                "action": "delete_price",
+                "body": {
+                    "system_code": system_code,
+                    "customer_type": customer_type,
+                    "storage": storage_id
+                }
+            }
+        },
+        headers={'pricing': True}
+    )
+    pricing_result = pricing_result.get("pricing", {})
+    if pricing_result.get("success"):
+        response.status_code = pricing_result.get("status_code", 200)
+        return convert_case({
+            "message": pricing_result.get("message", "Price deleted successfully"),
+        }, action='camel')
     raise HTTPException(status_code=pricing_result.get("status_code", 500),
                         detail={"error": pricing_result.get("error", "Something went wrong")})
