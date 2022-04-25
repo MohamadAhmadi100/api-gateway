@@ -35,9 +35,9 @@ class MultipleStatus(BaseModel):
 
 
 class Filters(BaseModel):
-    registerDate: Optional[DateType]
-    lastOrderDate: Optional[DateType]
-    status: Optional[MultipleStatus]
+    customerJalaliCreateTime: Optional[DateType]
+    customerLastOrderDate: Optional[DateType]
+    values: Optional[CustomerStatus]
 
 
 class StaffAuth(BaseModel):
