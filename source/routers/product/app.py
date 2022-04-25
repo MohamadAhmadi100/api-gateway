@@ -332,7 +332,7 @@ def get_product_by_system_code(
 @app.delete("/{systemCode}", tags=["Product"])
 def delete_product(
         response: Response,
-        system_code: str = Path(..., min_length=12, max_length=12, alias='systemCode')
+        system_code: str = Path(..., min_length=11, max_length=12, alias='systemCode')
 ) -> dict:
     """
     Delete a product by name in main collection in database.
