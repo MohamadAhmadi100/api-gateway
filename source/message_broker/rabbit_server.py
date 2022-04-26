@@ -3,9 +3,8 @@ import signal
 import sys
 import uuid
 import time
-
+from threading import Thread
 import pika
-
 from source.config import settings
 from source.helpers.exception_handler import ExceptionHandler
 from pika.exceptions import StreamLostError
