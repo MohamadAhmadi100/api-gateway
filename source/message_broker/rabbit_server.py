@@ -49,15 +49,20 @@ class RabbitRPC:
             self.channel.exchange_declare(exchange=self.exchange_name, exchange_type='headers')
             self.queue_result = self.channel.queue_declare(queue="", exclusive=True)
             self.callback_queue = self.queue_result.method.queue
+            if self.channel_is_closed():
+                self.connect()
 
     def fanout_publish(self, exchange_name: str, message: dict):
         # publish to all services
-        self.channel.exchange_declare(exchange=exchange_name, exchange_type='fanout')
+        self.channel.exchange_declare(exchange=exchange_name, exchange_type='fanout', passive=True)
         self.channel.basic_publish(
             exchange=exchange_name,
             routing_key='',
             body=json.dumps(message)
         )
+
+    def channel_is_closed(self):
+        return self.channel.is_closed
 
     def response_len_setter(self, response_len: int):
         # response length setter for timeout handler
@@ -66,6 +71,9 @@ class RabbitRPC:
 
     def publish(self, message: dict, headers: dict, extra_data: str = None):
         # publish message with given message and headers
+        if self.channel_is_closed():
+            self.connect()
+            self.publish(message=message, headers=headers, extra_data=extra_data)
         try:
             self.channel.basic_publish(
                 exchange=self.exchange_name,
@@ -95,14 +103,12 @@ class RabbitRPC:
             sys.stdout.write("\033[;1m\033[1;31m")
             print(error, " ========================     ")
             self.connect()
-            self.publish(message=message, headers=headers, extra_data=extra_data)
         except Exception as e:
             sys.stdout.write("\033[1;31m")
             print("        !!! ERROR !!!       =================== Unknown Exception raised: ", end="")
             sys.stdout.write("\033[;1m\033[1;31m")
             print(e, " ========================     ")
             self.connect()
-            self.publish(message=message, headers=headers, extra_data=extra_data)
 
     def on_response(self, channel, method, properties, body):
         if self.corr_id == properties.correlation_id:
