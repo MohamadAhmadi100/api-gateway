@@ -1,19 +1,17 @@
-import re
 
-from fastapi import HTTPException
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel
 from typing import List
 
 
 class Stock(BaseModel):
-    stock_name: str
-    stock_id: str
+    stockName: str
+    stockId: str
     origin: str
     destination: str
     weight: int
-    total_price: int
-    total_item: int
+    totalPrice: int
+    totalItem: int
 
 class Shipment(BaseModel):
-    customer_id: int
+    customerId: int
     stocks: List[Stock]

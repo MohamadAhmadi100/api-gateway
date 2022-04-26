@@ -58,7 +58,7 @@ app.mount("/gallery_files/", StaticFiles(directory=settings.GALLERY_DIR), name="
 
 app.mount("/address/api/v1", address_app)
 
-app.mount("/shipment", shipment_app)
+app.mount("/shipment/api/v1", shipment_app)
 
 
 # ----------------------------------------- Start logging features  -------------------------------------------------- #
