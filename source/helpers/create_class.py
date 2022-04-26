@@ -51,7 +51,6 @@ class CreateClass:
         max_length = self._attributes_dict.get(self._key, {}).get("maxlength")
         min_length = self._attributes_dict.get(self._key, {}).get("minlength")
         keys: list = list(self._attributes_dict.keys())
-        print(self._attributes_dict)
         if regex_pattern:
             match = re.fullmatch(regex_pattern, value)
             if not match:

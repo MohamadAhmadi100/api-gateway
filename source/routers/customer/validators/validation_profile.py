@@ -31,7 +31,7 @@ def get_profile_attributes(data):
 
 
 class EditProfile(BaseModel):
-    attributes: dict
+    data: dict
     # customer_first_name: Optional[str] = Field(
     #     description="",
     #     title="نام",

@@ -255,7 +255,7 @@ def get_product_by_system_code(
     customer_type = None
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
-        customer_type = user_data.get("customer_type", "B2B")
+        customer_type = user_data.get("customer_type", ["B2B"])[0]
     rpc.response_len_setter(response_len=3)
     result = rpc.publish(
         message={
@@ -298,12 +298,12 @@ def get_product_by_system_code(
             if customer_type:
                 product['config']["warehouse"] = list()
                 for quantity_key, quantity in quantity_result.get("message", {}).get("products", {}).get(
-                        product.get("system_code")).get("customer_types").get(customer_type).get("storages",
-                                                                                                 {}).items():
+                        product.get("system_code"), {}).get("customer_types", {}).get(customer_type, {}).get("storages",
+                                                                                                             {}).items():
 
                     for price_key, price in pricing_result.get("message", {}).get("products", {}).get(
-                            product.get("system_code")).get("customer_type").get(customer_type).get("storages",
-                                                                                                    {}).items():
+                            product.get("system_code"), {}).get("customer_type", {}).get(customer_type, {}).get(
+                        "storages", {}).items():
 
                         if quantity.get("storage_id") == price.get("storage_id"):
                             item = dict()
@@ -332,7 +332,7 @@ def get_product_by_system_code(
 @app.delete("/{systemCode}", tags=["Product"])
 def delete_product(
         response: Response,
-        system_code: str = Path(..., min_length=12, max_length=12, alias='systemCode')
+        system_code: str = Path(..., min_length=11, max_length=12, alias='systemCode')
 ) -> dict:
     """
     Delete a product by name in main collection in database.
@@ -662,6 +662,8 @@ def get_product_list_back_office(
                                                                                                     {}).get(
                         "total_stock_for_sale")
 
+        product_system_code = product.get("system_code")
+        product['system_code'] = product_system_code[:9] + "-" + product_system_code[9:]
         product_list.append(product)
     message_product['products'] = product_list
     if product_result.get("success"):
