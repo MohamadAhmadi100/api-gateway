@@ -97,7 +97,7 @@ def get_product_quantity_page(response: Response,
 
             return convert_case({
                 "product": product_result.get("message"),
-                "quantity": quantity_obj,
+                "quantity": True if quantity_obj else False,
                 "pricing": pricing_obj
             }, 'camel')
         raise HTTPException(status_code=409, detail={"error": "Product is not in the correct step"})
