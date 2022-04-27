@@ -76,8 +76,8 @@ def get_product_quantity_page(response: Response,
     if product_result.get("success"):
         response.status_code = product_result.get("status_code", 200)
         if product_result.get("message", {}).get("product", {}).get("step") >= 4:
-            quantity_obj = quantity_result.get("message", {}).get("products", {}).get(system_code)
-            pricing_obj = pricing_result.get("message", {}).get("products", {}).get(system_code)
+            quantity_obj = quantity_result.get("message", {}).get("products", {}).get(system_code, {})
+            pricing_obj = pricing_result.get("message", {}).get("products", {}).get(system_code, {})
 
             for customer_type, value in pricing_obj.get("customer_type", {}).items():
                 for storage, value2 in value.get("storages", {}).items():
