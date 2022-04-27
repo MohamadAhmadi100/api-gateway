@@ -42,7 +42,6 @@ class RabbitRPC:
                     credentials=self.credentials,
                     heartbeat=0,
                     blocked_connection_timeout=86400,  # 86400 seconds = 24 hours
-                    heartbeat_interval=0
                 )
             )
             # self.connection.sleep(1)
