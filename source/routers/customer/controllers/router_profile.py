@@ -63,7 +63,6 @@ def get_profile(
         raise HTTPException(status_code=attribute_result.get("status_code", 500),
                             detail={"error": attribute_result.get("error", "Something went wrong")})
     customer_data = customer_result.get("message", {})
-    print(customer_data)
     attributes = attribute_result.get("message", [])
     valid_attrs = []
     for attr in attributes:
