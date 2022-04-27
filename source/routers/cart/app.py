@@ -50,7 +50,7 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
     user, token_dict = auth_header
     customer_type = user.get("customer_type")[0]
     # check if all will have response(timeout)
-    rpc.response_len_setter(response_len=3)
+    rpc.response_len_setter(response_len=2)
     result = rpc.publish(
         message={
             "product": {
@@ -59,11 +59,6 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
                     "system_code": item.parent_system_code,
                     "lang": "fa_ir"
                 }
-            }, "pricing": {
-                "action": "get_price",
-                "body": {
-                    "system_code": item.parent_system_code
-                }
             }, "quantity": {
                 "action": "get_quantity",
                 "body": {
@@ -71,17 +66,13 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
                 }
             }
         },
-        headers={'product': True, "pricing": True, "quantity": True}
+        headers={'product': True, "quantity": True}
     )
     product_result = result.get("product", {})
-    pricing_result = result.get("pricing", {})
     quantity_result = result.get("quantity", {})
     if not product_result.get("success"):
         raise HTTPException(status_code=product_result.get("status_code", 500),
                             detail={"error": product_result.get("error", "Something went wrong")})
-    elif not pricing_result.get("success"):
-        raise HTTPException(status_code=pricing_result.get("status_code", 500),
-                            detail={"error": pricing_result.get("error", "Something went wrong")})
     elif not quantity_result.get("success"):
         raise HTTPException(status_code=quantity_result.get("status_code", 500),
                             detail={"error": quantity_result.get("error", "Something went wrong")})
@@ -92,18 +83,9 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
         for product in product_result.get("products", []):
             if product.get("system_code") == item.system_code:
                 product['name'] = product_result.get("name")
+                product['parent_system_code'] = product_result.get("system_code")
                 final_result["product"] = product
                 break
-
-        # price actions
-
-        main_price = pricing_result.get("message", {}).get("products", {}).get(item.system_code, {})
-        customer_type_price = main_price.get("customer_type", {}).get(customer_type, {})
-        storage_price = customer_type_price.get("storages", {}).get(item.storage_id, {})
-
-        price = storage_price if storage_price else customer_type_price if customer_type_price else main_price
-
-        final_result["price"] = price.get("special") if price.get("special") else price.get("regular")
 
         # quantity actions
 
@@ -145,13 +127,15 @@ def get_cart(response: Response, auth_header=Depends(auth_handler.check_current_
     get user cart
     """
     user, token_dict = auth_header
+    user_id = user.get("user_id")
+    customer_type = user.get("customer_type")[0]
     rpc.response_len_setter(response_len=1)
     result = rpc.publish(
         message={
             "cart": {
                 "action": "get_cart",
                 "body": {
-                    "user_id": user.get("user_id")
+                    "user_id": user_id
                 }
             }
         },
@@ -162,6 +146,28 @@ def get_cart(response: Response, auth_header=Depends(auth_handler.check_current_
         raise HTTPException(status_code=cart_result.get("status_code", 500),
                             detail={"error": cart_result.get("error", "Something went wrong")})
     else:
+        for product in cart_result["message"]["products"]:
+            pricing_result = rpc.publish(
+                message={
+                    "pricing": {
+                        "action": "get_price",
+                        "body": {
+                            "system_code": product.get("parent_system_code")
+                        }
+                    }
+                },
+                headers={'pricing': True}
+            )
+            pricing_result = pricing_result.get("pricing", {})
+
+            main_price = pricing_result.get("message", {}).get("products", {}).get(product.get("system_code"), {})
+            customer_type_price = main_price.get("customer_type", {}).get(customer_type, {})
+            storage_price = customer_type_price.get("storages", {}).get(product.get("storage_id"), {})
+
+            price = storage_price if storage_price else customer_type_price if customer_type_price else main_price
+
+            product["price"] = price.get("special") if price.get("special") else price.get("regular")
+
         response.status_code = cart_result.get("status_code", 200)
         return convert_case(cart_result.get("message"), 'camel')
 
