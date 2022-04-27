@@ -146,6 +146,7 @@ def get_cart(response: Response, auth_header=Depends(auth_handler.check_current_
         raise HTTPException(status_code=cart_result.get("status_code", 500),
                             detail={"error": cart_result.get("error", "Something went wrong")})
     else:
+        base_price = 0
         for product in cart_result["message"]["products"]:
             pricing_result = rpc.publish(
                 message={
@@ -168,6 +169,9 @@ def get_cart(response: Response, auth_header=Depends(auth_handler.check_current_
 
             product["price"] = price.get("special") if price.get("special") else price.get("regular")
 
+            base_price += product.get("price") * product.get("count")
+
+        cart_result["message"]["base_price"] = base_price
         response.status_code = cart_result.get("status_code", 200)
         return convert_case(cart_result.get("message"), 'camel')
 
