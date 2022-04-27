@@ -40,6 +40,7 @@ class RabbitRPCClient:
         credentials = pika.PlainCredentials(self.user, self.password)
         return pika.BlockingConnection(
             pika.ConnectionParameters(host=self.host, port=self.port, credentials=credentials, heartbeat=5,
+                                      heartbeat_interval=0,
                                       blocked_connection_timeout=86400))  # 86400 seconds = 24 hours
 
     def publish(self, channel, method, properties, body):
@@ -89,6 +90,7 @@ if __name__ == "__main__":
                           headers={'service': True}, headers_match_all=False)
     rpc.connect()
     rpc.consume()
+
 
     # ----------------------------------------------------------------------
 
