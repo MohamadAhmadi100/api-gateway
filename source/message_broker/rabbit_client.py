@@ -90,7 +90,6 @@ if __name__ == "__main__":
     rpc.connect()
     rpc.consume()
 
-
     # ----------------------------------------------------------------------
 
     def fanout_callback(message: dict):
