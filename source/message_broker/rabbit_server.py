@@ -34,14 +34,14 @@ class RabbitRPC:
     def connect(self):
         # connect to rabbit with defined credentials
         if not self.connection or self.connection.is_closed:
-            self.credentials = pika.PlainCredentials(self.user, self.password)
+            credentials = pika.PlainCredentials(self.user, self.password)
             self.connection = pika.BlockingConnection(
                 pika.ConnectionParameters(
                     host=self.host,
                     port=self.port,
                     credentials=self.credentials,
                     heartbeat=0,
-                    blocked_connection_timeout=86400,  # 86400 seconds = 24 hours
+                    blocked_connection_timeout=86400  # 86400 seconds = 24 hours
                 )
             )
             # self.connection.sleep(1)
