@@ -12,7 +12,7 @@ def camel_to_snake(camel_str):
     return re.sub(r'(?<!^)(?=[A-Z])', '_', camel_str).lower()
 
 
-# converting all keys of dict to camelCase or sanke_case
+# converting all keys of dict to camelCase or snake_case
 def convert_case(dict_data, action):
     function = camel_to_snake if action == 'snake' else snake_to_camel
     new_dict = {}
