@@ -2,12 +2,12 @@ import json
 import signal
 import sys
 import uuid
-import time
-from threading import Thread
+
 import pika
+from pika.exceptions import StreamLostError
+
 from source.config import settings
 from source.helpers.exception_handler import ExceptionHandler
-from pika.exceptions import StreamLostError
 
 
 class RabbitRPC:
@@ -29,7 +29,13 @@ class RabbitRPC:
         self.corr_id = None
         self.response_len = 0
         self.timeout = timeout
-        signal.signal(signal.SIGALRM, self.timeout_handler)
+        self.consume()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.connection.close()
 
     def connect(self):
         # connect to rabbit with defined credentials
@@ -88,10 +94,8 @@ class RabbitRPC:
                 body=json.dumps(message) if isinstance(message, dict) else message
             )
             print("message sent...")
-            signal.alarm(self.timeout)
             while len(self.broker_response) < self.response_len:
                 self.connection.process_data_events()
-            signal.alarm(0)
             result = self.broker_response.copy()
             self.broker_response.clear()
             return result
