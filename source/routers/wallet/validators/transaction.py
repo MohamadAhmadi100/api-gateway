@@ -1,6 +1,6 @@
 from enum import Enum
 from pydantic import BaseModel, Field, BaseConfig, validator
-from typing import Optional
+from typing import Optional, List
 from fastapi import Query
 
 
@@ -18,14 +18,14 @@ def make_enum(name, values):
 
 class SortName(str, Enum):
     customer_id = "customerId"
-    order_number = "customerNumber"
+    order_number = "orderNumber"
     payment_id = "paymentID"
     payment_date = "paymentDate"
     amount = "amount"
     wallet_id = "walletID"
     user_id = "userId"
     transaction_date = "transactionDate"
-    create_date = "createDate"
+    create_Persian_Date = "createPersianDate"
     transaction_id = "transactionId"
 
 
@@ -34,14 +34,74 @@ class SortType(str, Enum):
     desc = "desc"
 
 
+# class FilterRangeName(BaseModel):
+#     name: str = Field(
+#         placeholder="",
+#         title="نام فیلد",
+#         type="str",
+#     )
+#
+#
+# class RangeDateValue(BaseModel):
+#     # name: Optional[FilterRangeName]
+#     min: str = Field(
+#         placeholder="1401-01-17 11:25:00",
+#         type="jalali",
+#         example="1401-01-17 11:25:00"
+#     )
+#     max: str = Field(
+#         placeholder="1401-01-17 11:25:00",
+#         type="jalali",
+#         example="1401-01-18 23:25:00"
+#     )
+#
+#
+# class RangeIntValue(BaseModel):
+#     # name: Optional[FilterRangeName]
+#     min: int = Field(
+#         title="min",
+#         alias="min",
+#         name="min",
+#         dataType="int",
+#         isRquired=False
+#     )
+#     max: int = Field(
+#         title="max ",
+#         alias="max",
+#         name="max",
+#         dataType="int",
+#         isRquired=False
+#     )
+#
+# class RangeDate(BaseModel):
+#     name: str = Field(
+#         placeholder="",
+#         title="نام فیلد",
+#         type="str",
+#     )
+#     value:Optional[RangeDateValue]
+#
+# class RangeData(BaseModel):
+#     name: str = Field(
+#         placeholder="",
+#         title="نام فیلد",
+#         type="str",
+#     )
+#     value: Optional[RangeIntValue]
+#
+# class Range(BaseModel):
+#     paymentDate:Optional[RangeDate]
+#     createPersianDate:Optional[RangeDate]
+#     amount:Optional[RangeData]
+
 class Transaction(BaseModel):
     page: Optional[int] = Field(alias="page", default=1)
     sort_name: Optional[SortName] = Field(alias="sortName", default="customerId")
     sort_type: Optional[SortType] = Field(alias="sortType", default="desc")
     per_page: Optional[int] = Field(alias="perPage", default=15)
     search: Optional[str] = Field(alias="search", default=None)
-    filters: Optional[list] = Field(alias="filters", default=None)
-    ranges: Optional[list] = Field(alias="ranges", default=None)
+    filters: Optional[List[dict]] = Field(alias="filters", default=None)
+    ranges: Optional[List[dict]] = Field(alias="ranges", default=None)
 
     class Config:
         orm_mode = True
@@ -50,8 +110,7 @@ class Transaction(BaseModel):
     def check_filters(cls, filters):
         if filters:
             try:
-                filters = dict(filters)
-                print(filters)
+                filters = filters
             except:
                 for item in filters:
                     if len(item.keys()) != 2:
