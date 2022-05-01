@@ -49,9 +49,10 @@ def get_profile_info(user_data: dict) -> dict or Exception:
                             detail={"error": attribute_result.get("error", "Something went wrong")})
     customer_data = customer_result.get("message", {})
     attributes = attribute_result.get("message", [])
-    valid_attrs = []
+    valid_attrs = {}
     for attr in attributes:
         if customer_data.get(attr.get("name")) is None or not None:
             attr["value"] = customer_data.get(attr.get("name"))
-            valid_attrs.append(attr)
-    return valid_attrs
+            customer_data[attr['name']] = attr['value']
+
+    return customer_data
