@@ -6,11 +6,6 @@ from source.routers.attribute.validators.assignee import Assignee
 
 router = APIRouter()
 
-# initialize rabbit mq
-rpc = RabbitRPC(exchange_name='headers_exchange', timeout=5)
-rpc.connect()
-rpc.consume()
-
 
 @router.post("/assignee/attr/{attr_name}", tags=["assignee"], status_code=201)
 def add_attribute_to_assignee(
@@ -21,37 +16,38 @@ def add_attribute_to_assignee(
     """
     Add an attribute to assignee collection(if not existed, it will create one) in database.
     """
-    rpc.response_len_setter(response_len=1)
-    result = rpc.publish(
-        message={
-            "attribute": {
-                "action": "add_attribute_to_assignee",
-                "body": {
-                    "item": item.dict(),
-                    "attr_name": attr_name
-                }
-            }
-        },
-        headers={'attribute': True}
-    )
-    attribute_result = result.get("attribute", {})
-    if not attribute_result.get("success"):
-        raise HTTPException(status_code=attribute_result.get("status_code", 500),
-                            detail={"error": attribute_result.get("error", "Something went wrong")})
-    else:
-        product_result = rpc.publish(
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
             message={
-                "product": {
-                    "action": "update_attributes",
+                "attribute": {
+                    "action": "add_attribute_to_assignee",
                     "body": {
-                        "attributes": attribute_result.get("attribute")
+                        "item": item.dict(),
+                        "attr_name": attr_name
                     }
                 }
             },
-            headers={'product': True}
+            headers={'attribute': True}
         )
-        response.status_code = attribute_result.get("status_code", 200)
-        return {"message": attribute_result.get("message", [])}
+        attribute_result = result.get("attribute", {})
+        if not attribute_result.get("success"):
+            raise HTTPException(status_code=attribute_result.get("status_code", 500),
+                                detail={"error": attribute_result.get("error", "Something went wrong")})
+        else:
+            product_result = rpc.publish(
+                message={
+                    "product": {
+                        "action": "update_attributes",
+                        "body": {
+                            "attributes": attribute_result.get("attribute")
+                        }
+                    }
+                },
+                headers={'product': True}
+            )
+            response.status_code = attribute_result.get("status_code", 200)
+            return {"message": attribute_result.get("message", [])}
 
 
 @router.get("/assignee/{name}/attrs/", tags=["assignee"], status_code=200)
@@ -62,25 +58,26 @@ def get_all_attributes_by_assignee(
     """
     Get all the attributes of assignee collection in database.
     """
-    rpc.response_len_setter(response_len=1)
-    result = rpc.publish(
-        message={
-            "attribute": {
-                "action": "get_all_attributes_by_assignee",
-                "body": {
-                    "name": name
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
+            message={
+                "attribute": {
+                    "action": "get_all_attributes_by_assignee",
+                    "body": {
+                        "name": name
+                    }
                 }
-            }
-        },
-        headers={'attribute': True}
-    )
-    attribute_result = result.get("attribute", {})
-    if not attribute_result.get("success"):
-        raise HTTPException(status_code=attribute_result.get("status_code", 500),
-                            detail={"error": attribute_result.get("error", "Something went wrong")})
-    else:
-        response.status_code = attribute_result.get("status_code", 200)
-        return {"message": attribute_result.get("message", [])}
+            },
+            headers={'attribute': True}
+        )
+        attribute_result = result.get("attribute", {})
+        if not attribute_result.get("success"):
+            raise HTTPException(status_code=attribute_result.get("status_code", 500),
+                                detail={"error": attribute_result.get("error", "Something went wrong")})
+        else:
+            response.status_code = attribute_result.get("status_code", 200)
+            return {"message": attribute_result.get("message", [])}
 
 
 @router.delete("/assignee/{name}/attr/{attr_name}", tags=["assignee"], status_code=200)
@@ -92,37 +89,38 @@ def delete_attribute_from_assignee(
     """
     Delete an attribute from assignee collection in database.
     """
-    rpc.response_len_setter(response_len=1)
-    result = rpc.publish(
-        message={
-            "attribute": {
-                "action": "delete_attribute_from_assignee",
-                "body": {
-                    "name": name,
-                    "attr_name": attr_name
-                }
-            }
-        },
-        headers={'attribute': True}
-    )
-    attribute_result = result.get("attribute", {})
-    if not attribute_result.get("success"):
-        raise HTTPException(status_code=attribute_result.get("status_code", 500),
-                            detail={"error": attribute_result.get("error", "Something went wrong")})
-    else:
-        product_result = rpc.publish(
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
             message={
-                name: {
-                    "action": "delete_attributes",
+                "attribute": {
+                    "action": "delete_attribute_from_assignee",
                     "body": {
-                        "name": attr_name
+                        "name": name,
+                        "attr_name": attr_name
                     }
                 }
             },
-            headers={name: True}
+            headers={'attribute': True}
         )
-        response.status_code = attribute_result.get("status_code", 200)
-        return {"message": attribute_result.get("message", [])}
+        attribute_result = result.get("attribute", {})
+        if not attribute_result.get("success"):
+            raise HTTPException(status_code=attribute_result.get("status_code", 500),
+                                detail={"error": attribute_result.get("error", "Something went wrong")})
+        else:
+            product_result = rpc.publish(
+                message={
+                    name: {
+                        "action": "delete_attributes",
+                        "body": {
+                            "name": attr_name
+                        }
+                    }
+                },
+                headers={name: True}
+            )
+            response.status_code = attribute_result.get("status_code", 200)
+            return {"message": attribute_result.get("message", [])}
 
 
 @router.get("/assignees/", tags=["assignee"], status_code=200)
@@ -132,20 +130,21 @@ def get_all_assignees(
     """
     Get all the assignees(collections of the database beside main one).
     """
-    rpc.response_len_setter(response_len=1)
-    result = rpc.publish(
-        message={
-            "attribute": {
-                "action": "get_all_assignees",
-                "body": {}
-            }
-        },
-        headers={'attribute': True}
-    )
-    assignee_result = result.get("attribute", {})
-    if not assignee_result.get("success"):
-        raise HTTPException(status_code=assignee_result.get("status_code", 500),
-                            detail={"error": assignee_result.get("error", "Something went wrong")})
-    else:
-        response.status_code = assignee_result.get("status_code", 200)
-        return {"message": assignee_result.get("message", [])}
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
+            message={
+                "attribute": {
+                    "action": "get_all_assignees",
+                    "body": {}
+                }
+            },
+            headers={'attribute': True}
+        )
+        assignee_result = result.get("attribute", {})
+        if not assignee_result.get("success"):
+            raise HTTPException(status_code=assignee_result.get("status_code", 500),
+                                detail={"error": assignee_result.get("error", "Something went wrong")})
+        else:
+            response.status_code = assignee_result.get("status_code", 200)
+            return {"message": assignee_result.get("message", [])}

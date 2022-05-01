@@ -33,11 +33,6 @@ def validation_exception_handler(request, exc):
     return responses.JSONResponse(exc.detail, status_code=exc.status_code)
 
 
-# initialize rabbit mq
-rpc = RabbitRPC(exchange_name='headers_exchange', timeout=5)
-rpc.connect()
-rpc.consume()
-
 auth_handler = AuthHandler()
 
 
@@ -47,24 +42,25 @@ def get_parent_configs(response: Response,
     """
     Get parent system code configs
     """
-    rpc.response_len_setter(response_len=1)
-    product_result = rpc.publish(
-        message={
-            "product": {
-                "action": "get_parent_configs",
-                "body": {
-                    "system_code": system_code
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_parent_configs",
+                    "body": {
+                        "system_code": system_code
+                    }
                 }
-            }
-        },
-        headers={'product': True}
-    )
-    product_result = product_result.get("product", {})
-    if product_result.get("success"):
-        response.status_code = product_result.get("status_code", 200)
-        return convert_case(product_result.get("message"), 'camel')
-    raise HTTPException(status_code=product_result.get("status_code", 500),
-                        detail={"error": product_result.get("error", "Something went wrong")})
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(product_result.get("message"), 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
 
 
 @app.get("/parent/", tags=["Product"])
@@ -79,22 +75,23 @@ def create_parent_schema():
 def create_parent(
         item: CreateParent, response: Response
 ) -> dict:
-    rpc.response_len_setter(response_len=1)
-    product_result = rpc.publish(
-        message={
-            "product": {
-                "action": "create_parent",
-                "body": dict(item)
-            }
-        },
-        headers={'product': True}
-    )
-    product_result = product_result.get("product", {})
-    if product_result.get("success"):
-        response.status_code = product_result.get("status_code", 200)
-        return convert_case(product_result.get("message"), 'camel')
-    raise HTTPException(status_code=product_result.get("status_code", 500),
-                        detail={"error": product_result.get("error", "Something went wrong")})
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "create_parent",
+                    "body": dict(item)
+                }
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(product_result.get("message"), 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
 
 
 @app.get("/{systemCode}/items", tags=["Product"])
@@ -103,24 +100,25 @@ def suggest_product(response: Response,
     """
     Get child system code configs
     """
-    rpc.response_len_setter(response_len=1)
-    product_result = rpc.publish(
-        message={
-            "product": {
-                "action": "suggest_product",
-                "body": {
-                    "system_code": system_code
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "suggest_product",
+                    "body": {
+                        "system_code": system_code
+                    }
                 }
-            }
-        },
-        headers={'product': True}
-    )
-    product_result = product_result.get("product", {})
-    if product_result.get("success"):
-        response.status_code = product_result.get("status_code", 200)
-        return convert_case(product_result.get("message"), 'camel')
-    raise HTTPException(status_code=product_result.get("status_code", 500),
-                        detail={"error": product_result.get("error", "Something went wrong")})
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(product_result.get("message"), 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
 
 
 @app.get("/child/", tags=["Product"])
@@ -139,22 +137,23 @@ def create_child(
     Create a product for sale in main collection in database.
     attributes will be validated before insert.
     """
-    rpc.response_len_setter(response_len=1)
-    product_result = rpc.publish(
-        message={
-            "product": {
-                "action": "create_child",
-                "body": dict(item)
-            }
-        },
-        headers={'product': True}
-    )
-    product_result = product_result.get("product", {})
-    if product_result.get("success"):
-        response.status_code = product_result.get("status_code", 200)
-        return convert_case(product_result.get("message"), 'camel')
-    raise HTTPException(status_code=product_result.get("status_code", 500),
-                        detail={"error": product_result.get("error", "Something went wrong")})
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "create_child",
+                    "body": dict(item)
+                }
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(product_result.get("message"), 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
 
 
 @app.get("/get_product_attributes/{systemCode}/", tags=["Product"])
@@ -163,24 +162,25 @@ def get_product_attributes(response: Response,
     """
     Get product attributes
     """
-    rpc.response_len_setter(response_len=1)
-    product_result = rpc.publish(
-        message={
-            "product": {
-                "action": "get_product_attributes",
-                "body": {
-                    "system_code": system_code
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_product_attributes",
+                    "body": {
+                        "system_code": system_code
+                    }
                 }
-            }
-        },
-        headers={'product': True}
-    )
-    product_result = product_result.get("product", {})
-    if product_result.get("success"):
-        response.status_code = product_result.get("status_code", 200)
-        return convert_case(product_result.get("message"), 'camel')
-    raise HTTPException(status_code=product_result.get("status_code", 500),
-                        detail={"error": product_result.get("error", "Something went wrong")})
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(product_result.get("message"), 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
 
 
 @app.get("/attributes/", tags=["Product"])
@@ -205,40 +205,41 @@ def add_attributes(response: Response,
     Create a product for sale in main collection in database.
     attributes will be validated before insert.
     """
-    rpc.response_len_setter(response_len=1)
-    attribute_result = rpc.publish(
-        message={
-            "product": {
-                "action": "get_product_attributes",
-                "body": {
-                    "system_code": item.system_code
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        attribute_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_product_attributes",
+                    "body": {
+                        "system_code": item.system_code
+                    }
                 }
-            }
-        },
-        headers={'product': True}
-    )
-    attributes = attribute_result.get("product", {}).get("message", {}).get("attributes", {})
-    dict_data = {obj.get("name"): obj for obj in attributes}
-    attribute_model = CreateClass(class_name="attribute_model", attributes=dict_data).get_pydantic_class()
-    attribute_object = attribute_model(**item.attributes)
-    product_result = rpc.publish(
-        message={
-            "product": {
-                "action": "add_attributes",
-                "body": {
-                    "system_code": item.system_code,
-                    "attributes": dict(attribute_object)
+            },
+            headers={'product': True}
+        )
+        attributes = attribute_result.get("product", {}).get("message", {}).get("attributes", {})
+        dict_data = {obj.get("name"): obj for obj in attributes}
+        attribute_model = CreateClass(class_name="attribute_model", attributes=dict_data).get_pydantic_class()
+        attribute_object = attribute_model(**item.attributes)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "add_attributes",
+                    "body": {
+                        "system_code": item.system_code,
+                        "attributes": dict(attribute_object)
+                    }
                 }
-            }
-        },
-        headers={'product': True}
-    )
-    product_result = product_result.get("product", {})
-    if product_result.get("success"):
-        response.status_code = product_result.get("status_code", 200)
-        return convert_case(product_result.get("message"), 'camel')
-    raise HTTPException(status_code=product_result.get("status_code", 500),
-                        detail={"error": product_result.get("error", "Something went wrong")})
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(product_result.get("message"), 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
 
 
 @app.get("/{systemCode}/{lang}", tags=["Product"])
@@ -256,77 +257,80 @@ def get_product_by_system_code(
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", ["B2B"])[0]
-    rpc.response_len_setter(response_len=3)
-    result = rpc.publish(
-        message={
-            "product": {
-                "action": "get_product_by_system_code",
-                "body": {
-                    "system_code": system_code,
-                    "lang": lang
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=3)
+        result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_product_by_system_code",
+                    "body": {
+                        "system_code": system_code,
+                        "lang": lang
+                    }
+                }, "pricing": {
+                    "action": "get_price",
+                    "body": {
+                        "system_code": system_code
+                    }
+                }, "quantity": {
+                    "action": "get_quantity",
+                    "body": {
+                        "system_code": system_code
+                    }
                 }
-            }, "pricing": {
-                "action": "get_price",
-                "body": {
-                    "system_code": system_code
-                }
-            }, "quantity": {
-                "action": "get_quantity",
-                "body": {
-                    "system_code": system_code
-                }
-            }
-        },
-        headers={'product': True, "pricing": True, "quantity": True}
-    )
-    product_result = result.get("product", {})
-    pricing_result = result.get("pricing", {})
-    quantity_result = result.get("quantity", {})
-    if not product_result.get("success"):
-        raise HTTPException(status_code=product_result.get("status_code", 500),
-                            detail={"error": product_result.get("error", "Something went wrong")})
-    elif not pricing_result.get("success"):
-        raise HTTPException(status_code=pricing_result.get("status_code", 500),
-                            detail={"error": pricing_result.get("error", "Something went wrong")})
-    elif not quantity_result.get("success"):
-        raise HTTPException(status_code=quantity_result.get("status_code", 500),
-                            detail={"error": quantity_result.get("error", "Something went wrong")})
-    else:
-        response.status_code = product_result.get("status_code", 200)
-        final_result = product_result.get("message").copy()
-        for product in final_result.get("products", []):
-            if customer_type:
-                product['config']["warehouse"] = list()
-                for quantity_key, quantity in quantity_result.get("message", {}).get("products", {}).get(
-                        product.get("system_code"), {}).get("customer_types", {}).get(customer_type, {}).get("storages",
-                                                                                                             {}).items():
+            },
+            headers={'product': True, "pricing": True, "quantity": True}
+        )
+        product_result = result.get("product", {})
+        pricing_result = result.get("pricing", {})
+        quantity_result = result.get("quantity", {})
+        if not product_result.get("success"):
+            raise HTTPException(status_code=product_result.get("status_code", 500),
+                                detail={"error": product_result.get("error", "Something went wrong")})
+        elif not pricing_result.get("success"):
+            raise HTTPException(status_code=pricing_result.get("status_code", 500),
+                                detail={"error": pricing_result.get("error", "Something went wrong")})
+        elif not quantity_result.get("success"):
+            raise HTTPException(status_code=quantity_result.get("status_code", 500),
+                                detail={"error": quantity_result.get("error", "Something went wrong")})
+        else:
+            response.status_code = product_result.get("status_code", 200)
+            final_result = product_result.get("message").copy()
+            for product in final_result.get("products", []):
+                if customer_type:
+                    product['config']["warehouse"] = list()
+                    for quantity_key, quantity in quantity_result.get("message", {}).get("products", {}).get(
+                            product.get("system_code"), {}).get("customer_types", {}).get(customer_type, {}).get(
+                        "storages",
+                        {}).items():
 
-                    for price_key, price in pricing_result.get("message", {}).get("products", {}).get(
-                            product.get("system_code"), {}).get("customer_type", {}).get(customer_type, {}).get(
-                        "storages", {}).items():
+                        for price_key, price in pricing_result.get("message", {}).get("products", {}).get(
+                                product.get("system_code"), {}).get("customer_type", {}).get(customer_type, {}).get(
+                            "storages", {}).items():
 
-                        if quantity.get("storage_id") == price.get("storage_id"):
-                            item = dict()
-                            item["warehouse_id"] = quantity.get("storage_id")
-                            item["price"] = price.get("regular")
-                            item["special_price"] = price.get("special")
-                            item["quantity"] = quantity.get("stock_for_sale")
-                            item['max_qty'] = quantity.get("max_qty")
-                            item['min_qty'] = quantity.get("min_qty")
-                            item['order_limit'] = quantity.get("order_limit")
-                            item["warehouse_state"] = quantity.get("warehouse_state")
-                            item["warehouse_city"] = quantity.get("warehouse_city")
-                            item["warehouse_state_id"] = quantity.get("warehouse_state_id")
-                            item["warehouse_city_id"] = quantity.get("warehouse_city_id")
-                            item["warehouse_label"] = quantity.get("warehouse_label")
-                            item["attribute_label"] = quantity.get("attribute_label")
-                            product['config']["warehouse"].append(item)
-            else:
-                product["price"] = pricing_result.get("message", {}).get("products", {}).get(product.get("system_code"),
-                                                                                             {}).get("regular")
-                product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
-                    product.get("system_code"), {}).get("special")
-        return convert_case(final_result, 'camel')
+                            if quantity.get("storage_id") == price.get("storage_id"):
+                                item = dict()
+                                item["warehouse_id"] = quantity.get("storage_id")
+                                item["price"] = price.get("regular")
+                                item["special_price"] = price.get("special")
+                                item["quantity"] = quantity.get("stock_for_sale")
+                                item['max_qty'] = quantity.get("max_qty")
+                                item['min_qty'] = quantity.get("min_qty")
+                                item['order_limit'] = quantity.get("order_limit")
+                                item["warehouse_state"] = quantity.get("warehouse_state")
+                                item["warehouse_city"] = quantity.get("warehouse_city")
+                                item["warehouse_state_id"] = quantity.get("warehouse_state_id")
+                                item["warehouse_city_id"] = quantity.get("warehouse_city_id")
+                                item["warehouse_label"] = quantity.get("warehouse_label")
+                                item["attribute_label"] = quantity.get("attribute_label")
+                                product['config']["warehouse"].append(item)
+                else:
+                    product["price"] = pricing_result.get("message", {}).get("products", {}).get(
+                        product.get("system_code"),
+                        {}).get("regular")
+                    product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
+                        product.get("system_code"), {}).get("special")
+            return convert_case(final_result, 'camel')
 
 
 @app.delete("/{systemCode}", tags=["Product"])
@@ -337,24 +341,25 @@ def delete_product(
     """
     Delete a product by name in main collection in database.
     """
-    rpc.response_len_setter(response_len=1)
-    product_result = rpc.publish(
-        message={
-            "product": {
-                "action": "delete_product",
-                "body": {
-                    "system_code": system_code
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "delete_product",
+                    "body": {
+                        "system_code": system_code
+                    }
                 }
-            }
-        },
-        headers={'product': True}
-    )
-    product_result = product_result.get("product", {})
-    if product_result.get("success"):
-        response.status_code = product_result.get("status_code", 200)
-        return convert_case(product_result.get("message"), 'camel')
-    raise HTTPException(status_code=product_result.get("status_code", 500),
-                        detail={"error": product_result.get("error", "Something went wrong")})
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(product_result.get("message"), 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
 
 
 @app.post("/edit_product/{systemCode}", tags=["Product"])
@@ -366,25 +371,26 @@ def edit_product(
     """
     Edit a product by name in main collection in database.
     """
-    rpc.response_len_setter(response_len=1)
-    product_result = rpc.publish(
-        message={
-            "product": {
-                "action": "edit_product",
-                "body": {
-                    "system_code": system_code,
-                    "item": dict(item)
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "edit_product",
+                    "body": {
+                        "system_code": system_code,
+                        "item": dict(item)
+                    }
                 }
-            }
-        },
-        headers={'product': True}
-    )
-    product_result = product_result.get("product", {})
-    if product_result.get("success"):
-        response.status_code = product_result.get("status_code", 200)
-        return convert_case(product_result.get("message"), 'camel')
-    raise HTTPException(status_code=product_result.get("status_code", 500),
-                        detail={"error": product_result.get("error", "Something went wrong")})
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(product_result.get("message"), 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
 
 
 @app.get("/categories/{systemCode}/", tags=["Product"])
@@ -396,26 +402,27 @@ def get_all_categories(
     """
     Get all available categories in database.
     """
-    rpc.response_len_setter(response_len=1)
-    product_result = rpc.publish(
-        message={
-            "product": {
-                "action": "get_all_categories",
-                "body": {
-                    "system_code": system_code,
-                    "page": page,
-                    "per_page": per_page
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_all_categories",
+                    "body": {
+                        "system_code": system_code,
+                        "page": page,
+                        "per_page": per_page
+                    }
                 }
-            }
-        },
-        headers={'product': True}
-    )
-    product_result = product_result.get("product", {})
-    if product_result.get("success"):
-        response.status_code = product_result.get("status_code", 200)
-        return convert_case(product_result.get("message"), 'camel')
-    raise HTTPException(status_code=product_result.get("status_code", 500),
-                        detail={"error": product_result.get("error", "Something went wrong")})
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(product_result.get("message"), 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
 
 
 @app.get("/get_product_list_by_system_code/{systemCode}/", tags=["Product"])
@@ -434,68 +441,70 @@ def get_product_list_by_system_code(
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", "B2B")
-    rpc.response_len_setter(response_len=1)
-    product_result = rpc.publish(
-        message={
-            "product": {
-                "action": "get_product_list_by_system_code",
-                "body": {
-                    "system_code": system_code,
-                    "page": page,
-                    "per_page": per_page
-                }
-            }
-        },
-        headers={'product': True}
-    )
-    product_result = product_result.get("product", {})
-    if product_result.get("success"):
-        message_product = product_result.get("message", {})
-        for product in message_product['products']:
-            pricing_result = rpc.publish(
-                message={
-                    "pricing": {
-                        "action": "get_price",
-                        "body": {
-                            "system_code": product.get("system_code")
-                        }
+
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_product_list_by_system_code",
+                    "body": {
+                        "system_code": system_code,
+                        "page": page,
+                        "per_page": per_page
                     }
-                },
-                headers={'pricing': True}
-            )
-            pricing_result = pricing_result.get("pricing", {})
+                }
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            message_product = product_result.get("message", {})
+            for product in message_product['products']:
+                pricing_result = rpc.publish(
+                    message={
+                        "pricing": {
+                            "action": "get_price",
+                            "body": {
+                                "system_code": product.get("system_code")
+                            }
+                        }
+                    },
+                    headers={'pricing': True}
+                )
+                pricing_result = pricing_result.get("pricing", {})
 
-            if pricing_result.get("success"):
-                if not customer_type:
-                    product["price"] = pricing_result.get("message", {}).get("products", {}).get(
-                        list(pricing_result['message']['products'].keys())[0], {}).get("regular")
-                    product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
-                        list(pricing_result['message']['products'].keys())[0], {}).get("special")
+                if pricing_result.get("success"):
+                    if not customer_type:
+                        product["price"] = pricing_result.get("message", {}).get("products", {}).get(
+                            list(pricing_result['message']['products'].keys())[0], {}).get("regular")
+                        product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
+                            list(pricing_result['message']['products'].keys())[0], {}).get("special")
+                    else:
+                        price_tuples = list()
+                        for system_code, prices in pricing_result.get("message", {}).get("products", {}).items():
+                            customer_type_price = prices.get("customer_type", {}).get(customer_type, {})
+                            price_tuples.append((customer_type_price.get("regular"), customer_type_price.get("special")))
+                            for storage, storage_prices in prices.get("storages", {}).items():
+                                price_tuples.append((storage_prices.get("regular"), storage_prices.get("special")))
+
+                        price_tuples.sort(key=lambda x: x[1])
+                        price, special_price = (None, None)
+                        if price_tuples:
+                            price, special_price = price_tuples[0]
+                        product["price"] = price
+                        product["special_price"] = special_price
                 else:
-                    price_tuples = list()
-                    for system_code, prices in pricing_result.get("message", {}).get("products", {}).items():
-                        customer_type_price = prices.get("customer_type", {}).get(customer_type, {})
-                        price_tuples.append((customer_type_price.get("regular"), customer_type_price.get("special")))
-                        for storage, storage_prices in prices.get("storages", {}).items():
-                            price_tuples.append((storage_prices.get("regular"), storage_prices.get("special")))
+                    product["price"] = None
+                    product["special_price"] = None
 
-                    price_tuples.sort(key=lambda x: x[1])
-                    price, special_price = (None, None)
-                    if price_tuples:
-                        price, special_price = price_tuples[0]
-                    product["price"] = price
-                    product["special_price"] = special_price
-            else:
-                product["price"] = None
-                product["special_price"] = None
-
-        response.status_code = product_result.get("status_code", 200)
-        for i in message_product.keys():
-            for j in message_product[i]:
-                j['image'] = "default.png"
-        return convert_case(message_product, 'camel')
-    raise HTTPException(status_code=product_result.get("status_code", 500),
-                        detail={"error": product_result.get("error", "Something went wrong")})
+            response.status_code = product_result.get("status_code", 200)
+            for i in message_product.keys():
+                for j in message_product[i]:
+                    j['image'] = "default.png"
+            return convert_case(message_product, 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
 
 
 @app.get("/get_category_list", tags=["Product"])
@@ -511,65 +520,67 @@ def get_category_list(
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", "B2B")
-    rpc.response_len_setter(response_len=1)
 
-    product_result = rpc.publish(
-        message={
-            "product": {
-                "action": "get_category_list",
-                "body": {}
-            }
-        },
-        headers={'product': True}
-    )
-    product_result = product_result.get("product", {})
-    if product_result.get("success"):
-        message_product = product_result.get("message", {})
-        product_list = list()
-        for key in message_product.keys():
-            if key != "latest_product":
-                for obj in message_product[key]['items']:
-                    obj['image'] = "default.png"
-        for product in message_product['product']['items']:
-            product['image'] = "/default_product.png"
-            pricing_result = rpc.publish(
-                message={
-                    "pricing": {
-                        "action": "get_price",
-                        "body": {
-                            "system_code": product.get("system_code")
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_category_list",
+                    "body": {}
+                }
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            message_product = product_result.get("message", {})
+            product_list = list()
+            for key in message_product.keys():
+                if key != "latest_product":
+                    for obj in message_product[key]['items']:
+                        obj['image'] = "default.png"
+            for product in message_product['product']['items']:
+                product['image'] = "/default_product.png"
+                pricing_result = rpc.publish(
+                    message={
+                        "pricing": {
+                            "action": "get_price",
+                            "body": {
+                                "system_code": product.get("system_code")
+                            }
                         }
-                    }
-                },
-                headers={'pricing': True}
-            )
-            pricing_result = pricing_result.get("pricing", {})
-            if pricing_result.get("success"):
-                if customer_type:
-                    price_tuples = list()
-                    for system_code, prices in pricing_result.get("message", {}).get("products", {}).items():
-                        customer_type_price = prices.get("customer_type", {}).get(customer_type, {})
-                        price_tuples.append((customer_type_price.get("regular"), customer_type_price.get("special")))
-                        for storage, storage_prices in prices.get("storages", {}).items():
-                            price_tuples.append((storage_prices.get("regular"), storage_prices.get("special")))
+                    },
+                    headers={'pricing': True}
+                )
+                pricing_result = pricing_result.get("pricing", {})
+                if pricing_result.get("success"):
+                    if customer_type:
+                        price_tuples = list()
+                        for system_code, prices in pricing_result.get("message", {}).get("products", {}).items():
+                            customer_type_price = prices.get("customer_type", {}).get(customer_type, {})
+                            price_tuples.append((customer_type_price.get("regular"), customer_type_price.get("special")))
+                            for storage, storage_prices in prices.get("storages", {}).items():
+                                price_tuples.append((storage_prices.get("regular"), storage_prices.get("special")))
 
-                    price_tuples.sort(key=lambda x: x[1])
-                    price, special_price = (None, None)
-                    if price_tuples:
-                        price, special_price = price_tuples[0]
-                    product["price"] = price
-                    product["special_price"] = special_price
-                else:
-                    product["price"] = pricing_result.get("message", {}).get("products", {}).get(
-                        list(pricing_result['message']['products'].keys())[0], {}).get("regular")
-                    product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
-                        list(pricing_result['message']['products'].keys())[0], {}).get("special")
-                product_list.append(product)
-        message_product['product']['items'] = product_list
-        response.status_code = product_result.get("status_code", 200)
-        return convert_case(message_product, 'camel')
-    raise HTTPException(status_code=product_result.get("status_code", 500),
-                        detail={"error": product_result.get("error", "Something went wrong")})
+                        price_tuples.sort(key=lambda x: x[1])
+                        price, special_price = (None, None)
+                        if price_tuples:
+                            price, special_price = price_tuples[0]
+                        product["price"] = price
+                        product["special_price"] = special_price
+                    else:
+                        product["price"] = pricing_result.get("message", {}).get("products", {}).get(
+                            list(pricing_result['message']['products'].keys())[0], {}).get("regular")
+                        product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
+                            list(pricing_result['message']['products'].keys())[0], {}).get("special")
+                    product_list.append(product)
+            message_product['product']['items'] = product_list
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(message_product, 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
 
 
 @app.get("/get_product_list_back_office", tags=["Product"])
@@ -593,84 +604,85 @@ def get_product_list_back_office(
     """
     Get product list
     """
-    rpc.response_len_setter(response_len=1)
-    product_result = rpc.publish(
-        message={
-            "product": {
-                "action": "get_product_list_back_office",
-                "body": {
-                    "brands": brands,
-                    "warehouses": warehouses,
-                    "price": price,
-                    "sellers": sellers,
-                    "colors": colors,
-                    "quantity": quantity,
-                    "date": date,
-                    "guarantees": guarantees,
-                    "steps": steps,
-                    "visible_in_site": visible_in_site,
-                    "approved": approved,
-                    "available": available,
-                    "page": page,
-                    "per_page": per_page,
-                }
-            }
-        },
-        headers={'product': True}
-    )
-    product_result = product_result.get("product", {})
-    message_product = product_result.get("message", {})
-    product_list = list()
-    for product in message_product['products']:
-        pricing_result = rpc.publish(
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
             message={
-                "pricing": {
-                    "action": "get_price",
+                "product": {
+                    "action": "get_product_list_back_office",
                     "body": {
-                        "system_code": product.get("system_code")
+                        "brands": brands,
+                        "warehouses": warehouses,
+                        "price": price,
+                        "sellers": sellers,
+                        "colors": colors,
+                        "quantity": quantity,
+                        "date": date,
+                        "guarantees": guarantees,
+                        "steps": steps,
+                        "visible_in_site": visible_in_site,
+                        "approved": approved,
+                        "available": available,
+                        "page": page,
+                        "per_page": per_page,
                     }
                 }
             },
-            headers={'pricing': True}
+            headers={'product': True}
         )
-        quantity_result = rpc.publish(
-            message={
-                "quantity": {
-                    "action": "get_quantity",
-                    "body": {
-                        "system_code": product.get("system_code")
+        product_result = product_result.get("product", {})
+        message_product = product_result.get("message", {})
+        product_list = list()
+        for product in message_product['products']:
+            pricing_result = rpc.publish(
+                message={
+                    "pricing": {
+                        "action": "get_price",
+                        "body": {
+                            "system_code": product.get("system_code")
+                        }
                     }
-                }
-            },
-            headers={'quantity': True}
-        )
-        pricing_result = pricing_result.get("pricing", {})
-        quantity_result = quantity_result.get("quantity", {})
-        # price_tuples = list()
-        if product.get('products'):
-            for config in product['products']:
-                if pricing_result.get("success"):
-                    system_code = config.get("system_code")
-                    config['price'] = pricing_result.get("message", {}).get("products", {}).get(system_code, {}).get(
-                        "regular")
-                    config['special_price'] = pricing_result.get("message", {}).get("products", {}).get(system_code,
+                },
+                headers={'pricing': True}
+            )
+            quantity_result = rpc.publish(
+                message={
+                    "quantity": {
+                        "action": "get_quantity",
+                        "body": {
+                            "system_code": product.get("system_code")
+                        }
+                    }
+                },
+                headers={'quantity': True}
+            )
+            pricing_result = pricing_result.get("pricing", {})
+            quantity_result = quantity_result.get("quantity", {})
+            # price_tuples = list()
+            if product.get('products'):
+                for config in product['products']:
+                    if pricing_result.get("success"):
+                        system_code = config.get("system_code")
+                        config['price'] = pricing_result.get("message", {}).get("products", {}).get(system_code, {}).get(
+                            "regular")
+                        config['special_price'] = pricing_result.get("message", {}).get("products", {}).get(system_code,
+                                                                                                            {}).get(
+                            "special")
+                    if quantity_result.get("success"):
+                        system_code = config.get("system_code")
+                        config['quantity'] = quantity_result.get("message", {}).get("products", {}).get(system_code,
                                                                                                         {}).get(
-                        "special")
-                if quantity_result.get("success"):
-                    system_code = config.get("system_code")
-                    config['quantity'] = quantity_result.get("message", {}).get("products", {}).get(system_code,
-                                                                                                    {}).get(
-                        "total_stock_for_sale")
+                            "total_stock_for_sale")
 
-        product_system_code = product.get("system_code")
-        product['system_code'] = product_system_code[:9] + "-" + product_system_code[9:]
-        product_list.append(product)
-    message_product['products'] = product_list
-    if product_result.get("success"):
-        response.status_code = product_result.get("status_code", 200)
-        return convert_case(message_product, 'camel')
-    raise HTTPException(status_code=product_result.get("status_code", 500),
-                        detail={"error": product_result.get("error", "Something went wrong")})
+            product_system_code = product.get("system_code")
+            product['system_code'] = product_system_code[:9] + "-" + product_system_code[9:]
+            product_list.append(product)
+        message_product['products'] = product_list
+        if product_result.get("success"):
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(message_product, 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
 
 
 @app.get("/{systemCode}/", tags=["Kowsar"])
@@ -681,24 +693,25 @@ def get_kowsar(
     """
     Get kowsar item by system code
     """
-    rpc.response_len_setter(response_len=1)
-    product_result = rpc.publish(
-        message={
-            "product": {
-                "action": "get_kowsar",
-                "body": {
-                    "system_code": system_code
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_kowsar",
+                    "body": {
+                        "system_code": system_code
+                    }
                 }
-            }
-        },
-        headers={'product': True}
-    )
-    product_result = product_result.get("product", {})
-    if product_result.get("success"):
-        response.status_code = product_result.get("status_code", 200)
-        return convert_case(product_result.get("message"), 'camel')
-    raise HTTPException(status_code=product_result.get("status_code", 500),
-                        detail={"error": product_result.get("error", "Something went wrong")})
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(product_result.get("message"), 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
 
 
 @app.get("/{systemCode}/items/", tags=["Kowsar"])
@@ -709,24 +722,25 @@ def get_kowsar_items(
     """
     Get children of kowsar item
     """
-    rpc.response_len_setter(response_len=1)
-    product_result = rpc.publish(
-        message={
-            "product": {
-                "action": "get_kowsar_items",
-                "body": {
-                    "system_code": system_code
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_kowsar_items",
+                    "body": {
+                        "system_code": system_code
+                    }
                 }
-            }
-        },
-        headers={'product': True}
-    )
-    product_result = product_result.get("product", {})
-    if product_result.get("success"):
-        response.status_code = product_result.get("status_code", 200)
-        return convert_case(product_result.get("message"), 'camel')
-    raise HTTPException(status_code=product_result.get("status_code", 500),
-                        detail={"error": product_result.get("error", "Something went wrong")})
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(product_result.get("message"), 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
 
 
 @app.get("/update_collection", tags=["Kowsar"])
@@ -736,19 +750,20 @@ def update_kowsar_collection(
     """
     Update kowsar collection based on given file
     """
-    rpc.response_len_setter(response_len=1)
-    product_result = rpc.publish(
-        message={
-            "product": {
-                "action": "update_kowsar_collection",
-                "body": {}
-            }
-        },
-        headers={'product': True}
-    )
-    product_result = product_result.get("product", {})
-    if product_result.get("success"):
-        response.status_code = product_result.get("status_code", 200)
-        return convert_case(product_result.get("message"), 'camel')
-    raise HTTPException(status_code=product_result.get("status_code", 500),
-                        detail={"error": product_result.get("error", "Something went wrong")})
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "update_kowsar_collection",
+                    "body": {}
+                }
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(product_result.get("message"), 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})

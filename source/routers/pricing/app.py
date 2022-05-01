@@ -31,12 +31,6 @@ def validation_exception_handler(request, exc):
     return responses.JSONResponse(exc.detail, status_code=exc.status_code)
 
 
-# initialize rabbit mq
-rpc = RabbitRPC(exchange_name='headers_exchange', timeout=5)
-rpc.connect()
-rpc.consume()
-
-
 @app.get("/product/price_page/{systemCode}/", tags=["Pricing"])
 def get_product_price_page(response: Response,
                            system_code: str = Path(..., alias="systemCode", max_length=12, min_length=12),
@@ -44,37 +38,38 @@ def get_product_price_page(response: Response,
     """
     get product price page
     """
-    rpc.response_len_setter(response_len=2)
-    price_page = rpc.publish(
-        message={
-            "product": {
-                "action": "get_product_child",
-                "body": {
-                    "system_code": system_code,
-                    "lang": lang
-                }
-            }, "pricing": {
-                "action": "get_price_child",
-                "body": {
-                    "system_code": system_code
-                }
-            }}
-        ,
-        headers={"product": True, "pricing": True}
-    )
-    product_result = price_page.get("product", {})
-    pricing_result = price_page.get("pricing", {})
-    if product_result.get("success"):
-        response.status_code = product_result.get("status_code", 200)
-        if product_result.get("message", {}).get("product", {}).get("step") >= 3:
-            return convert_case({
-                "product": product_result.get("message"),
-                "pricing": pricing_result.get("message", {}).get("products", {}).get(system_code, None)
-            }, 'camel')
-        raise HTTPException(status_code=409, detail={"error": "Product is not in the correct step"})
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=2)
+        price_page = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_product_child",
+                    "body": {
+                        "system_code": system_code,
+                        "lang": lang
+                    }
+                }, "pricing": {
+                    "action": "get_price_child",
+                    "body": {
+                        "system_code": system_code
+                    }
+                }}
+            ,
+            headers={"product": True, "pricing": True}
+        )
+        product_result = price_page.get("product", {})
+        pricing_result = price_page.get("pricing", {})
+        if product_result.get("success"):
+            response.status_code = product_result.get("status_code", 200)
+            if product_result.get("message", {}).get("product", {}).get("step") >= 3:
+                return convert_case({
+                    "product": product_result.get("message"),
+                    "pricing": pricing_result.get("message", {}).get("products", {}).get(system_code, None)
+                }, 'camel')
+            raise HTTPException(status_code=409, detail={"error": "Product is not in the correct step"})
 
-    raise HTTPException(status_code=product_result.get("status_code", 500),
-                        detail={"error": product_result.get("error", "something went wrong")})
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "something went wrong")})
 
 
 @app.post("/product/price/", tags=["Pricing"])
@@ -89,34 +84,35 @@ def set_product_price(item: Price, response: Response) -> dict:
     5. Special price of all
     6. Price of all
     """
-    rpc.response_len_setter(response_len=1)
-    pricing_result = rpc.publish(
-        message={
-            "pricing": {
-                "action": "set_price",
-                "body": item.get()
-            }
-        },
-        headers={'pricing': True}
-    )
-    pricing_result = pricing_result.get("pricing", {})
-    if pricing_result.get("success"):
-        if pricing_result.get("message", {}) == "price set successfully":
-            rpc.publish(
-                message={
-                    "product": {
-                        "action": "step_up_product",
-                        "body": {
-                            "system_code": item.system_code
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        pricing_result = rpc.publish(
+            message={
+                "pricing": {
+                    "action": "set_price",
+                    "body": item.get()
+                }
+            },
+            headers={'pricing': True}
+        )
+        pricing_result = pricing_result.get("pricing", {})
+        if pricing_result.get("success"):
+            if pricing_result.get("message", {}) == "price set successfully":
+                rpc.publish(
+                    message={
+                        "product": {
+                            "action": "step_up_product",
+                            "body": {
+                                "system_code": item.system_code
+                            }
                         }
-                    }
-                },
-                headers={"product": True}
-            )
-        response.status_code = pricing_result.get("status_code", 200)
-        return {"message": pricing_result.get("message")}
-    raise HTTPException(status_code=pricing_result.get("status_code", 500),
-                        detail={"error": pricing_result.get("error", "Something went wrong")})
+                    },
+                    headers={"product": True}
+                )
+            response.status_code = pricing_result.get("status_code", 200)
+            return {"message": pricing_result.get("message")}
+        raise HTTPException(status_code=pricing_result.get("status_code", 500),
+                            detail={"error": pricing_result.get("error", "Something went wrong")})
 
 
 @app.put("/product/price/", tags=["Pricing"])
@@ -131,22 +127,23 @@ def update_product_price(item: UpdatePrice, response: Response) -> dict:
     5. Special price of all
     6. Price of all
     """
-    rpc.response_len_setter(response_len=1)
-    pricing_result = rpc.publish(
-        message={
-            "pricing": {
-                "action": "update_price",
-                "body": item.__dict__
-            }
-        },
-        headers={'pricing': True}
-    )
-    pricing_result = pricing_result.get("pricing", {})
-    if pricing_result.get("success"):
-        response.status_code = pricing_result.get("status_code", 200)
-        return {"message": pricing_result.get("message")}
-    raise HTTPException(status_code=pricing_result.get("status_code", 500),
-                        detail={"error": pricing_result.get("error", "Something went wrong")})
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        pricing_result = rpc.publish(
+            message={
+                "pricing": {
+                    "action": "update_price",
+                    "body": item.__dict__
+                }
+            },
+            headers={'pricing': True}
+        )
+        pricing_result = pricing_result.get("pricing", {})
+        if pricing_result.get("success"):
+            response.status_code = pricing_result.get("status_code", 200)
+            return {"message": pricing_result.get("message")}
+        raise HTTPException(status_code=pricing_result.get("status_code", 500),
+                            detail={"error": pricing_result.get("error", "Something went wrong")})
 
 
 @app.get("/product/price/{systemCode}/", tags=["Pricing"])
@@ -155,24 +152,25 @@ def get_product_price(response: Response,
     """
     get product price
     """
-    rpc.response_len_setter(response_len=1)
-    pricing_result = rpc.publish(
-        message={
-            "pricing": {
-                "action": "get_price",
-                "body": {
-                    "system_code": system_code
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        pricing_result = rpc.publish(
+            message={
+                "pricing": {
+                    "action": "get_price",
+                    "body": {
+                        "system_code": system_code
+                    }
                 }
-            }
-        },
-        headers={'pricing': True}
-    )
-    pricing_result = pricing_result.get("pricing", {})
-    if pricing_result.get("success"):
-        response.status_code = pricing_result.get("status_code", 200)
-        return convert_case(pricing_result.get("message"), 'camel')
-    raise HTTPException(status_code=pricing_result.get("status_code", 500),
-                        detail={"error": pricing_result.get("error", "Something went wrong")})
+            },
+            headers={'pricing': True}
+        )
+        pricing_result = pricing_result.get("pricing", {})
+        if pricing_result.get("success"):
+            response.status_code = pricing_result.get("status_code", 200)
+            return convert_case(pricing_result.get("message"), 'camel')
+        raise HTTPException(status_code=pricing_result.get("status_code", 500),
+                            detail={"error": pricing_result.get("error", "Something went wrong")})
 
 
 @app.delete("/product/{systemCode}/{customerType}/{storageId}/", tags=["Pricing"])
@@ -183,25 +181,26 @@ def delete_price(response: Response,
     """
     delete product price
     """
-    rpc.response_len_setter(response_len=1)
-    pricing_result = rpc.publish(
-        message={
-            "pricing": {
-                "action": "delete_price",
-                "body": {
-                    "system_code": system_code,
-                    "customer_type": customer_type,
-                    "storage": storage_id
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        pricing_result = rpc.publish(
+            message={
+                "pricing": {
+                    "action": "delete_price",
+                    "body": {
+                        "system_code": system_code,
+                        "customer_type": customer_type,
+                        "storage": storage_id
+                    }
                 }
-            }
-        },
-        headers={'pricing': True}
-    )
-    pricing_result = pricing_result.get("pricing", {})
-    if pricing_result.get("success"):
-        response.status_code = pricing_result.get("status_code", 200)
-        return convert_case({
-            "message": pricing_result.get("message", "Price deleted successfully"),
-        }, action='camel')
-    raise HTTPException(status_code=pricing_result.get("status_code", 500),
-                        detail={"error": pricing_result.get("error", "Something went wrong")})
+            },
+            headers={'pricing': True}
+        )
+        pricing_result = pricing_result.get("pricing", {})
+        if pricing_result.get("success"):
+            response.status_code = pricing_result.get("status_code", 200)
+            return convert_case({
+                "message": pricing_result.get("message", "Price deleted successfully"),
+            }, action='camel')
+        raise HTTPException(status_code=pricing_result.get("status_code", 500),
+                            detail={"error": pricing_result.get("error", "Something went wrong")})

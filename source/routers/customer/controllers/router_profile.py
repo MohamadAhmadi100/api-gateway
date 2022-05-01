@@ -7,6 +7,7 @@ from source.routers.customer.module.auth import AuthHandler
 from source.helpers.create_class import CreateClass
 from source.routers.customer.validators import validation_profile
 from source.routers.customer.validators.validation_profile import EditProfile, get_profile_attributes
+from source.helpers import case_converter
 
 # from source.routers.customer.validators import validation_profile, validation_auth
 
@@ -63,10 +64,9 @@ def get_profile(
         raise HTTPException(status_code=attribute_result.get("status_code", 500),
                             detail={"error": attribute_result.get("error", "Something went wrong")})
     customer_data = customer_result.get("message", {})
-    print(customer_data)
     attributes = attribute_result.get("message", [])
     valid_attrs = []
-    for attr in attributes:
+    for attr in case_converter.convert_case(attributes, "camel"):
         if customer_data.get(attr.get("name")) is None or not None:
             attr["value"] = customer_data.get(attr.get("name"))
             valid_attrs.append(attr)
@@ -99,7 +99,8 @@ def edit_profile_data(
     if not attribute_result.get("success"):
         return HTTPException(status_code=attribute_result.get("status_code", 500),
                              detail={"error": attribute_result.get("error", "Something went wrong")})
-    attrs = {obj.get("name"): obj for obj in attribute_result.get("message")}
+    attrs = case_converter.convert_case(attribute_result.get("message"), "camel")
+    attrs = {obj.get("name"): obj for obj in attrs}
     profile_model = CreateClass(class_name="EditProfileModel", attributes=attrs).get_pydantic_class()
     try:
         profile_object = profile_model(**value.data)
