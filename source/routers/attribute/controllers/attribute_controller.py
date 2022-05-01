@@ -9,11 +9,6 @@ from source.helpers.case_converter import convert_case
 
 router = APIRouter()
 
-# initialize rabbit mq
-rpc = RabbitRPC(exchange_name='headers_exchange', timeout=5)
-rpc.connect()
-rpc.consume()
-
 
 @router.get("/", status_code=200)
 def main_page(
@@ -24,25 +19,26 @@ def main_page(
     Get all the attributes in main collection in database.
     It shows 10 attributes per page.
     """
-    rpc.response_len_setter(response_len=1)
-    result = rpc.publish(
-        message={
-            "attribute": {
-                "action": "main_page",
-                "body": {
-                    "page": page
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
+            message={
+                "attribute": {
+                    "action": "main_page",
+                    "body": {
+                        "page": page
+                    }
                 }
-            }
-        },
-        headers={'attribute': True}
-    )
-    attribute_result = result.get("attribute", {})
-    if not attribute_result.get("success"):
-        raise HTTPException(status_code=attribute_result.get("status_code", 500),
-                            detail={"error": attribute_result.get("error", "Something went wrong")})
-    else:
-        response.status_code = attribute_result.get("status_code", 200)
-        return convert_case(attribute_result.get("message", []), "camel")
+            },
+            headers={'attribute': True}
+        )
+        attribute_result = result.get("attribute", {})
+        if not attribute_result.get("success"):
+            raise HTTPException(status_code=attribute_result.get("status_code", 500),
+                                detail={"error": attribute_result.get("error", "Something went wrong")})
+        else:
+            response.status_code = attribute_result.get("status_code", 200)
+            return convert_case(attribute_result.get("message", []), "camel")
 
 
 @router.post("/attr/", tags=["attribute"], status_code=201)
@@ -65,25 +61,26 @@ def add_attribute(
     - **values**: list of values for the attribute
     - **set_to_nodes**: if the attribute is set to nodes or not(Boolean type)
     """
-    rpc.response_len_setter(response_len=1)
-    result = rpc.publish(
-        message={
-            "attribute": {
-                "action": "add_attribute",
-                "body": {
-                    "item": item.dict()
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
+            message={
+                "attribute": {
+                    "action": "add_attribute",
+                    "body": {
+                        "item": item.dict()
+                    }
                 }
-            }
-        },
-        headers={'attribute': True}
-    )
-    attribute_result = result.get("attribute", {})
-    if not attribute_result.get("success"):
-        raise HTTPException(status_code=attribute_result.get("status_code", 500),
-                            detail={"error": attribute_result.get("error", "Something went wrong")})
-    else:
-        response.status_code = attribute_result.get("status_code", 200)
-        return {"message": attribute_result.get("message", [])}
+            },
+            headers={'attribute': True}
+        )
+        attribute_result = result.get("attribute", {})
+        if not attribute_result.get("success"):
+            raise HTTPException(status_code=attribute_result.get("status_code", 500),
+                                detail={"error": attribute_result.get("error", "Something went wrong")})
+        else:
+            response.status_code = attribute_result.get("status_code", 200)
+            return {"message": attribute_result.get("message", [])}
 
 
 @router.get("/attrs/{page}", tags=["attribute"], status_code=200)
@@ -96,26 +93,27 @@ def get_attributes(
     Get all the attributes of the main collection in database.
     It shows 10 attributes per page.
     """
-    rpc.response_len_setter(response_len=1)
-    result = rpc.publish(
-        message={
-            "attribute": {
-                "action": "get_attributes",
-                "body": {
-                    "page": page,
-                    "per_page": per_page
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
+            message={
+                "attribute": {
+                    "action": "get_attributes",
+                    "body": {
+                        "page": page,
+                        "per_page": per_page
+                    }
                 }
-            }
-        },
-        headers={'attribute': True}
-    )
-    attribute_result = result.get("attribute", {})
-    if not attribute_result.get("success"):
-        raise HTTPException(status_code=attribute_result.get("status_code", 500),
-                            detail={"error": attribute_result.get("error", "Something went wrong")})
-    else:
-        response.status_code = attribute_result.get("status_code", 200)
-        return {"message": convert_case(attribute_result.get("message", []), "camel")}
+            },
+            headers={'attribute': True}
+        )
+        attribute_result = result.get("attribute", {})
+        if not attribute_result.get("success"):
+            raise HTTPException(status_code=attribute_result.get("status_code", 500),
+                                detail={"error": attribute_result.get("error", "Something went wrong")})
+        else:
+            response.status_code = attribute_result.get("status_code", 200)
+            return {"message": convert_case(attribute_result.get("message", []), "camel")}
 
 
 @router.get("/attr/{attribute_name}", tags=["attribute"], status_code=200)
@@ -126,25 +124,26 @@ def get_attribute_by_name(
     """
     Get an attribute by name in main collection in database.
     """
-    rpc.response_len_setter(response_len=1)
-    result = rpc.publish(
-        message={
-            "attribute": {
-                "action": "get_attribute_by_name",
-                "body": {
-                    "attribute_name": attribute_name
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
+            message={
+                "attribute": {
+                    "action": "get_attribute_by_name",
+                    "body": {
+                        "attribute_name": attribute_name
+                    }
                 }
-            }
-        },
-        headers={'attribute': True}
-    )
-    attribute_result = result.get("attribute", {})
-    if not attribute_result.get("success"):
-        raise HTTPException(status_code=attribute_result.get("status_code", 500),
-                            detail={"error": attribute_result.get("error", "Something went wrong")})
-    else:
-        response.status_code = attribute_result.get("status_code", 200)
-        return {"message": convert_case(attribute_result.get("message", []), "camel")}
+            },
+            headers={'attribute': True}
+        )
+        attribute_result = result.get("attribute", {})
+        if not attribute_result.get("success"):
+            raise HTTPException(status_code=attribute_result.get("status_code", 500),
+                                detail={"error": attribute_result.get("error", "Something went wrong")})
+        else:
+            response.status_code = attribute_result.get("status_code", 200)
+            return {"message": convert_case(attribute_result.get("message", []), "camel")}
 
 
 @router.put("/attr/", tags=["attribute"], status_code=202)
@@ -155,38 +154,39 @@ def update_attribute(
     """
     Update an attribute by name in main collection in database.
     """
-    rpc.response_len_setter(response_len=1)
-    result = rpc.publish(
-        message={
-            "attribute": {
-                "action": "update_attribute",
-                "body": {
-                    "item": item.dict(),
-                }
-            }
-        },
-        headers={'attribute': True}
-    )
-    attribute_result = result.get("attribute", {})
-    if not attribute_result.get("success"):
-        raise HTTPException(status_code=attribute_result.get("status_code", 500),
-                            detail={"error": attribute_result.get("error", "Something went wrong")})
-    else:
-        for collection in attribute_result.get("collections", []):
-            rpc.publish(
-                message={
-                    collection: {
-                        "action": "update_attributes",
-                        "body": {
-                            "attributes": attribute_result.get("attribute")
-                        }
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
+            message={
+                "attribute": {
+                    "action": "update_attribute",
+                    "body": {
+                        "item": item.dict(),
                     }
-                },
-                headers={collection: True}
-            )
+                }
+            },
+            headers={'attribute': True}
+        )
+        attribute_result = result.get("attribute", {})
+        if not attribute_result.get("success"):
+            raise HTTPException(status_code=attribute_result.get("status_code", 500),
+                                detail={"error": attribute_result.get("error", "Something went wrong")})
+        else:
+            for collection in attribute_result.get("collections", []):
+                rpc.publish(
+                    message={
+                        collection: {
+                            "action": "update_attributes",
+                            "body": {
+                                "attributes": attribute_result.get("attribute")
+                            }
+                        }
+                    },
+                    headers={collection: True}
+                )
 
-        response.status_code = attribute_result.get("status_code", 200)
-        return {"message": attribute_result.get("message", [])}
+            response.status_code = attribute_result.get("status_code", 200)
+            return {"message": attribute_result.get("message", [])}
 
 
 @router.delete("/attr/{attribute_name}", tags=["attribute"], status_code=200)
@@ -197,46 +197,35 @@ def delete_attribute(
     """
     Delete an attribute by name in main collection in database.
     """
-    rpc.response_len_setter(response_len=1)
-    result = rpc.publish(
-        message={
-            "attribute": {
-                "action": "delete_attribute",
-                "body": {
-                    "attribute_name": attribute_name
-                }
-            }
-        },
-        headers={'attribute': True}
-    )
-    attribute_result = result.get("attribute", {})
-    if not attribute_result.get("success"):
-        raise HTTPException(status_code=attribute_result.get("status_code", 500),
-                            detail={"error": attribute_result.get("error", "Something went wrong")})
-    else:
-
-        # for collection in attribute_result.get("collections", []):
-        #     rpc.publish(
-        #         message={
-        #             collection: {
-        #                 "action": "delete_attributes",
-        #                 "body": {
-        #                     "name": attribute_name
-        #                 }
-        #             }
-        #         },
-        #         headers={collection: True}
-        #     )
-        rpc.publish(
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
             message={
-                "product": {
-                    "action": "delete_attributes",
+                "attribute": {
+                    "action": "delete_attribute",
                     "body": {
-                        "name": attribute_name
+                        "attribute_name": attribute_name
                     }
                 }
             },
-            headers={"product": True}
+            headers={'attribute': True}
         )
-        response.status_code = attribute_result.get("status_code", 200)
-        return {"message": attribute_result.get("message", [])}
+        attribute_result = result.get("attribute", {})
+        if not attribute_result.get("success"):
+            raise HTTPException(status_code=attribute_result.get("status_code", 500),
+                                detail={"error": attribute_result.get("error", "Something went wrong")})
+        else:
+            for collection in attribute_result.get("collections", []):
+                rpc.publish(
+                    message={
+                        collection: {
+                            "action": "delete_attributes",
+                            "body": {
+                                "name": attribute_name
+                            }
+                        }
+                    },
+                    headers={collection: True}
+                )
+            response.status_code = attribute_result.get("status_code", 200)
+            return {"message": attribute_result.get("message", [])}

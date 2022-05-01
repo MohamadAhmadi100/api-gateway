@@ -24,20 +24,12 @@ class DateType(BaseModel):
     )
 
 
-class CustomerStatus(BaseModel):
-    customerIsMobileConfirm: bool
-    customerIsConfirm: bool
-    customerIsActive: bool
-
-
-class MultipleStatus(BaseModel):
-    values: Optional[CustomerStatus]
-
-
 class Filters(BaseModel):
-    registerDate: Optional[DateType]
-    lastOrderDate: Optional[DateType]
-    status: Optional[MultipleStatus]
+    customerJalaliCreateTime: Optional[DateType]
+    customerLastOrderDate: Optional[DateType]
+    customerIsMobileConfirm: Optional[bool]
+    customerIsConfirm: Optional[bool]
+    customerIsActive: Optional[bool]
 
 
 class StaffAuth(BaseModel):
