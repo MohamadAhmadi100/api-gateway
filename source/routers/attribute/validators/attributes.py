@@ -3,7 +3,7 @@ from typing import Optional, Any
 from pydantic import BaseModel, validator, Field
 
 VALID_INPUT_TYPE = ['Text Field', 'Text Area', 'Text Editor', 'Date', 'Date and Time', 'Yes or No',
-                    'Multiple Select', 'Dropdown', 'Price', 'Media Image', 'Color', 'Number']
+                    'Multiple Select', 'Dropdown', 'Price', 'Media Image', 'Color', 'Number', 'Radio Button']
 
 
 class Attribute(BaseModel):

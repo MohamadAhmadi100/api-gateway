@@ -18,6 +18,7 @@ from source.routers.coupon.app import app as coupon_app
 from source.routers.gallery.app import app as gallery_app
 from source.routers.address.app import app as address_app
 from source.routers.shipment.app import app as shipment_app
+from source.routers.order.app import app as order_app
 
 app = FastAPI(title="API Gateway",
               description="Backend for frontend aka. API Gateway!",
@@ -58,7 +59,9 @@ app.mount("/gallery_files/", StaticFiles(directory=settings.GALLERY_DIR), name="
 
 app.mount("/address/api/v1", address_app)
 
-app.mount("/shipment", shipment_app)
+app.mount("/shipment/api/v1", shipment_app)
+
+app.mount("/order/api/v1", order_app)
 
 
 # ----------------------------------------- Start logging features  -------------------------------------------------- #
