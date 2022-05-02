@@ -395,10 +395,8 @@ def edit_product(
 
 @app.get("/categories/{systemCode}/", tags=["Product"])
 def get_all_categories(
-        response: Response,
-        system_code: str = Path(00, min_length=2, max_length=6, alias='systemCode'),
-        page: int = Query(1, ge=1, le=1000),
-        per_page: int = Query(15, ge=1, le=1000, alias='perPage')):
+        response: Response
+):
     """
     Get all available categories in database.
     """
@@ -408,11 +406,7 @@ def get_all_categories(
             message={
                 "product": {
                     "action": "get_all_categories",
-                    "body": {
-                        "system_code": system_code,
-                        "page": page,
-                        "per_page": per_page
-                    }
+                    "body": {}
                 }
             },
             headers={'product': True}
