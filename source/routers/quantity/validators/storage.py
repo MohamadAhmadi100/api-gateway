@@ -47,6 +47,5 @@ class Storage(BaseModel):
     def get(self):
         return {
             "storage_id": self.storage_id,
-            "stock": self.stock,
             "stock_for_sale": self.stock_for_sale
         }

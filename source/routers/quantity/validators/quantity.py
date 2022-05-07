@@ -123,7 +123,6 @@ class UpdateQuantity(BaseModel):
                 "systemCode": "123456789012",
                 "customerType": "B2B",
                 "storageId": "1",
-                "stock": 100,
                 "stockForSale": 100,
                 "minQty": 1,
                 "maxQty": 100
