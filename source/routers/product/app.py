@@ -434,7 +434,7 @@ def get_product_list_by_system_code(
     customer_type = None
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
-        customer_type = user_data.get("customer_type", "B2B")
+        customer_type = user_data.get("customer_type", ["B2B"])[0]
 
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
@@ -471,14 +471,17 @@ def get_product_list_by_system_code(
                 if pricing_result.get("success"):
                     if not customer_type:
                         product["price"] = pricing_result.get("message", {}).get("products", {}).get(
-                            list(pricing_result['message']['products'].keys())[0], {}).get("regular")
+                            list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
+                            "B2B", {}).get("storages", {}).get("1", {}).get("regular", 0)
                         product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
-                            list(pricing_result['message']['products'].keys())[0], {}).get("special")
+                            list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
+                            "B2B", {}).get("storages", {}).get("1", {}).get("special", 0)
                     else:
                         price_tuples = list()
                         for system_code, prices in pricing_result.get("message", {}).get("products", {}).items():
                             customer_type_price = prices.get("customer_type", {}).get(customer_type, {})
-                            price_tuples.append((customer_type_price.get("regular"), customer_type_price.get("special")))
+                            price_tuples.append(
+                                (customer_type_price.get("regular"), customer_type_price.get("special")))
                             for storage, storage_prices in prices.get("storages", {}).items():
                                 price_tuples.append((storage_prices.get("regular"), storage_prices.get("special")))
 
@@ -493,9 +496,6 @@ def get_product_list_by_system_code(
                     product["special_price"] = None
 
             response.status_code = product_result.get("status_code", 200)
-            for i in message_product.keys():
-                for j in message_product[i]:
-                    j['image'] = "default.png"
             return convert_case(message_product, 'camel')
         raise HTTPException(status_code=product_result.get("status_code", 500),
                             detail={"error": product_result.get("error", "Something went wrong")})
@@ -553,7 +553,8 @@ def get_category_list(
                         price_tuples = list()
                         for system_code, prices in pricing_result.get("message", {}).get("products", {}).items():
                             customer_type_price = prices.get("customer_type", {}).get(customer_type, {})
-                            price_tuples.append((customer_type_price.get("regular"), customer_type_price.get("special")))
+                            price_tuples.append(
+                                (customer_type_price.get("regular"), customer_type_price.get("special")))
                             for storage, storage_prices in prices.get("storages", {}).items():
                                 price_tuples.append((storage_prices.get("regular"), storage_prices.get("special")))
 
@@ -656,7 +657,8 @@ def get_product_list_back_office(
                 for config in product['products']:
                     if pricing_result.get("success"):
                         system_code = config.get("system_code")
-                        config['price'] = pricing_result.get("message", {}).get("products", {}).get(system_code, {}).get(
+                        config['price'] = pricing_result.get("message", {}).get("products", {}).get(system_code,
+                                                                                                    {}).get(
                             "regular")
                         config['special_price'] = pricing_result.get("message", {}).get("products", {}).get(system_code,
                                                                                                             {}).get(
