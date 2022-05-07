@@ -586,7 +586,7 @@ def get_product_list_back_office(
         sellers: Optional[List[str]] = Query(None),
         colors: Optional[List[str]] = Query(None),
         quantity: Optional[Tuple[str, str]] = Query(None),
-        date: Optional[list] = Query(None, description="Date range in tuple format (from, to)"),
+        date: Optional[list] = Query([], description="Date range in tuple format (from, to)"),
         guarantees: Optional[List[str]] = Query(None),
         steps: Optional[List[int]] = Query(None),
         visible_in_site: Optional[bool] = Query(None, alias='visibleInSite'),
