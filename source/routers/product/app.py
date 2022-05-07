@@ -393,7 +393,7 @@ def edit_product(
                             detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@app.get("/categories/{systemCode}/", tags=["Product"])
+@app.get("/categories/", tags=["Product"])
 def get_all_categories(
         response: Response
 ):
@@ -513,7 +513,7 @@ def get_category_list(
     customer_type = None
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
-        customer_type = user_data.get("customer_type", "B2B")
+        customer_type = user_data.get("customer_type", ["B2B"])[0]
 
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
@@ -536,7 +536,6 @@ def get_category_list(
                     for obj in message_product[key]['items']:
                         obj['image'] = "default.png"
             for product in message_product['product']['items']:
-                product['image'] = "/default_product.png"
                 pricing_result = rpc.publish(
                     message={
                         "pricing": {
