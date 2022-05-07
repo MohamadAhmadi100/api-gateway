@@ -395,10 +395,8 @@ def edit_product(
 
 @app.get("/categories/{systemCode}/", tags=["Product"])
 def get_all_categories(
-        response: Response,
-        system_code: str = Path(00, min_length=2, max_length=6, alias='systemCode'),
-        page: int = Query(1, ge=1, le=1000),
-        per_page: int = Query(15, ge=1, le=1000, alias='perPage')):
+        response: Response
+):
     """
     Get all available categories in database.
     """
@@ -408,11 +406,7 @@ def get_all_categories(
             message={
                 "product": {
                     "action": "get_all_categories",
-                    "body": {
-                        "system_code": system_code,
-                        "page": page,
-                        "per_page": per_page
-                    }
+                    "body": {}
                 }
             },
             headers={'product': True}
@@ -592,9 +586,9 @@ def get_product_list_back_office(
         sellers: Optional[List[str]] = Query(None),
         colors: Optional[List[str]] = Query(None),
         quantity: Optional[Tuple[str, str]] = Query(None),
-        date: Optional[Tuple[str, str]] = Query(None),
+        date: Optional[list] = Query([], description="Date range in tuple format (from, to)"),
         guarantees: Optional[List[str]] = Query(None),
-        steps: Optional[List[str]] = Query(None),
+        steps: Optional[List[int]] = Query(None),
         visible_in_site: Optional[bool] = Query(None, alias='visibleInSite'),
         approved: Optional[bool] = Query(None),
         available: Optional[bool] = Query(None),
@@ -617,7 +611,7 @@ def get_product_list_back_office(
                         "sellers": sellers,
                         "colors": colors,
                         "quantity": quantity,
-                        "date": date,
+                        "date": date if len(date) == 2 else [date[0], None] if len(date) == 1 else [None, None],
                         "guarantees": guarantees,
                         "steps": steps,
                         "visible_in_site": visible_in_site,
