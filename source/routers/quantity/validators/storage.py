@@ -4,7 +4,6 @@ from pydantic import BaseModel, validator, Field
 
 class Storage(BaseModel):
     storage_id: str = Field(..., alias="storageId")
-    stock: int
     reserved = 0
     stock_for_sale: int = Field(..., alias="stockForSale")
     min_qty: int = Field(..., alias="minQty")
