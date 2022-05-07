@@ -17,14 +17,6 @@ class Storage(BaseModel):
             raise HTTPException(status_code=422, detail={"error": "storage_id must be between 1 and 127"})
         return value
 
-    @validator("stock")
-    def stock_validator(cls, value):
-        if not isinstance(value, int):
-            raise HTTPException(status_code=422, detail={"error": "stock must be int"})
-        elif 100_000_000_000_000 < value or value < 1:
-            raise HTTPException(status_code=422, detail={"error": "stock must be between 1 and 100_000_000_000_000"})
-        return value
-
     @validator("stock_for_sale")
     def stock_for_sale_validator(cls, value):
         if not isinstance(value, int):
