@@ -14,4 +14,6 @@ COPY ./.env /api-gateway/source/.env
 
 RUN pip install -e /api-gateway/.
 
+RUN mkdir /gallery-files
+
 CMD ["python", "/api-gateway/source/main.py"]
