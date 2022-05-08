@@ -63,14 +63,6 @@ def get_parent_configs(response: Response,
                             detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@app.get("/parent/", tags=["Product"])
-def create_parent_schema():
-    """
-    Get create parent json schema
-    """
-    return CreateParent.schema().get("properties")
-
-
 @app.post("/parent/", tags=["Product"])
 def create_parent(
         item: CreateParent, response: Response
@@ -119,14 +111,6 @@ def suggest_product(response: Response,
             return convert_case(product_result.get("message"), 'camel')
         raise HTTPException(status_code=product_result.get("status_code", 500),
                             detail={"error": product_result.get("error", "Something went wrong")})
-
-
-@app.get("/child/", tags=["Product"])
-def create_child_schema():
-    """
-    Get create child json schema
-    """
-    return CreateChild.schema().get("properties")
 
 
 @app.post("/child/", tags=["Product"])
@@ -181,14 +165,6 @@ def get_product_attributes(response: Response,
             return convert_case(product_result.get("message"), 'camel')
         raise HTTPException(status_code=product_result.get("status_code", 500),
                             detail={"error": product_result.get("error", "Something went wrong")})
-
-
-@app.get("/attributes/", tags=["Product"])
-def add_attributes_schema():
-    """
-    Get add attributes json schema
-    """
-    return AddAtributes.schema().get("properties")
 
 
 @app.post("/attributes/", tags=["Product"])
