@@ -62,7 +62,7 @@ push:
   script:
     - echo APP_NAME=$APP_NAME >> .env
     - echo DEBUG_MODE=$DEBUG_MODE >> .env
-    - echo RABBITMQ_HOST=200.100.100.215 >> .env
+    - echo RABBITMQ_HOST="200.100.100.215" >> .env
     - echo RABBITMQ_PORT=$RABBITMQ_PORT >> .env
     - echo RABBITMQ_USER=$RABBITMQ_USER >> .env
     - echo RABBITMQ_PASS=$RABBITMQ_PASS >> .env
@@ -87,7 +87,7 @@ master_deploy:
   script:
     - echo APP_NAME=$APP_NAME >> .env
     - echo DEBUG_MODE=$DEBUG_MODE >> .env
-    - echo RABBITMQ_HOST=200.100.100.215 >> .env
+    - echo RABBITMQ_HOST="200.100.100.215" >> .env
     - echo RABBITMQ_PORT=$RABBITMQ_PORT >> .env
     - echo RABBITMQ_USER=$RABBITMQ_USER >> .env
     - echo RABBITMQ_PASS=$RABBITMQ_PASS >> .env
