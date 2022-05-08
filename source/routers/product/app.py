@@ -246,7 +246,7 @@ def add_attributes(response: Response,
 def get_product_by_system_code(
         response: Response,
         system_code: str = Path(..., min_length=11, max_length=11, alias='systemCode'),
-        lang: str = Path("fa_ir", min_length=2, max_length=8),
+        lang: Optional[str] = Path("fa_ir", min_length=2, max_length=8),
         access: Optional[str] = Header(None),
         refresh: Optional[str] = Header(None)
 ) -> dict:
@@ -300,13 +300,14 @@ def get_product_by_system_code(
                 if customer_type:
                     product['config']["warehouse"] = list()
                     for quantity_key, quantity in quantity_result.get("message", {}).get("products", {}).get(
-                            product.get("system_code"), {}).get("customer_types", {}).get(customer_type, {}).get(
-                        "storages",
-                        {}).items():
+                            product.get("system_code"), {}).get("customer_types", {}).get(customer_type,
+                                                                                          {}).get("storages",
+                                                                                                  {}).items():
 
                         for price_key, price in pricing_result.get("message", {}).get("products", {}).get(
-                                product.get("system_code"), {}).get("customer_type", {}).get(customer_type, {}).get(
-                            "storages", {}).items():
+                                product.get("system_code"), {}).get("customer_type", {}).get(customer_type,
+                                                                                             {}).get("storages",
+                                                                                                     {}).items():
 
                             if quantity.get("storage_id") == price.get("storage_id"):
                                 item = dict()
@@ -326,10 +327,11 @@ def get_product_by_system_code(
                                 product['config']["warehouse"].append(item)
                 else:
                     product["price"] = pricing_result.get("message", {}).get("products", {}).get(
-                        product.get("system_code"),
-                        {}).get("regular")
+                        list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
+                        "B2B", {}).get("storages", {}).get("1", {}).get("regular", 0)
                     product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
-                        product.get("system_code"), {}).get("special")
+                        list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
+                        "B2B", {}).get("storages", {}).get("1", {}).get("special", 0)
             return convert_case(final_result, 'camel')
 
 
@@ -566,9 +568,11 @@ def get_category_list(
                         product["special_price"] = special_price
                     else:
                         product["price"] = pricing_result.get("message", {}).get("products", {}).get(
-                            list(pricing_result['message']['products'].keys())[0], {}).get("regular")
+                            list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
+                            "B2B", {}).get("storages", {}).get("1", {}).get("regular", 0)
                         product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
-                            list(pricing_result['message']['products'].keys())[0], {}).get("special")
+                            list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
+                            "B2B", {}).get("storages", {}).get("1", {}).get("special", 0)
                     product_list.append(product)
             message_product['product']['items'] = product_list
             response.status_code = product_result.get("status_code", 200)

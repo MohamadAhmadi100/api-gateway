@@ -82,6 +82,8 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
                     product['parent_system_code'] = product_result.get("system_code")
                     final_result["product"] = product
                     break
+            if not final_result.get("product"):
+                raise HTTPException(status_code=404, detail={"error": "Product not found"})
 
             # quantity actions
 
