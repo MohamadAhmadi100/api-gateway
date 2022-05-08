@@ -113,6 +113,14 @@ def suggest_product(response: Response,
                             detail={"error": product_result.get("error", "Something went wrong")})
 
 
+@app.get("/child/", tags=["Product"])
+def create_child_schema():
+    """
+    Get create child json schema
+    """
+    return CreateChild.schema().get("properties")
+
+
 @app.post("/child/", tags=["Product"])
 def create_child(
         item: CreateChild, response: Response
@@ -165,6 +173,14 @@ def get_product_attributes(response: Response,
             return convert_case(product_result.get("message"), 'camel')
         raise HTTPException(status_code=product_result.get("status_code", 500),
                             detail={"error": product_result.get("error", "Something went wrong")})
+
+
+@app.get("/attributes/", tags=["Product"])
+def add_attributes_schema():
+    """
+    Get add attributes json schema
+    """
+    return AddAtributes.schema().get("properties")
 
 
 @app.post("/attributes/", tags=["Product"])
@@ -458,9 +474,7 @@ def get_product_list_by_system_code(
                         price_tuples = list()
                         for system_code, prices in pricing_result.get("message", {}).get("products", {}).items():
                             customer_type_price = prices.get("customer_type", {}).get(customer_type, {})
-                            price_tuples.append(
-                                (customer_type_price.get("regular"), customer_type_price.get("special")))
-                            for storage, storage_prices in prices.get("storages", {}).items():
+                            for storage, storage_prices in customer_type_price.get("storages", {}).items():
                                 price_tuples.append((storage_prices.get("regular"), storage_prices.get("special")))
 
                         price_tuples.sort(key=lambda x: x[1])
@@ -531,9 +545,7 @@ def get_category_list(
                         price_tuples = list()
                         for system_code, prices in pricing_result.get("message", {}).get("products", {}).items():
                             customer_type_price = prices.get("customer_type", {}).get(customer_type, {})
-                            price_tuples.append(
-                                (customer_type_price.get("regular"), customer_type_price.get("special")))
-                            for storage, storage_prices in prices.get("storages", {}).items():
+                            for storage, storage_prices in customer_type_price.get("storages", {}).items():
                                 price_tuples.append((storage_prices.get("regular"), storage_prices.get("special")))
 
                         price_tuples.sort(key=lambda x: x[1])
