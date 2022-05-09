@@ -15,10 +15,6 @@ router_register = APIRouter(
     tags=["register"]
 )
 
-rpc = RabbitRPC(exchange_name='headers_exchange', timeout=5)
-rpc.connect()
-rpc.consume()
-
 auth_handler = AuthHandler()
 
 
@@ -33,19 +29,20 @@ def register(
         response: Response,
         value: validation_register.CustomerRegister,
 ):
-    rpc.response_len_setter(response_len=1)
-    result = rpc.publish(
-        message={
-            "customer": {
-                "action": "register",
-                "body": {
-                    "values": value.dict()
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
+            message={
+                "customer": {
+                    "action": "register",
+                    "body": {
+                        "values": value.dict()
 
+                    }
                 }
-            }
-        },
-        headers={'customer': True}
-    )
+            },
+            headers={'customer': True}
+        )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(

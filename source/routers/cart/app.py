@@ -178,7 +178,8 @@ def get_cart(response: Response, auth_header=Depends(auth_handler.check_current_
 
                 product["quantity"] = quantity_result.get("message", {}).get("products", {}).get(product.get("system_code"), {}).get("customer_types", {}).get(customer_type, {}).get("storages", {}).get(product.get("storage_id"), {})
 
-                base_price += product.get("price") * product.get("count")
+                if product.get("price"):
+                    base_price += product.get("price") * product.get("count")
 
             cart_result["message"]["base_price"] = base_price
             # need to add shipping price
