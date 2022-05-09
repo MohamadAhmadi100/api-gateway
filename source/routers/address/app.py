@@ -27,114 +27,116 @@ def validation_exception_handler(request, exc):
     return responses.JSONResponse(exc.detail, status_code=exc.status_code)
 
 
-rpc = RabbitRPC(exchange_name='headers_exchange', timeout=5)
-rpc.connect()
-rpc.consume()
 
 
 @app.get("/states", tags=["City and States"])
 def states(response: Response):
-    rpc.response_len_setter(response_len=1)
-    address_response = rpc.publish(
-        message={
-            "address": {
-                "action": "states",
-                "body": {}
-            }
-        },
-        headers={'address': True}
-    ).get("address", {})
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        address_response = rpc.publish(
+            message={
+                "address": {
+                    "action": "states",
+                    "body": {}
+                }
+            },
+            headers={'address': True}
+        ).get("address", {})
 
-    if address_response.get("success"):
-        response.status_code = address_response.get("status_code", 200)
-        return address_response
-    raise HTTPException(status_code=address_response.get("status_code", 500),
-                        detail={"error": address_response.get("error", "Address service Internal error")})
+        if address_response.get("success"):
+            response.status_code = address_response.get("status_code", 200)
+            return address_response
+        raise HTTPException(status_code=address_response.get("status_code", 500),
+                            detail={"error": address_response.get("error", "Address service Internal error")})
 
 
 @app.get("/cities", tags=["City and States"])
 def cities(CityId: str, response: Response):
-    rpc.response_len_setter(response_len=1)
-    address_response = rpc.publish(
-        message={
-            "address": {
-                "action": "cities",
-                "body": {
-                    "CityId": CityId
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        address_response = rpc.publish(
+            message={
+                "address": {
+                    "action": "cities",
+                    "body": {
+                        "CityId": CityId
+                    }
                 }
-            }
-        },
-        headers={'address': True}
-    ).get("address", {})
+            },
+            headers={'address': True}
+        ).get("address", {})
 
-    if address_response.get("success"):
-        response.status_code = address_response.get("status_code", 200)
-        return address_response
-    raise HTTPException(status_code=address_response.get("status_code", 500),
-                        detail={"error": address_response.get("error", "Address service Internal error")})
+        if address_response.get("success"):
+            response.status_code = address_response.get("status_code", 200)
+            return address_response
+        raise HTTPException(status_code=address_response.get("status_code", 500),
+                            detail={"error": address_response.get("error", "Address service Internal error")})
 
 
 @app.post("/create", tags=["Address"])
 def create_address(data: Address, response: Response):
-    rpc.response_len_setter(response_len=1)
-    address_response = rpc.publish(
-        message={
-            "address": {
-                "action": "insert_address",
-                "body": {
-                    "data": dict(data)
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        address_response = rpc.publish(
+            message={
+                "address": {
+                    "action": "insert_address",
+                    "body": {
+                        "data": dict(data)
+                    }
                 }
-            }
-        },
-        headers={'address': True}
-    ).get("address", {})
+            },
+            headers={'address': True}
+        ).get("address", {})
 
-    if address_response.get("success"):
-        response.status_code = address_response.get("status_code", 201)
-        return address_response
-    raise HTTPException(status_code=address_response.get("status_code", 500),
-                        detail={"error": address_response.get("error", "Address service Internal error")})
+        if address_response.get("success"):
+            response.status_code = address_response.get("status_code", 201)
+            return address_response
+        raise HTTPException(status_code=address_response.get("status_code", 500),
+                            detail={"error": address_response.get("error", "Address service Internal error")})
 
 
 @app.put("/update_fields", tags=["Address"])
 def update_address(data: UpdateAddress, response: Response):
-    rpc.response_len_setter(response_len=1)
-    address_response = rpc.publish(
-        message={
-            "address": {
-                "action": "update_address",
-                "body": {
-                    "data": dict(data)
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        address_response = rpc.publish(
+            message={
+                "address": {
+                    "action": "update_address",
+                    "body": {
+                        "data": dict(data)
+                    }
                 }
-            }
-        },
-        headers={'address': True}
-    ).get("address", {})
+            },
+            headers={'address': True}
+        ).get("address", {})
 
-    if address_response.get("success"):
-        response.status_code = address_response.get("status_code", 200)
-        return address_response
-    raise HTTPException(status_code=address_response.get("status_code", 500),
-                        detail={"error": address_response.get("error", "Address service Internal error")})
+        if address_response.get("success"):
+            response.status_code = address_response.get("status_code", 200)
+            return address_response
+        raise HTTPException(status_code=address_response.get("status_code", 500),
+                            detail={"error": address_response.get("error", "Address service Internal error")})
 
 
 @app.get("/customer_addresses", tags=["Address"])
 def cities(customerId: str, response: Response):
-    rpc.response_len_setter(response_len=1)
-    address_response = rpc.publish(
-        message={
-            "address": {
-                "action": "get_customer_addresses",
-                "body": {
-                    "customerId": customerId
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        address_response = rpc.publish(
+            message={
+                "address": {
+                    "action": "get_customer_addresses",
+                    "body": {
+                        "customerId": customerId
+                    }
                 }
-            }
-        },
-        headers={'address': True}
-    ).get("address", {})
+            },
+            headers={'address': True}
+        ).get("address", {})
 
-    if address_response.get("success"):
-        response.status_code = address_response.get("status_code", 200)
-        return address_response
-    raise HTTPException(status_code=address_response.get("status_code", 500),
-                        detail={"error": address_response.get("error", "Address service Internal error")})
+        if address_response.get("success"):
+            response.status_code = address_response.get("status_code", 200)
+            return address_response
+        raise HTTPException(status_code=address_response.get("status_code", 500),
+                            detail={"error": address_response.get("error", "Address service Internal error")})
