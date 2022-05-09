@@ -44,8 +44,8 @@ def get_profile(
             status_code=customer_result.get("status_code", 500),
             detail={"error": customer_result.get("error", "Something went wrong")}
         )
-    rpc.response_len_setter(response_len=1)
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
         result = rpc.publish(
             message={
                 "attribute": {
