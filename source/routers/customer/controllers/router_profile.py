@@ -6,10 +6,8 @@ from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
 from source.helpers.create_class import CreateClass
 from source.routers.customer.validators import validation_profile
-from source.routers.customer.validators.validation_profile import EditProfile, get_profile_attributes, Delivery
+from source.routers.customer.validators.validation_profile import EditProfile, Delivery
 from source.helpers import case_converter
-
-# from source.routers.customer.validators import validation_profile, validation_auth
 
 router_profile = APIRouter(
     prefix="/profile",
