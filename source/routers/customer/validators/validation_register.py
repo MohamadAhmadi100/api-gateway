@@ -280,4 +280,3 @@ class CustomerRegister(BaseModel):
         if not match:
             raise HTTPException(status_code=422, detail={"error": "شناسه شهر وارد شده صحیح نمیباشد"})
         return customer_city_id
-
