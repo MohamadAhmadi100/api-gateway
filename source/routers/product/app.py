@@ -186,7 +186,7 @@ def get_product_attributes(response: Response,
             for attr in product_attrs_result.get("message", {}).get("attributes", []):
                 if product_result.get("message", {}).get("product", {}).get("attributes", {}).get(attr.get("name")):
                     attr["selected_value"] = product_result.get("message", {}).get("product", {}).get("attributes",
-                                                                                                    {}).get(
+                                                                                                      {}).get(
                         attr.get("name"))
             response.status_code = product_attrs_result.get("status_code", 200)
             return convert_case(product_attrs_result.get("message", {})
