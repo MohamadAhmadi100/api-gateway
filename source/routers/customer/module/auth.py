@@ -110,13 +110,3 @@ class AuthHandler:
 
         else:
             raise HTTPException(status_code=401, detail={"error": "مجددا وارد شوید", "redirect": "login"})
-
-
-dict_data = {
-    "user_id": 212,
-    "phone_number": "09363094999",
-}
-
-x = AuthHandler()
-print(x.encode_access_token(dict_data))
-print(x.encode_refresh_token(dict_data))
