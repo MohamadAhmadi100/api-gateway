@@ -405,7 +405,7 @@ class ChangePassword(BaseModel):
 
 
 class Delivery(BaseModel):
-    delivery_first_name: str = Field(
+    deliveryFirstName: Optional[str] = Field(
         description="",
         title="نام تحویل گیرنده",
         alias="deliveryFirstName",
@@ -418,7 +418,7 @@ class Delivery(BaseModel):
         regexPattern=r"^[\u0600-\u06FF ]{2,32}$",
         isRquired=False,
     )
-    delivery_last_name: str = Field(
+    deliveryLastName: Optional[str] = Field(
         description="",
         alias="deliveryLastName",
         title="نام خانوادگی تحویل گیرنده",
@@ -431,7 +431,7 @@ class Delivery(BaseModel):
         regexPattern=r"^[\u0600-\u06FF ]{2,32}$",
         isRquired=False,
     )
-    delivery_national_id: str = Field(
+    deliveryNationalId: Optional[str] = Field(
         description="",
         title="کد ملی تحویل گیرنده",
         alias="deliveryNationalID",
@@ -444,7 +444,7 @@ class Delivery(BaseModel):
         isRquired=False,
         regexPattern="^[0-9]{10}$",
     )
-    delivery_mobile_number: str = Field(
+    deliveryMobileNumber: Optional[str] = Field(
         alias="deliveryMobileNumber",
         description="",
         title="تلفن تحویل گیرنده",
