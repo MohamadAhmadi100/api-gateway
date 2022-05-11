@@ -17,15 +17,11 @@ def make_enum(name, values):
 
 class SortName(str, Enum):
     customer_id = "customerId"
-    order_number = "orderNumber"
-    payment_id = "paymentID"
-    payment_date = "paymentDate"
     amount = "amount"
     wallet_id = "walletID"
-    user_id = "userId"
-    transaction_date = "transactionDate"
-    create_Persian_Date = "createPersianDate"
-    transaction_id = "transactionId"
+    remaining_amount = "remainingAmount"
+    total_amount = "totalAmount"
+    reserve_amount = "reserveAmount"
 
 
 class SortType(str, Enum):
@@ -33,7 +29,7 @@ class SortType(str, Enum):
     desc = "desc"
 
 
-class Transaction(BaseModel):
+class Wallet(BaseModel):
     page: Optional[int] = Field(alias="page", default=1)
     sort_name: Optional[SortName] = Field(alias="sortName", default="customerId")
     sort_type: Optional[SortType] = Field(alias="sortType", default="desc")
