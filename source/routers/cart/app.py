@@ -177,7 +177,8 @@ def get_cart(response: Response, auth_header=Depends(auth_handler.check_current_
 
                 price = storage_price if storage_price else customer_type_price if customer_type_price else main_price
 
-                now_formated_date_time = time.strptime(str(jdatetime.datetime.now()).split(".")[0], "%Y-%m-%d %H:%M:%S")
+                now_formated_date_time = time.strptime(str(jdatetime.datetime.now()).split(".")[0],
+                                                       "%Y-%m-%d %H:%M:%S")
 
                 special_formated_date_time = time.strptime(price.get(
                     "special_to_date"), "%Y-%m-%d %H:%M:%S")
