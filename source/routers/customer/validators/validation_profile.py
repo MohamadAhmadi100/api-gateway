@@ -405,7 +405,7 @@ class ChangePassword(BaseModel):
 
 
 class Delivery(BaseModel):
-    delivery_first_name: str = Field(
+    deliveryFirstName: Optional[str] = Field(
         description="",
         title="نام تحویل گیرنده",
         alias="deliveryFirstName",
@@ -418,7 +418,7 @@ class Delivery(BaseModel):
         regexPattern=r"^[\u0600-\u06FF ]{2,32}$",
         isRquired=False,
     )
-    delivery_last_name: str = Field(
+    deliveryLastName: Optional[str] = Field(
         description="",
         alias="deliveryLastName",
         title="نام خانوادگی تحویل گیرنده",
@@ -431,7 +431,7 @@ class Delivery(BaseModel):
         regexPattern=r"^[\u0600-\u06FF ]{2,32}$",
         isRquired=False,
     )
-    delivery_national_id: str = Field(
+    deliveryNationalId: Optional[str] = Field(
         description="",
         title="کد ملی تحویل گیرنده",
         alias="deliveryNationalID",
@@ -444,7 +444,7 @@ class Delivery(BaseModel):
         isRquired=False,
         regexPattern="^[0-9]{10}$",
     )
-    delivery_mobile_number: str = Field(
+    deliveryMobileNumber: Optional[str] = Field(
         alias="deliveryMobileNumber",
         description="",
         title="تلفن تحویل گیرنده",
@@ -456,3 +456,38 @@ class Delivery(BaseModel):
         type="text",
         isRquired=False,
     )
+
+    @validator("deliveryMobileNumber")
+    def validate_mobile_num(cls, delivery_mobile_number):
+        # sourcery skip: instance-method-first-arg-name
+        pattern = r"^09[0-9]{9}$"
+        match = re.fullmatch(pattern, delivery_mobile_number)
+        if not match:
+            raise HTTPException(status_code=422, detail={"error": "شماره تلفن وارد شده صحیح نمیباشد"})
+        return delivery_mobile_number
+
+    @validator("deliveryFirstName")
+    def validate_delivery_first_name(cls, delivery_first_name):
+        # sourcery skip: instance-method-first-arg-name
+        pattern = r"^[\u0600-\u06FF ]{2,32}$"
+        match = re.fullmatch(pattern, delivery_first_name)
+        if not match:
+            raise HTTPException(status_code=422, detail={"error": "نام وارد شده صحیح نمیباشد"})
+        return delivery_first_name
+
+    @validator("deliveryLastName")
+    def validate_delivery_lastname(cls, delivery_lastname):
+        # sourcery skip: instance-method-first-arg-name
+        pattern = r"^[\u0600-\u06FF ]{2,32}$"
+        match = re.fullmatch(pattern, delivery_lastname)
+        if not match:
+            raise HTTPException(status_code=422, detail={"error": "نام خانوادگی وارد شده صحیح نمیباشد"})
+        return delivery_lastname
+
+    @validator("deliveryNationalId")
+    def validate_customer_national_id(cls, delivery_national_id):
+        pattern = r"^[0-9]{10}$"
+        match = re.fullmatch(pattern, delivery_national_id)
+        if not match:
+            raise HTTPException(status_code=422, detail={"error": "کد ملی وارد شده صحیح نمیباشد"})
+        return delivery_national_id

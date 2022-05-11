@@ -212,10 +212,12 @@ def get_delivery_persons(response: Response,
 
 
 @router_profile.post("/delivery")
-def add_delivery_person(delivery: Delivery,
-                        response: Response,
+def add_delivery_person(response: Response,
+                        delivery: Delivery = None,
                         auth_header=Depends(auth_handler.check_current_user_tokens)
                         ):
+    if delivery is None:
+        delivery = Delivery()
     user_data, header = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
