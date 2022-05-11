@@ -60,9 +60,8 @@ def create_wallet(response: Response,
 
     # get customer data from token and send that for create wallet
     data = {
-        "customer_id": sub_data.get("customerId"),
-        "customer_phone_number": sub_data.get("customerPhoneNumber"),
-        "customer_name": sub_data.get("firstName") + " " + sub_data.get("lastName"),
+        "user_id": sub_data.get("user_id"),
+        "phone_number": sub_data.get("phone_number"),
     }
 
     wallet_response = rpc.publish(
@@ -101,7 +100,7 @@ def get_customer_wallet_back_side(response: Response,
             "wallet": {
                 "action": "get_customer_wallet_back_side",
                 "body": {
-                    "data": int(sub_data.get("customerId"))
+                    "data": int(sub_data.get("user_id"))
                 }
             }
         },
@@ -157,7 +156,7 @@ def update_wallet(data: UpdateData, response: Response,
 
     last_data = dict(data)
     # get customer id and add that to update object
-    last_data["customer_id"] = sub_data.get("customerId")
+    last_data["customer_id"] = sub_data.get("user_id")
     wallet_response = rpc.publish(
         message={
             "wallet": {
@@ -224,7 +223,7 @@ def get_transaction(response: Response, data: Transaction,
 
     default_filter = [{
         "name": "customerId",
-        "value": str(sub_data.get("customerId"))
+        "value": str(sub_data.get("user_id"))
     }]
 
     last_data = dict(data)
@@ -398,7 +397,7 @@ def reserve_wallet(data: Reserve, response: Response,
     # get customer data from token and send that for create wallet
     last_data = dict(data)
     # get customer id and add that to update object
-    last_data["customer_id"] = sub_data.get("customerId")
+    last_data["customer_id"] = sub_data.get("user_id")
 
     wallet_response = rpc.publish(
         message={
