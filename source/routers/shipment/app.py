@@ -1,8 +1,10 @@
-from fastapi import FastAPI, HTTPException, Response, responses
+from fastapi import FastAPI, HTTPException, Response, responses, Depends
 from source.config import settings
 from starlette.exceptions import HTTPException as starletteHTTPException
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.shipment.validators.shipment import Shipment
+from source.routers.cart.validators.shipment_per_stock import PerStock
+from source.routers.customer.module.auth import AuthHandler
 
 
 
@@ -17,11 +19,12 @@ app = FastAPI(
     description="This is Shipment gateway MicroService",
     version="0.1.0",
     openapi_tags=TAGS,
-    docs_url="/api/v1/docs/",
     redoc_url="/api/v1/redoc/",
     debug=settings.DEBUG_MODE
 )
 
+
+auth_handler = AuthHandler()
 
 @app.exception_handler(starletteHTTPException)
 def validation_exception_handler(request, exc):
@@ -34,24 +37,101 @@ rpc.consume()
 
 
 @app.post("/get_price", tags=["Calculate shipment price"])
-def cities(data: Shipment, response: Response):
-    print(data)
-    print(type(data))
-    rpc.response_len_setter(response_len=1)
-    shipment_response = rpc.publish(
-        message={
-            "shipment": {
-                "action": "get_shipment_details",
-                "body": {
-                    "data": data.json()
+def initial_shipment(data: Shipment, response: Response):
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        shipment_response = rpc.publish(
+            message={
+                "shipment": {
+                    "action": "get_shipment_details",
+                    "body": {
+                        "data": data.json()
+                    }
                 }
-            }
-        },
-        headers={'shipment': True}
-    ).get("shipment", {})
+            },
+            headers={'shipment': True}
+        ).get("shipment", {})
 
-    if shipment_response.get("success"):
-        response.status_code = shipment_response.get("status_code", 200)
-        return shipment_response
-    raise HTTPException(status_code=shipment_response.get("status_code", 500),
-                        detail={"error": shipment_response.get("error", "Shipment service Internal error")})
+        if shipment_response.get("success"):
+            response.status_code = shipment_response.get("status_code", 200)
+            return shipment_response
+        raise HTTPException(status_code=shipment_response.get("status_code", 500),
+                            detail={"error": shipment_response.get("error", "Shipment service Internal error")})
+
+
+
+
+@app.put("/get_shipment_per_stock", tags=["Get shipment details and insurance per stock"])
+def shipment_per_stock(
+        response: Response,
+        data: PerStock,
+        auth_header=Depends(auth_handler.check_current_user_tokens)
+):
+    user, token_dict = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        shipment_response = rpc.publish(
+            message={
+                "shipment": {
+                    "action": "get_selected_method",
+                    "body": {
+                        "data": data.json()
+                    }
+                }
+            },
+            headers={'shipment': True}
+        ).get("shipment", {})
+        if shipment_response.get("success"):
+            rpc.response_len_setter(response_len=1)
+            cart_response = rpc.publish(
+                message={
+                    "cart": {
+                        "action": "add_shipment_to_cart",
+                        "body": {
+                            "shipment": {
+                                "shipment_details": shipment_response.get("message"),
+                                "user_id": user.get("user_id")
+                            }
+                        }
+                    }
+                },
+                headers={'cart': True}
+            ).get("cart", {})
+
+            if cart_response.get("success"):
+                response.status_code = cart_response.get("status_code", 200)
+                return cart_response
+            raise HTTPException(status_code=cart_response.get("status_code", 500),
+                                detail={"error": cart_response.get("error", "Shipment service Internal error")})
+
+
+
+
+
+@app.post("/test_wallet", tags=["test"])
+def test(response: Response, auth_header=Depends(auth_handler.check_current_user_tokens)):
+    user, token_dict = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        cart_response = rpc.publish(
+            message={
+                "cart": {
+                    "action": "get_shipment_details",
+                    "body": {
+                        "user": user.get("user_id"),
+                        "wallet_details": {
+                            "amount": 15000000,
+                            "transactionId": "354137853"
+                        }
+                    }
+                }
+            },
+            headers={'cart': True}
+        ).get("cart", {})
+
+        if cart_response.get("success"):
+            response.status_code = cart_response.get("status_code", 200)
+            return cart_response
+        raise HTTPException(status_code=cart_response.get("status_code", 500),
+                            detail={"error": cart_response.get("error", "Shipment service Internal error")})
+

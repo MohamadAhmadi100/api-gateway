@@ -31,9 +31,6 @@ def validation_exception_handler(request, exc):
     return responses.JSONResponse(exc.detail, status_code=exc.status_code)
 
 
-
-
-
 @app.get("/product/quantity_page/{systemCode}/", tags=["Quantity"])
 def get_product_quantity_page(response: Response,
                               system_code: str = Path(..., alias="systemCode", max_length=12, min_length=12),

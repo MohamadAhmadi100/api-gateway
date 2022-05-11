@@ -63,14 +63,6 @@ def get_parent_configs(response: Response,
                             detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@app.get("/parent/", tags=["Product"])
-def create_parent_schema():
-    """
-    Get create parent json schema
-    """
-    return CreateParent.schema().get("properties")
-
-
 @app.post("/parent/", tags=["Product"])
 def create_parent(
         item: CreateParent, response: Response
@@ -246,7 +238,7 @@ def add_attributes(response: Response,
 def get_product_by_system_code(
         response: Response,
         system_code: str = Path(..., min_length=11, max_length=11, alias='systemCode'),
-        lang: str = Path("fa_ir", min_length=2, max_length=8),
+        lang: Optional[str] = Path("fa_ir", min_length=2, max_length=8),
         access: Optional[str] = Header(None),
         refresh: Optional[str] = Header(None)
 ) -> dict:
@@ -300,13 +292,14 @@ def get_product_by_system_code(
                 if customer_type:
                     product['config']["warehouse"] = list()
                     for quantity_key, quantity in quantity_result.get("message", {}).get("products", {}).get(
-                            product.get("system_code"), {}).get("customer_types", {}).get(customer_type, {}).get(
-                        "storages",
-                        {}).items():
+                            product.get("system_code"), {}).get("customer_types", {}).get(customer_type,
+                                                                                          {}).get("storages",
+                                                                                                  {}).items():
 
                         for price_key, price in pricing_result.get("message", {}).get("products", {}).get(
-                                product.get("system_code"), {}).get("customer_type", {}).get(customer_type, {}).get(
-                            "storages", {}).items():
+                                product.get("system_code"), {}).get("customer_type", {}).get(customer_type,
+                                                                                             {}).get("storages",
+                                                                                                     {}).items():
 
                             if quantity.get("storage_id") == price.get("storage_id"):
                                 item = dict()
@@ -326,10 +319,11 @@ def get_product_by_system_code(
                                 product['config']["warehouse"].append(item)
                 else:
                     product["price"] = pricing_result.get("message", {}).get("products", {}).get(
-                        product.get("system_code"),
-                        {}).get("regular")
+                        list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
+                        "B2B", {}).get("storages", {}).get("1", {}).get("regular", 0)
                     product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
-                        product.get("system_code"), {}).get("special")
+                        list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
+                        "B2B", {}).get("storages", {}).get("1", {}).get("special", 0)
             return convert_case(final_result, 'camel')
 
 
@@ -393,12 +387,10 @@ def edit_product(
                             detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@app.get("/categories/{systemCode}/", tags=["Product"])
+@app.get("/categories/", tags=["Product"])
 def get_all_categories(
-        response: Response,
-        system_code: str = Path(00, min_length=2, max_length=6, alias='systemCode'),
-        page: int = Query(1, ge=1, le=1000),
-        per_page: int = Query(15, ge=1, le=1000, alias='perPage')):
+        response: Response
+):
     """
     Get all available categories in database.
     """
@@ -408,11 +400,7 @@ def get_all_categories(
             message={
                 "product": {
                     "action": "get_all_categories",
-                    "body": {
-                        "system_code": system_code,
-                        "page": page,
-                        "per_page": per_page
-                    }
+                    "body": {}
                 }
             },
             headers={'product': True}
@@ -440,7 +428,7 @@ def get_product_list_by_system_code(
     customer_type = None
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
-        customer_type = user_data.get("customer_type", "B2B")
+        customer_type = user_data.get("customer_type", ["B2B"])[0]
 
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
@@ -477,15 +465,16 @@ def get_product_list_by_system_code(
                 if pricing_result.get("success"):
                     if not customer_type:
                         product["price"] = pricing_result.get("message", {}).get("products", {}).get(
-                            list(pricing_result['message']['products'].keys())[0], {}).get("regular")
+                            list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
+                            "B2B", {}).get("storages", {}).get("1", {}).get("regular", 0)
                         product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
-                            list(pricing_result['message']['products'].keys())[0], {}).get("special")
+                            list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
+                            "B2B", {}).get("storages", {}).get("1", {}).get("special", 0)
                     else:
                         price_tuples = list()
                         for system_code, prices in pricing_result.get("message", {}).get("products", {}).items():
                             customer_type_price = prices.get("customer_type", {}).get(customer_type, {})
-                            price_tuples.append((customer_type_price.get("regular"), customer_type_price.get("special")))
-                            for storage, storage_prices in prices.get("storages", {}).items():
+                            for storage, storage_prices in customer_type_price.get("storages", {}).items():
                                 price_tuples.append((storage_prices.get("regular"), storage_prices.get("special")))
 
                         price_tuples.sort(key=lambda x: x[1])
@@ -499,9 +488,6 @@ def get_product_list_by_system_code(
                     product["special_price"] = None
 
             response.status_code = product_result.get("status_code", 200)
-            for i in message_product.keys():
-                for j in message_product[i]:
-                    j['image'] = "default.png"
             return convert_case(message_product, 'camel')
         raise HTTPException(status_code=product_result.get("status_code", 500),
                             detail={"error": product_result.get("error", "Something went wrong")})
@@ -519,7 +505,7 @@ def get_category_list(
     customer_type = None
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
-        customer_type = user_data.get("customer_type", "B2B")
+        customer_type = user_data.get("customer_type", ["B2B"])[0]
 
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
@@ -542,7 +528,6 @@ def get_category_list(
                     for obj in message_product[key]['items']:
                         obj['image'] = "default.png"
             for product in message_product['product']['items']:
-                product['image'] = "/default_product.png"
                 pricing_result = rpc.publish(
                     message={
                         "pricing": {
@@ -560,8 +545,7 @@ def get_category_list(
                         price_tuples = list()
                         for system_code, prices in pricing_result.get("message", {}).get("products", {}).items():
                             customer_type_price = prices.get("customer_type", {}).get(customer_type, {})
-                            price_tuples.append((customer_type_price.get("regular"), customer_type_price.get("special")))
-                            for storage, storage_prices in prices.get("storages", {}).items():
+                            for storage, storage_prices in customer_type_price.get("storages", {}).items():
                                 price_tuples.append((storage_prices.get("regular"), storage_prices.get("special")))
 
                         price_tuples.sort(key=lambda x: x[1])
@@ -572,9 +556,11 @@ def get_category_list(
                         product["special_price"] = special_price
                     else:
                         product["price"] = pricing_result.get("message", {}).get("products", {}).get(
-                            list(pricing_result['message']['products'].keys())[0], {}).get("regular")
+                            list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
+                            "B2B", {}).get("storages", {}).get("1", {}).get("regular", 0)
                         product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
-                            list(pricing_result['message']['products'].keys())[0], {}).get("special")
+                            list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
+                            "B2B", {}).get("storages", {}).get("1", {}).get("special", 0)
                     product_list.append(product)
             message_product['product']['items'] = product_list
             response.status_code = product_result.get("status_code", 200)
@@ -592,9 +578,9 @@ def get_product_list_back_office(
         sellers: Optional[List[str]] = Query(None),
         colors: Optional[List[str]] = Query(None),
         quantity: Optional[Tuple[str, str]] = Query(None),
-        date: Optional[Tuple[str, str]] = Query(None),
+        date: Optional[list] = Query([], description="Date range in tuple format (from, to)"),
         guarantees: Optional[List[str]] = Query(None),
-        steps: Optional[List[str]] = Query(None),
+        steps: Optional[List[int]] = Query(None),
         visible_in_site: Optional[bool] = Query(None, alias='visibleInSite'),
         approved: Optional[bool] = Query(None),
         available: Optional[bool] = Query(None),
@@ -617,7 +603,7 @@ def get_product_list_back_office(
                         "sellers": sellers,
                         "colors": colors,
                         "quantity": quantity,
-                        "date": date,
+                        "date": date if len(date) == 2 else [date[0], None] if len(date) == 1 else [None, None],
                         "guarantees": guarantees,
                         "steps": steps,
                         "visible_in_site": visible_in_site,
@@ -663,7 +649,8 @@ def get_product_list_back_office(
                 for config in product['products']:
                     if pricing_result.get("success"):
                         system_code = config.get("system_code")
-                        config['price'] = pricing_result.get("message", {}).get("products", {}).get(system_code, {}).get(
+                        config['price'] = pricing_result.get("message", {}).get("products", {}).get(system_code,
+                                                                                                    {}).get(
                             "regular")
                         config['special_price'] = pricing_result.get("message", {}).get("products", {}).get(system_code,
                                                                                                             {}).get(

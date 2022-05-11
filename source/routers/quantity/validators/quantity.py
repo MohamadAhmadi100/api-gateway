@@ -36,14 +36,12 @@ class Quantity(BaseModel):
                         "storages": [
                             {
                                 "storageId": "0",
-                                "stock": 400,
                                 "stockForSale": 200,
                                 "minQty": 1,
                                 "maxQty": 100,
                             },
                             {
                                 "storageId": "1",
-                                "stock": 100,
                                 "stockForSale": 50,
                                 "minQty": 1,
                                 "maxQty": 100,
@@ -67,7 +65,6 @@ class UpdateQuantity(BaseModel):
     system_code: str = Field(..., alias="systemCode")
     customer_type: str = Field(..., alias="customerType")
     storage_id: str = Field(..., alias="storageId")
-    stock: int
     stock_for_sale: int = Field(None, alias="stockForSale")
     min_qty: int = Field(None, alias="minQty")
     max_qty: int = Field(None, alias="maxQty")
@@ -94,14 +91,6 @@ class UpdateQuantity(BaseModel):
             raise HTTPException(status_code=422, detail={"error": "storage_id must be str"})
         elif int(value) > 10000:
             raise HTTPException(status_code=422, detail={"error": "storage_id must be less than 10000"})
-        return value
-
-    @validator("stock")
-    def stock_validator(cls, value):
-        if not isinstance(value, int):
-            raise HTTPException(status_code=422, detail={"error": "stock must be int"})
-        elif value <= 0 or value > 100000000000:
-            raise HTTPException(status_code=422, detail={"error": "stock must be between 0 and 100000000000"})
         return value
 
     @validator("stock_for_sale")
@@ -134,7 +123,6 @@ class UpdateQuantity(BaseModel):
                 "systemCode": "123456789012",
                 "customerType": "B2B",
                 "storageId": "1",
-                "stock": 100,
                 "stockForSale": 100,
                 "minQty": 1,
                 "maxQty": 100

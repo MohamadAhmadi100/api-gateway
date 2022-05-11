@@ -82,6 +82,8 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
                     product['parent_system_code'] = product_result.get("system_code")
                     final_result["product"] = product
                     break
+            if not final_result.get("product"):
+                raise HTTPException(status_code=404, detail={"error": "Product not found"})
 
             # quantity actions
 
@@ -145,6 +147,7 @@ def get_cart(response: Response, auth_header=Depends(auth_handler.check_current_
         else:
             base_price = 0
             for product in cart_result["message"]["products"]:
+                rpc.response_len_setter(response_len=2)
                 pricing_result = rpc.publish(
                     message={
                         "pricing": {
@@ -152,10 +155,17 @@ def get_cart(response: Response, auth_header=Depends(auth_handler.check_current_
                             "body": {
                                 "system_code": product.get("parent_system_code")
                             }
+                        },
+                        "quantity": {
+                            "action": "get_quantity",
+                            "body": {
+                                "system_code": product.get("parent_system_code")
+                            }
                         }
                     },
-                    headers={'pricing': True}
+                    headers={'pricing': True, "quantity": True}
                 )
+                quantity_result = pricing_result.get("quantity", {})
                 pricing_result = pricing_result.get("pricing", {})
 
                 main_price = pricing_result.get("message", {}).get("products", {}).get(product.get("system_code"), {})
@@ -166,9 +176,14 @@ def get_cart(response: Response, auth_header=Depends(auth_handler.check_current_
 
                 product["price"] = price.get("special") if price.get("special") else price.get("regular")
 
-                base_price += product.get("price") * product.get("count")
+                product["quantity"] = quantity_result.get("message", {}).get("products", {}).get(product.get("system_code"), {}).get("customer_types", {}).get(customer_type, {}).get("storages", {}).get(product.get("storage_id"), {})
+
+                if product.get("price"):
+                    base_price += product.get("price") * product.get("count")
 
             cart_result["message"]["base_price"] = base_price
+            # need to add shipping price
+            cart_result["message"]["total_price"] = base_price
             response.status_code = cart_result.get("status_code", 200)
             return convert_case(cart_result.get("message"), 'camel')
 

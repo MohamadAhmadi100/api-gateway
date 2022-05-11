@@ -11,10 +11,6 @@ router_portal = APIRouter(
 
 auth_handler = AuthHandler()
 
-rpc = RabbitRPC(exchange_name='headers_exchange', timeout=5)
-rpc.connect()
-rpc.consume()
-
 
 @router_portal.post("/")
 def get_customers_data(
@@ -23,18 +19,18 @@ def get_customers_data(
         auth_header=Depends(auth_handler.check_current_user_tokens)
 ):
     username, token_dict = auth_header
-    print(value)
-    rpc.response_len_setter(response_len=1)
-    result = rpc.publish(
-        message={
-            "customer": {
-                "action": "get_customers_data",
-                "body": {
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
+            message={
+                "customer": {
+                    "action": "get_customers_data",
+                    "body": {
+                    }
                 }
-            }
-        },
-        headers={'customer': True}
-    )
+            },
+            headers={'customer': True}
+        )
     customer_result = result.get("customer", {})
     response.status_code = customer_result.get("status_code", 200)
     return customer_result.get("message")
@@ -47,28 +43,29 @@ def get_customers_data(
         # auth_header=Depends(auth_handler.check_current_user_tokens)
 ):
     # username, token_dict = auth_header
-    rpc.response_len_setter(response_len=1)
-    if value:
-        result = rpc.publish(
-            message={
-                "customer": {
-                    "action": "get_customers_grid_data",
-                    "body": {
-                        "data": value.json()
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        if value:
+            result = rpc.publish(
+                message={
+                    "customer": {
+                        "action": "get_customers_grid_data",
+                        "body": {
+                            "data": value.json()
+                        }
                     }
-                }
-            },
-            headers={'customer': True}
-        )
-    else:
-        result = rpc.publish(
-            message={
-                "customer": {
-                    "action": "get_customers_grid_data",
-                }
-            },
-            headers={'customer': True}
-        )
+                },
+                headers={'customer': True}
+            )
+        else:
+            result = rpc.publish(
+                message={
+                    "customer": {
+                        "action": "get_customers_grid_data",
+                    }
+                },
+                headers={'customer': True}
+            )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
@@ -86,28 +83,29 @@ def get_customers_data(
         auth_header=Depends(auth_handler.check_current_user_tokens)
 ):
     username, token_dict = auth_header
-    rpc.response_len_setter(response_len=1)
-    if value:
-        result = rpc.publish(
-            message={
-                "customer": {
-                    "action": "get_customers_grid_data",
-                    "body": {
-                        "data": value.json()
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        if value:
+            result = rpc.publish(
+                message={
+                    "customer": {
+                        "action": "get_customers_grid_data",
+                        "body": {
+                            "data": value.json()
+                        }
                     }
-                }
-            },
-            headers={'customer': True}
-        )
-    else:
-        result = rpc.publish(
-            message={
-                "customer": {
-                    "action": "get_customers_grid_data",
-                }
-            },
-            headers={'customer': True}
-        )
+                },
+                headers={'customer': True}
+            )
+        else:
+            result = rpc.publish(
+                message={
+                    "customer": {
+                        "action": "get_customers_grid_data",
+                    }
+                },
+                headers={'customer': True}
+            )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
