@@ -267,7 +267,7 @@ def get_customer_wallet_customer_side(
             "wallet": {
                 "action": "get_customer_wallet_customer_side",
                 "body": {
-                    "customer_id": sub_data.get("customer_id")
+                    "customer_id": sub_data.get("user_id")
                 }
             }
         },
