@@ -113,10 +113,8 @@ class AuthHandler:
 
 
 dict_data = {
-    "customerId": 212,
-    "customerPhoneNumber": "09363094999",
-    "firstName": "مرتضی",
-    "lastName": "معافی"
+    "user_id": 212,
+    "phone_number": "09363094999",
 }
 
 x = AuthHandler()
