@@ -156,7 +156,7 @@ def get_product_attributes(response: Response,
     """
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
-        product_result = rpc.publish(
+        product_attrs_result = rpc.publish(
             message={
                 "product": {
                     "action": "get_product_attributes",
@@ -167,12 +167,32 @@ def get_product_attributes(response: Response,
             },
             headers={'product': True}
         )
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_product_child",
+                    "body": {
+                        "system_code": system_code,
+                        "lang": "fa_ir"
+                    }
+                }
+            },
+            headers={'product': True}
+        )
+        product_attrs_result = product_attrs_result.get("product", {})
         product_result = product_result.get("product", {})
-        if product_result.get("success"):
-            response.status_code = product_result.get("status_code", 200)
-            return convert_case(product_result.get("message"), 'camel')
-        raise HTTPException(status_code=product_result.get("status_code", 500),
-                            detail={"error": product_result.get("error", "Something went wrong")})
+        if product_attrs_result.get("success"):
+
+            for attr in product_attrs_result.get("message", {}).get("attributes", []):
+                if product_result.get("message", {}).get("product", {}).get("attributes", {}).get(attr.get("name")):
+                    attr["defaultValue"] = product_result.get("message", {}).get("product", {}).get("attributes",
+                                                                                                    {}).get(
+                        attr.get("name"))
+            response.status_code = product_attrs_result.get("status_code", 200)
+            return convert_case(product_attrs_result.get("message", {})
+                                , 'camel')
+        raise HTTPException(status_code=product_attrs_result.get("status_code", 500),
+                            detail={"error": product_attrs_result.get("error", "Something went wrong")})
 
 
 @app.get("/attributes/", tags=["Product"])
