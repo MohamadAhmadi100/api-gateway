@@ -620,19 +620,15 @@ def get_product_list_back_office(
         message_product = product_result.get("message", {})
         product_list = list()
         for product in message_product['products']:
-            pricing_result = rpc.publish(
+            rpc.response_len_setter(response_len=2)
+            rpc_result = rpc.publish(
                 message={
                     "pricing": {
                         "action": "get_price",
                         "body": {
                             "system_code": product.get("system_code")
                         }
-                    }
-                },
-                headers={'pricing': True}
-            )
-            quantity_result = rpc.publish(
-                message={
+                    },
                     "quantity": {
                         "action": "get_quantity",
                         "body": {
@@ -640,26 +636,21 @@ def get_product_list_back_office(
                         }
                     }
                 },
-                headers={'quantity': True}
+                headers={'pricing': True, "quantity": True}
             )
-            pricing_result = pricing_result.get("pricing", {})
-            quantity_result = quantity_result.get("quantity", {})
+            pricing_result = rpc_result.get("pricing", {})
+            quantity_result = rpc_result.get("quantity", {})
             # price_tuples = list()
             if product.get('products'):
                 for config in product['products']:
                     if pricing_result.get("success"):
                         system_code = config.get("system_code")
                         config['price'] = pricing_result.get("message", {}).get("products", {}).get(system_code,
-                                                                                                    {}).get(
-                            "regular")
-                        config['special_price'] = pricing_result.get("message", {}).get("products", {}).get(system_code,
-                                                                                                            {}).get(
-                            "special")
+                                                                                                    {})
                     if quantity_result.get("success"):
                         system_code = config.get("system_code")
                         config['quantity'] = quantity_result.get("message", {}).get("products", {}).get(system_code,
-                                                                                                        {}).get(
-                            "total_stock_for_sale")
+                                                                                                        {})
 
             product_system_code = product.get("system_code")
             product['system_code'] = product_system_code[:9] + "-" + product_system_code[9:]
