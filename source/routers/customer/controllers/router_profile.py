@@ -6,10 +6,8 @@ from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
 from source.helpers.create_class import CreateClass
 from source.routers.customer.validators import validation_profile
-from source.routers.customer.validators.validation_profile import EditProfile, get_profile_attributes, Delivery
+from source.routers.customer.validators.validation_profile import EditProfile, Delivery
 from source.helpers import case_converter
-
-# from source.routers.customer.validators import validation_profile, validation_auth
 
 router_profile = APIRouter(
     prefix="/profile",
@@ -44,8 +42,8 @@ def get_profile(
             status_code=customer_result.get("status_code", 500),
             detail={"error": customer_result.get("error", "Something went wrong")}
         )
-    rpc.response_len_setter(response_len=1)
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
         result = rpc.publish(
             message={
                 "attribute": {
