@@ -110,12 +110,15 @@ def get_customer_wallet_back_side(response: Response,
     if wallet_response.get("success"):
         response.status_code = wallet_response.get("status_code", 200)
         return wallet_response
+    elif not wallet_response.get("success"):
+        response.status_code = wallet_response.get("status_code", 417)
+        return wallet_response
     raise HTTPException(status_code=wallet_response.get("status_code", 500),
                         detail={"error": wallet_response.get("error", "Wallet service Internal error")})
 
 
 @app.post("/get-wallets", tags=["back-office side"])
-def get_transactions(response: Response, data: Wallet,
+def get_wallets(response: Response, data: Wallet,
                      auth_header=Depends(auth.check_current_user_tokens)
                      ):
     sub_data, token_data = auth_header
@@ -137,6 +140,9 @@ def get_transactions(response: Response, data: Wallet,
 
     if wallet_response.get("success"):
         response.status_code = wallet_response.get("status_code", 200)
+        return wallet_response
+    elif not wallet_response.get("success"):
+        response.status_code = wallet_response.get("status_code", 417)
         return wallet_response
     raise HTTPException(status_code=wallet_response.get("status_code", 500),
                         detail={"error": wallet_response.get("error", "Wallet service Internal error")})
@@ -172,6 +178,9 @@ def update_wallet(data: UpdateData, response: Response,
     if wallet_response.get("success"):
         response.status_code = wallet_response.get("status_code", 200)
         return wallet_response
+    elif not wallet_response.get("success"):
+        response.status_code = wallet_response.get("status_code", 417)
+        return wallet_response
     raise HTTPException(status_code=wallet_response.get("status_code", 500),
                         detail={"error": wallet_response.get("error", "Wallet service Internal error")})
 
@@ -203,6 +212,9 @@ def get_transactions(response: Response, data: Transaction,
 
     if wallet_response.get("success"):
         response.status_code = wallet_response.get("status_code", 200)
+        return wallet_response
+    elif not wallet_response.get("success"):
+        response.status_code = wallet_response.get("status_code", 417)
         return wallet_response
     raise HTTPException(status_code=wallet_response.get("status_code", 500),
                         detail={"error": wallet_response.get("error", "Wallet service Internal error")})
@@ -248,6 +260,9 @@ def get_transaction(response: Response, data: Transaction,
     if wallet_response.get("success"):
         response.status_code = wallet_response.get("status_code", 200)
         return wallet_response
+    elif not wallet_response.get("success"):
+        response.status_code = wallet_response.get("status_code", 417)
+        return wallet_response
     raise HTTPException(status_code=wallet_response.get("status_code", 500),
                         detail={"error": wallet_response.get("error", "Wallet service Internal error")})
 
@@ -276,6 +291,9 @@ def get_customer_wallet_customer_side(
 
     if wallet_response.get("success"):
         response.status_code = wallet_response.get("status_code", 200)
+        return wallet_response
+    elif not wallet_response.get("success"):
+        response.status_code = wallet_response.get("status_code", 417)
         return wallet_response
     raise HTTPException(status_code=wallet_response.get("status_code", 500),
                         detail={"error": wallet_response.get("error", "Wallet service Internal error")})

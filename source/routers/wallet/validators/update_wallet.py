@@ -24,7 +24,7 @@ class UpdateData(BaseModel):
     staff_id: int = Field(..., alias="staffId")
     amount: int = Field(..., alias="amount", isRequired=True)
     balance: Optional[Balance] = Field(..., description="charge/consume", isRequired=True)
-    Action_type: Optional[ActionType] = Field(..., alias="ActionType")
+    action_type: Optional[ActionType] = Field(..., alias="ActionType")
     type: Optional[Type] = Field(..., alias="type")
     description: str = Field(min_length=5, max_length=300, isRequired=False)
     reason: str = Field(min_length=5, max_length=50, isRequired=True)
