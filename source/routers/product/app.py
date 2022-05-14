@@ -609,7 +609,7 @@ def get_product_list_back_office(
         per_page: Optional[int] = Query(15)
 ):
     """
-    Get product list
+    Get product list in  back office
     """
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
