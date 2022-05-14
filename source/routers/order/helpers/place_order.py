@@ -2,24 +2,12 @@ from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.helpers.profile_view import get_profile_info
 
 
-
-
-def place_order(auth_header):
+def place_order(auth_header, cart):
     user, token_dict = auth_header
     # check if all will have response(timeout)
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        result = rpc.publish(
-            message={
-                "cart": {
-                    "action": "get_cart",
-                    "body": {
-                        "user_id": user.get("user_id")
-                    }
-                }
-            },
-            headers={'cart': True}
-        )
+        result = dict()
+        result['cart'] = cart
         result['user_info'] = user
         result['customer'] = get_profile_info(user)
 
