@@ -34,10 +34,19 @@ class CreateClass:
     def make_class_attributes(self) -> None:
         for key, value in self._attributes_dict.items():
             self._class_attributes_dict[key] = Field(**value)
+            value_type = str
+            if value.get('input_type') == "Yes or No":
+                value_type = bool
+            elif value.get('input_type') == "Multiple Select":
+                value_type = list
+            elif value.get('input_type') == "Price":
+                value_type = int
+            elif value.get('input_type') == "Number":
+                value_type = int
             if value.get("required") or value.get("is_required"):
-                self._class_attributes_dict[key] = (str, Field(**value))
+                self._class_attributes_dict[key] = (value_type, Field(**value))
             else:
-                self._class_attributes_dict[key] = (Optional[str], Field(**value))
+                self._class_attributes_dict[key] = (Optional[value_type], Field(**value))
 
     def make_validator_dict(self):
         for key, value in self._class_attributes_dict.items():

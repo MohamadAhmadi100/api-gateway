@@ -1,3 +1,6 @@
+import time
+
+import jdatetime
 from fastapi import FastAPI, HTTPException, Response, responses, Path, Depends
 from starlette.exceptions import HTTPException as starletteHTTPException
 
@@ -174,9 +177,25 @@ def get_cart(response: Response, auth_header=Depends(auth_handler.check_current_
 
                 price = storage_price if storage_price else customer_type_price if customer_type_price else main_price
 
-                product["price"] = price.get("special") if price.get("special") else price.get("regular")
+                now_formated_date_time = time.strptime(str(jdatetime.datetime.now()).split(".")[0],
+                                                       "%Y-%m-%d %H:%M:%S")
 
-                product["quantity"] = quantity_result.get("message", {}).get("products", {}).get(product.get("system_code"), {}).get("customer_types", {}).get(customer_type, {}).get("storages", {}).get(product.get("storage_id"), {})
+                special_formated_date_time = time.strptime(price.get(
+                    "special_to_date"), "%Y-%m-%d %H:%M:%S")
+
+                if not price.get("special"):
+                    product["price"] = price.get("regular")
+                else:
+                    if now_formated_date_time < special_formated_date_time and price.get(
+                            "special"):
+                        product["price"] = price.get("special")
+                    else:
+                        product["price"] = price.get("regular")
+
+                product["quantity"] = quantity_result.get("message", {}).get("products", {}).get(
+                    product.get("system_code"), {}).get("customer_types", {}).get(customer_type, {}).get("storages",
+                                                                                                         {}).get(
+                    product.get("storage_id"), {})
 
                 if product.get("price"):
                     base_price += product.get("price") * product.get("count")
