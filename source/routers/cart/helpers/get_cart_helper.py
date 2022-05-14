@@ -1,3 +1,6 @@
+import time
+
+import jdatetime
 from fastapi import HTTPException
 
 from source.message_broker.rabbit_server import RabbitRPC
@@ -53,14 +56,28 @@ def get_cart(user):
 
                 price = storage_price if storage_price else customer_type_price if customer_type_price else main_price
 
-                product["price"] = price.get("special") if price.get("special") else price.get("regular")
+                now_formated_date_time = time.strptime(str(jdatetime.datetime.now()).split(".")[0],
+                                                       "%Y-%m-%d %H:%M:%S")
+
+                special_formated_date_time = time.strptime(price.get(
+                    "special_to_date"), "%Y-%m-%d %H:%M:%S")
+
+                if not price.get("special"):
+                    product["price"] = price.get("regular")
+                else:
+                    if now_formated_date_time < special_formated_date_time and price.get(
+                            "special"):
+                        product["price"] = price.get("special")
+                    else:
+                        product["price"] = price.get("regular")
 
                 product["quantity"] = quantity_result.get("message", {}).get("products", {}).get(
                     product.get("system_code"), {}).get("customer_types", {}).get(customer_type, {}).get("storages",
                                                                                                          {}).get(
                     product.get("storage_id"), {})
 
-                base_price += product.get("price") * product.get("count")
+                if product.get("price"):
+                    base_price += product.get("price") * product.get("count")
 
             cart_result["message"]["base_price"] = base_price
             # need to add shipping price
