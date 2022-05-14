@@ -3,7 +3,7 @@ from source.config import settings
 from starlette.exceptions import HTTPException as starletteHTTPException
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.shipment.validators.shipment import Shipment
-from source.routers.cart.validators.shipment_per_stock import PerStock
+from source.routers.shipment.validators.shipment_per_stock import PerStock
 from source.routers.customer.module.auth import AuthHandler
 
 
@@ -116,11 +116,11 @@ def test(response: Response, auth_header=Depends(auth_handler.check_current_user
         cart_response = rpc.publish(
             message={
                 "cart": {
-                    "action": "get_shipment_details",
+                    "action": "add_payment_to_cart",
                     "body": {
-                        "user": user.get("user_id"),
-                        "wallet_details": {
-                            "amount": 15000000,
+                        "user_id": user.get("user_id"),
+                        "payment_details": {
+                            "amount": 1425635,
                             "transactionId": "354137853"
                         }
                     }

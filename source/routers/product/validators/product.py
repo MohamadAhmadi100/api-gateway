@@ -102,3 +102,63 @@ class EditProduct(BaseModel):
                 "label": "نمایش در سایت باید از نوع بولین باشد"
             })
         return value
+
+
+class CustomCategory(BaseModel):
+    system_code: str = Field(..., title="شناسه محصول", maxLength=12, minLength=12, placeholder="100104021006",
+                             isRequired=True,
+                             alias="systemCode")
+    custom_name: str = Field(..., title="نام محصول", maxLength=256, minLength=3, placeholder="محصول سفارشی",
+                             isRequired=True,
+                             alias="customName")
+    visible_in_site: bool = Field(..., title="نمایش در سایت", isRequired=True, alias="visibleInSite")
+
+    image: Optional[str] = Field(..., title="تصویر محصول", maxLength=256, minLength=3, placeholder="تصویر محصول",
+                                 isRequired=False)
+
+    @validator('visible_in_site')
+    def visible_in_site_validator(cls, value):
+        if not isinstance(value, bool):
+            raise HTTPException(status_code=417, detail={
+                "error": "visible_in_site must be a boolean",
+                "label": "نمایش در سایت باید از نوع بولین باشد"
+            })
+        return value
+
+    @validator('custom_name')
+    def custom_name_validator(cls, value):
+        if not isinstance(value, str):
+            raise HTTPException(status_code=417, detail={
+                "error": "custom_name must be a string",
+                "label": "نام محصول سفارشی باید از نوع رشته باشد"
+            })
+        elif len(value) < 3:
+            raise HTTPException(status_code=417, detail={
+                "error": "custom_name must be at least 3 characters",
+                "label": "طول نام محصول سفارشی باید حداقل ۳ کاراکتر باشد"
+            })
+        elif len(value) > 256:
+            raise HTTPException(status_code=417, detail={
+                "error": "custom_name must be at most 256 characters",
+                "label": "طول نام محصول سفارشی باید حداکثر ۲۵۶ کاراکتر باشد"
+            })
+        return value
+
+    @validator('system_code')
+    def system_code_validator(cls, value):
+        if not isinstance(value, str):
+            raise HTTPException(status_code=417, detail={
+                "error": "system_code must be a string",
+                "label": "شناسه محصول باید از نوع رشته باشد"
+            })
+        return value
+
+    @validator('image')
+    def image_validator(cls, value):
+        if not isinstance(value, str):
+            raise HTTPException(status_code=417, detail={
+                "error": "image must be a string",
+                "label": "تصویر محصول باید از نوع رشته باشد"
+            })
+        return value
+
