@@ -1,5 +1,5 @@
-from fastapi import FastAPI, responses, Depends
-from starlette.exceptions import HTTPException as starletteHTTPException
+from fastapi import FastAPI, responses, Depends, Response
+from starlette.exceptions import HTTPException as starletteHTTPException, HTTPException
 from source.routers.order.helpers import place_order, check_out
 from source.config import settings
 from source.message_broker.rabbit_server import RabbitRPC
@@ -61,3 +61,27 @@ def checkout( auth_header=Depends(auth_handler.check_current_user_tokens)) -> st
     #     create_order = place_order.place_order(auth_header)
     #
     # return "you entered invalid type"
+
+
+@app.post("/re-initial", tags=["remove cart"])
+def test(response: Response, auth_header=Depends(auth_handler.check_current_user_tokens)):
+    user, token_dict = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        cart_response = rpc.publish(
+            message={
+                "cart": {
+                    "action": "remove_cart",
+                    "body": {
+                        "user_id": user.get("user_id")
+                    }
+                }
+            },
+            headers={'cart': True}
+        ).get("cart", {})
+
+        if cart_response.get("success"):
+            response.status_code = cart_response.get("status_code", 200)
+            return cart_response
+        raise HTTPException(status_code=cart_response.get("status_code", 500),
+                            detail={"error": cart_response.get("error", "Cart service Internal error")})
