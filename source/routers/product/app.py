@@ -7,7 +7,8 @@ from source.config import settings
 from source.helpers.case_converter import convert_case
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
-from source.routers.product.validators.product import CreateChild, AddAtributes, CreateParent, EditProduct
+from source.routers.product.validators.product import CreateChild, AddAtributes, CreateParent, EditProduct, \
+    CustomCategory
 from source.helpers.create_class import CreateClass
 
 TAGS = [
@@ -683,6 +684,8 @@ def get_product_list_back_office(
                             detail={"error": product_result.get("error", "Something went wrong")})
 
 
+# kowsar
+
 @app.get("/{systemCode}/", tags=["Kowsar"])
 def get_kowsar(
         response: Response,
@@ -763,5 +766,34 @@ def update_kowsar_collection(
         if product_result.get("success"):
             response.status_code = product_result.get("status_code", 200)
             return convert_case(product_result.get("message"), 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
+
+
+# custom category
+
+@app.post("/custom_categories/", tags=["Custom Category"])
+def create_custom_kowsar_category(
+        response: Response,
+        custom_category: CustomCategory
+):
+    """
+    Create custom category
+    """
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "create_custom_kowsar_category",
+                    "body": dict(custom_category)
+                }
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case({"message": product_result.get("message")}, 'camel')
         raise HTTPException(status_code=product_result.get("status_code", 500),
                             detail={"error": product_result.get("error", "Something went wrong")})
