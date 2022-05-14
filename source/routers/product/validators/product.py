@@ -113,6 +113,9 @@ class CustomCategory(BaseModel):
                              alias="customName")
     visible_in_site: bool = Field(..., title="نمایش در سایت", isRequired=True, alias="visibleInSite")
 
+    image: Optional[str] = Field(..., title="تصویر محصول", maxLength=256, minLength=3, placeholder="تصویر محصول",
+                                 isRequired=False)
+
     @validator('visible_in_site')
     def visible_in_site_validator(cls, value):
         if not isinstance(value, bool):
@@ -149,3 +152,13 @@ class CustomCategory(BaseModel):
                 "label": "شناسه محصول باید از نوع رشته باشد"
             })
         return value
+
+    @validator('image')
+    def image_validator(cls, value):
+        if not isinstance(value, str):
+            raise HTTPException(status_code=417, detail={
+                "error": "image must be a string",
+                "label": "تصویر محصول باید از نوع رشته باشد"
+            })
+        return value
+
