@@ -778,7 +778,9 @@ def create_custom_kowsar_category(
         custom_category: CustomCategory
 ):
     """
-    Create custom category
+    Can be used to give custome name and visibility to main categories (2 digits)
+    Can be used to give custome name and visibility to sub categories (4 digits)
+    Can be used to give custome name and visibility to brands (6 digits)
     """
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
