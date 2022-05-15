@@ -40,56 +40,13 @@ rpc.consume()
 auth_handler = AuthHandler()
 
 
-@app.put("/checkout/", tags=["Cart"])
-def checkout(auth_header=Depends(auth_handler.check_current_user_tokens)) -> str:
+@app.get("/initial/", tags=["Cart"])
+def initial_order(auth_header=Depends(auth_handler.check_current_user_tokens)) -> str:
     """
         all process for creating an order is here
     """
-    res = initial(auth_header)
-    return res
-    #
-    # if items.type == 'initial':
-    #     check_out_result = check_out.check_price_qty(auth_header)
-    #     if check_out_result['success']:
-    #         pass
-    #     else:
-    #         return check_out_result['message']
-    #
-    # elif items.type == 'shipment':
-    #     pass
-    # elif items.type == 'payment':
-    #     pass
-    # elif items.type == 'final':
-    #     create_order = place_order.place_order(auth_header)
-    #
-    # return "you entered invalid type"
-
-
-@app.post("/re-initial", tags=["remove cart"])
-def test(response: Response, auth_header=Depends(auth_handler.check_current_user_tokens)):
-    user, token_dict = auth_header
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        cart_response = rpc.publish(
-            message={
-                "cart": {
-                    "action": "remove_cart",
-                    "body": {
-                        "user_id": user.get("user_id")
-                    }
-                }
-            },
-            headers={'cart': True}
-        ).get("cart", {})
-
-        if cart_response.get("success"):
-            response.status_code = cart_response.get("status_code", 200)
-            return cart_response
-        raise HTTPException(status_code=cart_response.get("status_code", 500),
-                            detail={"error": cart_response.get("error", "Cart service Internal error")})
-
-
-
+    response = initial(auth_header)
+    return response
 
 @app.put("/add", tags=["add shipment to cart and get new cart"])
 def shipment_per_stock(

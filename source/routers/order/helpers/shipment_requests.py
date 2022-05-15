@@ -12,7 +12,7 @@ def ship_address_object(user, cart):
                 "order": {
                     "action": "shipment_storage_detail",
                     "body": {
-                        "cart_data": cart['message'],
+                        "cart_data": cart,
                     }
                 }
             },
@@ -41,8 +41,8 @@ def ship_address_object(user, cart):
             stocks.append({
                 "stockName": items['warehouse_label'],
                 "stockId": str(items['warehouse_id']),
-                "origin": result[1]['cityId'],
-                "destination": items['warehouse_city_id'],
+                "origin": items['warehouse_city_id'],
+                "destination": result[1]['cityId'],
                 "weight": 0,
                 "totalPrice": 0,
                 "totalItem": 0
