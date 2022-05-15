@@ -80,7 +80,12 @@ def get_cart(user):
                     base_price += product.get("price") * product.get("count")
 
             cart_result["message"]["base_price"] = base_price
-            # need to add shipping price
-            cart_result["message"]["total_price"] = base_price
+
+            total_price = base_price
+            if cart_result["message"].get("shipment"):
+                for storage_id, shipment in cart_result["message"]["shipment"].items():
+                    total_price += shipment.get("customerPrice", 0)
+
+            cart_result["message"]["total_price"] = total_price
 
             return cart_result
