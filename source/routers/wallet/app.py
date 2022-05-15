@@ -50,8 +50,28 @@ def create_wallet(response: Response,
     """
     Creating a wallet after the customer approved by the staffs
     """
+    sub_data, token_data = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        sub_data, token_data = auth_header
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
+            message={
+                "customer": {
+                    "action": "get_profile",
+                    "body": {
+                        "customer_phone_number": sub_data,
+                    }
+                }
+            },
+            headers={'customer': True}
+        )
+    customer_result = result.get("customer", {})
+    if not customer_result.get("success"):
+        raise HTTPException(
+            status_code=customer_result.get("status_code", 500),
+            detail={"error": customer_result.get("error", "Something went wrong")}
+        )
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+
         # send refresh and access token to front in header
         response.headers["accessToken"] = token_data.get("access_token")
         response.headers["refreshToken"] = token_data.get("refresh_token")
@@ -61,6 +81,8 @@ def create_wallet(response: Response,
         data = {
             "user_id": sub_data.get("user_id"),
             "phone_number": sub_data.get("phone_number"),
+            "customer_name": customer_result["message"]["customerFirstName"] + " " + customer_result["message"]["customerLastName"]
+
         }
 
         wallet_response = rpc.publish(
