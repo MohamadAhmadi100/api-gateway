@@ -103,19 +103,20 @@ def edit_profile_data(
         profile_object = profile_model(**value.data)
     except ValidationError as e:
         raise HTTPException(status_code=422, detail={"error": e.errors()}) from e
-    rpc.response_len_setter(response_len=1)
-    result = rpc.publish(
-        message={
-            "customer": {
-                "action": "edit_profile_data",
-                "body": {
-                    "customer_phone_number": user_data.get("phone_number"),
-                    "data": profile_object.json()
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
+            message={
+                "customer": {
+                    "action": "edit_profile_data",
+                    "body": {
+                        "customer_phone_number": user_data.get("phone_number"),
+                        "data": profile_object.json()
+                    }
                 }
-            }
-        },
-        headers={'customer': True}
-    )
+            },
+            headers={'customer': True}
+        )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(

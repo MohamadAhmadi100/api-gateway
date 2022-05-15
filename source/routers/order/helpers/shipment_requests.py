@@ -1,17 +1,18 @@
+import json
+
 from source.message_broker.rabbit_server import RabbitRPC
-from source.routers.cart.helpers.get_cart_helper import get_cart
 
 
-def build_object(user):
+def ship_address_object(user, cart):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         result = []
         rpc.response_len_setter(response_len=1)
         storage_result = rpc.publish(
             message={
                 "order": {
-                    "action": "get_stocks",
+                    "action": "shipment_storage_detail",
                     "body": {
-                        "cart_data": get_cart(user[0])['message'],
+                        "cart_data": cart,
                     }
                 }
             },
@@ -32,6 +33,7 @@ def build_object(user):
         address = address_result.get("address")['result']
         for items in address:
             if items.get('isDefault'):
+                address = items
                 result.append(items)
                 break
         stocks = []
@@ -45,7 +47,7 @@ def build_object(user):
                 "totalPrice": 0,
                 "totalItem": 0
             })
-        return_result ={
+        return_result = {
             "customerId": user[0].get("user_id"),
             "stocks": stocks,
         }
@@ -55,11 +57,11 @@ def build_object(user):
                 "shipment": {
                     "action": "get_shipment_details",
                     "body": {
-                        "data": return_result
+                        "data": str(return_result)
                     }
                 }
             },
             headers={'shipment': True}
-        ).get("shipment", {})
+        ).get("shipment", {})['message']
 
-        return shipment_response
+        return shipment_response, address
