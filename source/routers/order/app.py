@@ -5,7 +5,7 @@ from source.config import settings
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.order.validators.order import check_out
-from source.routers.order.helpers.shipment_requests import ship_address_object
+from source.routers.order.helpers.initial_data import initial
 from source.routers.cart.helpers.get_cart_helper import get_cart
 
 TAGS = [
@@ -45,9 +45,8 @@ def checkout(auth_header=Depends(auth_handler.check_current_user_tokens)) -> str
     """
         all process for creating an order is here
     """
-    cart = get_cart(auth_header)
-    res = ship_address_object(auth_header, cart)
-    a = res
+    res = initial(auth_header)
+    return res
     #
     # if items.type == 'initial':
     #     check_out_result = check_out.check_price_qty(auth_header)

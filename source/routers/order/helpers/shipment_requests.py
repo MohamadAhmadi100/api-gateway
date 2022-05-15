@@ -12,7 +12,7 @@ def ship_address_object(user, cart):
                 "order": {
                     "action": "shipment_storage_detail",
                     "body": {
-                        "cart_data": cart,
+                        "cart_data": cart['message'],
                     }
                 }
             },
