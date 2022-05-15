@@ -48,7 +48,7 @@ def initial_order(auth_header=Depends(auth_handler.check_current_user_tokens)) -
     response = initial(auth_header)
     return response
 
-@app.put("/add", tags=["add shipment to cart and get new cart"])
+@app.put("/shipment", tags=["add shipment to cart and get new cart"])
 def shipment_per_stock(
         response: Response,
         data: PerStock,
