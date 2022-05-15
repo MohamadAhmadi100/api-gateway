@@ -203,8 +203,9 @@ def get_cart(response: Response, auth_header=Depends(auth_handler.check_current_
             cart_result["message"]["base_price"] = base_price
 
             total_price = base_price
-            for storage_id, shipment in cart_result["message"]["shipment"].items():
-                total_price += shipment.get("customerPrice", 0)
+            if cart_result["message"].get("shipment"):
+                for storage_id, shipment in cart_result["message"]["shipment"].items():
+                    total_price += shipment.get("customerPrice", 0)
 
             cart_result["message"]["total_price"] = total_price
             response.status_code = cart_result.get("status_code", 200)
