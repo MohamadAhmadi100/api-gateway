@@ -1,16 +1,12 @@
 from fastapi import FastAPI, responses, Depends, Response
 from starlette.exceptions import HTTPException as starletteHTTPException, HTTPException
+
 from source.config import settings
 from source.message_broker.rabbit_server import RabbitRPC
-from source.routers.customer.module.auth import AuthHandler
-<<<<<<< HEAD
-from source.routers.order.validators.order import check_out
-from source.routers.order.helpers.initial_data import initial
-=======
-from source.routers.shipment.validators.shipment_per_stock import PerStock
-from source.routers.order.helpers.shipment_requests import ship_address_object
->>>>>>> 28b8df00c0cb95aff1797d3f8908d011d7d72b12
 from source.routers.cart.helpers.get_cart_helper import get_cart
+from source.routers.customer.module.auth import AuthHandler
+from source.routers.order.helpers.initial_data import initial
+from source.routers.shipment.validators.shipment_per_stock import PerStock
 
 TAGS = [
     {
