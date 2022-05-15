@@ -11,13 +11,35 @@ class ActionType(str, Enum):
     auto = "auto"
 
 
-class Balance(str, Enum):
-    balance = "consume"
+class CheckoutBalance(str, Enum):
+    consume = "consume"
+
+class OrderBalance(str, Enum):
+    charge = "charge"
+    consume = "consume"
+
+
+class Status(str, Enum):
+    success = "success"
+    failed = "failed"
 
 
 class Reserve(BaseModel):
     amount: int = Field(..., alias="amount")
     order_number: int = Field(..., alias="orderNumber")
     type: Optional[Type] = Field(..., alias="type")
-    Action_type: Optional[ActionType] = Field(..., alias="ActionType")
-    balance: Optional[Balance] = Field(..., alias="balance")
+    action_type: Optional[ActionType] = Field(..., alias="ActionType")
+    balance: Optional[CheckoutBalance] = Field(..., alias="balance")
+
+
+class Order(BaseModel):
+    order_number: int = Field(..., alias="orderNumber")
+    amount: int = Field(..., alias="amount", isRequired=True)
+    type: Optional[Type] = Field(..., alias="type")
+    status: Optional[Status] = Field(..., description="success/failed", isRequired=True)
+    action_type: Optional[ActionType] = Field(..., alias="ActionType")
+    balance: Optional[OrderBalance] = Field(..., alias="balance")
+
+
+
+
