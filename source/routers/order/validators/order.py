@@ -1,12 +1,25 @@
 from fastapi import HTTPException
-from pydantic import BaseModel, validator, Field
+from pydantic import BaseModel, validator
 
 
 class BaseCart(BaseModel):
     pass
 
 
-class check_out(BaseCart):
-    type: str = Field(..., alias="actionType")
-    data: dict = Field(..., alias="requiredData")
+class wallet(BaseModel):
+    user_id: int
+    wallet_amount: int
 
+
+class payment(BaseModel):
+    user_id: int
+    payment_method: str
+
+    @validator("payment_method")
+    def payment_method_validator(cls, value):
+        allowed_values = ['cashondelivery', 'bank_melli', 'bank_mellat', 'bank_saman', 'pos', 'deposit']
+        if not isinstance(value, str):
+            raise HTTPException(status_code=400, detail="payment method must be a string")
+        if value not in allowed_values:
+            raise HTTPException(status_code=400, detail=f"payment must be one of {allowed_values}")
+        return value

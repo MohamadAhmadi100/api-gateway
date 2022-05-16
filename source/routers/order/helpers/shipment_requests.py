@@ -18,6 +18,7 @@ def ship_address_object(user, cart):
             },
             headers={"order": True}
         )
+
         result.append(storage_result.get("order")['message'])
         rpc.response_len_setter(response_len=1)
         address_result = rpc.publish(

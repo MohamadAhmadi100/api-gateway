@@ -7,6 +7,7 @@ from source.routers.cart.helpers.get_cart_helper import get_cart
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.order.helpers.initial_data import initial
 from source.routers.shipment.validators.shipment_per_stock import PerStock
+from source.routers.order.validators.order import wallet, payment
 
 TAGS = [
     {
@@ -47,6 +48,7 @@ def initial_order(auth_header=Depends(auth_handler.check_current_user_tokens)) -
     """
     response = initial(auth_header)
     return response
+
 
 @app.put("/shipment", tags=["add shipment to cart and get new cart"])
 def shipment_per_stock(
@@ -92,3 +94,60 @@ def shipment_per_stock(
             raise HTTPException(status_code=cart_response.get("status_code", 500),
                                 detail={"error": cart_response.get("error", "Cart service Internal error")})
 
+
+@app.put("/wallet", tags=["add wallet detail to cart and get new cart"])
+def wallet_detail(
+        response: Response,
+        data: wallet,
+        auth_header=Depends(auth_handler.check_current_user_tokens)
+):
+    user, token_dict = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        order_response = rpc.publish(
+            message={
+                "cart": {
+                    "action": "add_wallet_to_cart",
+                    "body": {
+                        "user_id": data.user_id,
+                        "wallet_amount": data.wallet_amount,
+                    }
+                }
+            },
+            headers={'cart': True}
+        ).get("cart", {})
+        if order_response.get("success"):
+            cart = get_cart(user)
+            response.status_code = cart.get("status_code", 200)
+            return cart
+        raise HTTPException(status_code=order_response.get("status_code", 500),
+                            detail={"error": order_response.get("error", "Order service Internal error")})
+
+
+@app.put("/payment", tags=["add peyment to cart and get new cart"])
+def payment_detail(
+        response: Response,
+        data: payment,
+        auth_header=Depends(auth_handler.check_current_user_tokens)
+):
+    user, token_dict = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        order_response = rpc.publish(
+            message={
+                "cart": {
+                    "action": "add_payment_to_cart",
+                    "body": {
+                        "user_id": data.user_id,
+                        "payment_method": data.payment_method,
+                    }
+                }
+            },
+            headers={'cart': True}
+        ).get("cart", {})
+        if order_response.get("success"):
+            cart = get_cart(user)
+            response.status_code = cart.get("status_code", 200)
+            return cart
+        raise HTTPException(status_code=order_response.get("status_code", 500),
+                            detail={"error": order_response.get("error", "Order service Internal error")})
