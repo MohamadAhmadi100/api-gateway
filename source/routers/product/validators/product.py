@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import HTTPException
 from pydantic import BaseModel, validator, Field
@@ -104,7 +104,7 @@ class EditProduct(BaseModel):
         return value
 
 
-class CustomCategory(BaseModel):
+class KowsarCustomCategory(BaseModel):
     system_code: str = Field(..., title="شناسه محصول", maxLength=12, minLength=12, placeholder="100104021006",
                              isRequired=True,
                              alias="systemCode")
@@ -162,3 +162,87 @@ class CustomCategory(BaseModel):
             })
         return value
 
+
+class CustomCategory(BaseModel):
+    name: str
+    products: List[str]
+    label: str
+    visible_in_site: bool
+    image: Optional[str]
+
+    @validator('name')
+    def name_validator(cls, value):
+        if not isinstance(value, str):
+            raise HTTPException(status_code=417, detail={
+                "error": "name must be a string",
+                "label": "نام باید از نوع رشته باشد"
+            })
+        elif len(value) < 3:
+            raise HTTPException(status_code=417, detail={
+                "error": "name must be at least 3 characters",
+                "label": "طول نام باید حداقل ۳ کاراکتر باشد"
+            })
+        elif len(value) > 256:
+            raise HTTPException(status_code=417, detail={
+                "error": "name must be at most 256 characters",
+                "label": "طول نام باید حداکثر ۲۵۶ کاراکتر باشد"
+            })
+        return value
+
+    @validator('label')
+    def label_validator(cls, value):
+        if not isinstance(value, str):
+            raise HTTPException(status_code=417, detail={
+                "error": "label must be a string",
+                "label": "برچسب باید از نوع رشته باشد"
+            })
+        elif len(value) < 3:
+            raise HTTPException(status_code=417, detail={
+                "error": "label must be at least 3 characters",
+                "label": "طول برچسب باید حداقل ۳ کاراکتر باشد"
+            })
+        elif len(value) > 256:
+            raise HTTPException(status_code=417, detail={
+                "error": "label must be at most 256 characters",
+                "label": "طول برچسب باید حداکثر ۲۵۶ کاراکتر باشد"
+            })
+        return value
+
+    @validator('products')
+    def products_validator(cls, value):
+        if not isinstance(value, list):
+            raise HTTPException(status_code=417, detail={
+                "error": "products must be a list",
+                "label": "لیست محصولات باید از نوع لیست باشد"
+            })
+        for item in value:
+            if not isinstance(item, str):
+                raise HTTPException(status_code=417, detail={
+                    "error": "products must be a list of strings",
+                    "label": "لیست محصولات باید از نوع لیست رشته باشد"
+                })
+            elif len(item) != 12:
+
+                raise HTTPException(status_code=417, detail={
+                    "error": "products must be a list of 12-character strings",
+                    "label": "لیست محصولات باید از نوع لیست رشته باشد"
+                })
+        return value
+
+    @validator('visible_in_site')
+    def visible_in_site_validator(cls, value):
+        if not isinstance(value, bool):
+            raise HTTPException(status_code=417, detail={
+                "error": "visible_in_site must be a boolean",
+                "label": "مقدار visible_in_site باید از نوع رشته باشد"
+            })
+        return value
+
+    @validator('image')
+    def image_validator(cls, value):
+        if not isinstance(value, str):
+            raise HTTPException(status_code=417, detail={
+                "error": "image must be a string",
+                "label": "تصویر باید از نوع رشته باشد"
+            })
+        return value
