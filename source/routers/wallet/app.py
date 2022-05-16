@@ -8,7 +8,7 @@ from source.routers.wallet.validators.update_wallet import UpdateData
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.wallet.validators.charge_wallet import Charge
 from source.routers.payment.modules import payment_modules
-from source.routers.wallet.validators.checkout_wallet import Reserve
+from source.routers.wallet.validators.checkout_wallet import Reserve,Order
 
 """
 * this rout is for wallet that have two branch(back office side/ customer side)
@@ -37,9 +37,6 @@ auth = AuthHandler()
 @app.exception_handler(starletteHTTPException)
 def validation_exception_handler(request, exc):
     return responses.JSONResponse(exc.detail, status_code=exc.status_code)
-
-
-
 
 
 # --------------------------------- start back-office endpoints -------------------------------------- #
@@ -79,9 +76,10 @@ def create_wallet(response: Response,
 
         # get customer data from token and send that for create wallet
         data = {
-            "user_id": sub_data.get("user_id"),
+            "customer_id": sub_data.get("user_id"),
             "phone_number": sub_data.get("phone_number"),
-            "customer_name": customer_result["message"]["customerFirstName"] + " " + customer_result["message"]["customerLastName"]
+            "customer_name": customer_result["message"]["customerFirstName"] + " " + customer_result["message"][
+                "customerLastName"]
 
         }
 
@@ -139,10 +137,11 @@ def get_customer_wallet_back_side(response: Response,
                             detail={"error": wallet_response.get("error", "Wallet service Internal error")})
 
 
-    @app.post("/get-wallets", tags=["back-office side"])
-    def get_wallets(response: Response, data: Wallet,
-                         auth_header=Depends(auth.check_current_user_tokens)
-                         ):
+@app.post("/get-wallets", tags=["back-office side"])
+def get_wallets(response: Response, data: Wallet,
+                auth_header=Depends(auth.check_current_user_tokens)
+                ):
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         sub_data, token_data = auth_header
         response.headers["accessToken"] = token_data.get("access_token")
         response.headers["refreshToken"] = token_data.get("refresh_token")
@@ -245,6 +244,45 @@ def get_transactions(response: Response, data: Transaction,
                             detail={"error": wallet_response.get("error", "Wallet service Internal error")})
 
 
+@app.put("/change_wallet_status", tags=["back-office side"])
+def change_wallet_status(response: Response,
+                         auth_header=Depends(auth.check_current_user_tokens)
+                         ):
+    sub_data, token_data = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+
+        # send refresh and access token to front in header
+        response.headers["accessToken"] = token_data.get("access_token")
+        response.headers["refreshToken"] = token_data.get("refresh_token")
+        rpc.response_len_setter(response_len=1)
+
+        # get customer data from token and send that for create wallet
+        data = {
+            "customer_id": sub_data.get("user_id"),
+        }
+
+        wallet_response = rpc.publish(
+            message={
+                "wallet": {
+                    "action": "change_wallet_status",
+                    "body": {
+                        "data": data
+                    }
+                }
+            },
+            headers={'wallet': True}
+        ).get("wallet", {})
+
+        if wallet_response.get("success"):
+            response.status_code = wallet_response.get("status_code", 200)
+            return wallet_response
+        elif not wallet_response.get("success"):
+            response.status_code = wallet_response.get("status_code", 417)
+            return wallet_response
+        raise HTTPException(status_code=wallet_response.get("status_code", 500),
+                            detail={"error": wallet_response.get("error", "Wallet service Internal error")})
+
+
 # --------------------------------- end back-office endpoints -------------------------------------- #
 # ---------------------------------- start customer endpoints -------------------------------------- #
 
@@ -299,7 +337,6 @@ def get_customer_wallet_customer_side(
         response: Response,
         auth_header=Depends(auth.check_current_user_tokens)
 ):
-
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         sub_data, token_data = auth_header
         response.headers["accessToken"] = token_data.get("access_token")
@@ -452,6 +489,44 @@ def reserve_wallet(data: Reserve, response: Response,
             message={
                 "wallet": {
                     "action": "reserve_wallet",
+                    "body": {
+                        "data": last_data
+                    }
+                }
+            },
+            headers={'wallet': True}
+        ).get("wallet", {})
+
+        if wallet_response.get("success"):
+            response.status_code = wallet_response.get("status_code", 200)
+            return wallet_response
+        elif not wallet_response.get("success"):
+            response.status_code = wallet_response.get("status_code", 417)
+            return wallet_response
+        raise HTTPException(status_code=wallet_response.get("status_code", 500),
+                            detail={"error": wallet_response.get("error", "Wallet service Internal error")})
+
+
+@app.put("/order-result", tags=["customer side"])
+def order_result(response: Response,
+                 order_data: Order,
+                 auth_header=Depends(auth.check_current_user_tokens)
+                 ):
+    sub_data, token_data = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+
+        # send refresh and access token to front in header
+        response.headers["accessToken"] = token_data.get("access_token")
+        response.headers["refreshToken"] = token_data.get("refresh_token")
+        rpc.response_len_setter(response_len=1)
+
+        last_data = dict(order_data)
+        last_data["customer_id"]: sub_data.get("user_id")
+
+        wallet_response = rpc.publish(
+            message={
+                "wallet": {
+                    "action": "order_result",
                     "body": {
                         "data": last_data
                     }
