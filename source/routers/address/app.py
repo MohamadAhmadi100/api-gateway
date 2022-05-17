@@ -120,7 +120,7 @@ def update_address(data: UpdateAddress, response: Response):
 
 
 @app.get("/customer_addresses", tags=["Address"])
-def cities(customerId: str, response: Response):
+def customer_addresses(customerId: str, response: Response):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         address_response = rpc.publish(

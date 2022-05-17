@@ -107,4 +107,11 @@ class Address(BaseModel):
         match = re.fullmatch(pattern, tel)
         if not match:
             raise HTTPException(status_code=422, detail={"error": "Please enter a valid tel"})
+        return tel
 
+    @validator("is_default")
+    def validate_is_default(cls, is_default):
+        print(is_default)
+        if is_default not in [False, True]:
+            raise HTTPException(status_code=422, detail={"error": "Please enter a valid is_default"})
+        return is_default
