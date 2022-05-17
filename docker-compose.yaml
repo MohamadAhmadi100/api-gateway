@@ -19,6 +19,7 @@ services:
         volumes:
           - /gallery-files:/gallery-files
 
-apinet:
+networks:
+    apinet:
         driver: bridge
 
