@@ -8,7 +8,7 @@ from source.routers.wallet.validators.update_wallet import UpdateData
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.wallet.validators.charge_wallet import Charge
 from source.routers.payment.modules import payment_modules
-from source.routers.wallet.validators.checkout_wallet import Reserve,Order
+from source.routers.wallet.validators.checkout_wallet import Reserve, Order, OrderWallet, CancelOrder
 
 """
 * this rout is for wallet that have two branch(back office side/ customer side)
@@ -521,7 +521,7 @@ def order_result(response: Response,
         rpc.response_len_setter(response_len=1)
 
         last_data = dict(order_data)
-        last_data["customer_id"]= sub_data["user_id"]
+        last_data["customer_id"] = sub_data["user_id"]
 
         wallet_response = rpc.publish(
             message={
@@ -544,4 +544,80 @@ def order_result(response: Response,
         raise HTTPException(status_code=wallet_response.get("status_code", 500),
                             detail={"error": wallet_response.get("error", "Wallet service Internal error")})
 
+
 # ----------------------------------- end customer endpoints --------------------------------------- #
+
+@app.post("/order-wallet", tags=["customer side"])
+def order_wallet(response: Response,
+                 order_data: OrderWallet,
+                 auth_header=Depends(auth.check_current_user_tokens)
+                 ):
+    sub_data, token_data = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+
+        # send refresh and access token to front in header
+        response.headers["accessToken"] = token_data.get("access_token")
+        response.headers["refreshToken"] = token_data.get("refresh_token")
+        rpc.response_len_setter(response_len=1)
+
+        last_data = dict(order_data)
+        last_data["customer_id"] = sub_data["user_id"]
+
+        wallet_response = rpc.publish(
+            message={
+                "wallet": {
+                    "action": "order_wallet",
+                    "body": {
+                        "data": last_data
+                    }
+                }
+            },
+            headers={'wallet': True}
+        ).get("wallet", {})
+
+        if wallet_response.get("success"):
+            response.status_code = wallet_response.get("status_code", 200)
+            return wallet_response
+        elif not wallet_response.get("success"):
+            response.status_code = wallet_response.get("status_code", 417)
+            return wallet_response
+        raise HTTPException(status_code=wallet_response.get("status_code", 500),
+                            detail={"error": wallet_response.get("error", "Wallet service Internal error")})
+
+
+@app.post("/cancel-order", tags=["customer side"])
+def cancel_order(response: Response,
+                 order_data: CancelOrder,
+                 auth_header=Depends(auth.check_current_user_tokens)
+                 ):
+    sub_data, token_data = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+
+        # send refresh and access token to front in header
+        response.headers["accessToken"] = token_data.get("access_token")
+        response.headers["refreshToken"] = token_data.get("refresh_token")
+        rpc.response_len_setter(response_len=1)
+
+        last_data = dict(order_data)
+        last_data["customer_id"] = sub_data["user_id"]
+
+        wallet_response = rpc.publish(
+            message={
+                "wallet": {
+                    "action": "cancel_order",
+                    "body": {
+                        "data": last_data
+                    }
+                }
+            },
+            headers={'wallet': True}
+        ).get("wallet", {})
+
+        if wallet_response.get("success"):
+            response.status_code = wallet_response.get("status_code", 200)
+            return wallet_response
+        elif not wallet_response.get("success"):
+            response.status_code = wallet_response.get("status_code", 417)
+            return wallet_response
+        raise HTTPException(status_code=wallet_response.get("status_code", 500),
+                            detail={"error": wallet_response.get("error", "Wallet service Internal error")})
