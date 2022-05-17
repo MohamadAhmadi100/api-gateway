@@ -8,6 +8,9 @@ services:
           - 443:443
         depends_on:
           - api
+        networks:
+            - api-gw-net
+
 
     api:
         build: .
@@ -15,3 +18,7 @@ services:
           - 8000:80
         volumes:
           - /gallery-files:/gallery-files
+
+api-gw-net:
+        driver: bridge
+
