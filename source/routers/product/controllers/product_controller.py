@@ -313,7 +313,7 @@ def get_product_by_system_code(
                                 item["warehouse_city_id"] = quantity.get("warehouse_city_id")
                                 item["warehouse_label"] = quantity.get("warehouse_label")
                                 item["attribute_label"] = quantity.get("attribute_label")
-                                product['config']["warehouse"].routerend(item)
+                                product['config']["warehouse"].append(item)
                 else:
                     product["price"] = pricing_result.get("message", {}).get("products", {}).get(
                         list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
