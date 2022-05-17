@@ -521,7 +521,7 @@ def order_result(response: Response,
         rpc.response_len_setter(response_len=1)
 
         last_data = dict(order_data)
-        last_data["customer_id"]: sub_data.get("user_id")
+        last_data["customer_id"]= sub_data["user_id"]
 
         wallet_response = rpc.publish(
             message={
