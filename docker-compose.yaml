@@ -14,8 +14,8 @@ services:
 
     api:
         build: .
-        ports:
-          - 8000:80
+        expose: 
+          - 8000
         volumes:
           - /gallery-files:/gallery-files
 
