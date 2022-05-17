@@ -207,6 +207,9 @@ def get_cart(response: Response, auth_header=Depends(auth_handler.check_current_
                 for storage_id, shipment in cart_result["message"]["shipment"].items():
                     total_price += shipment.get("customerPrice", 0)
 
+            if cart_result["message"].get("payment") and cart_result["message"].get("payment").get("walletAmount"):
+                total_price -= cart_result["message"]["payment"]['walletAmount']
+
             cart_result["message"]["total_price"] = total_price
             response.status_code = cart_result.get("status_code", 200)
             return convert_case(cart_result.get("message"), 'camel')

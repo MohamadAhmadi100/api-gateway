@@ -3,11 +3,13 @@ version: "3"
 services:
     web:
         build: nginx
-        ports:
-          - 80:80
-          - 443:443
+        expose:
+          - 80
         depends_on:
           - api
+        networks:
+          - apinet
+
 
     api:
         build: .
@@ -15,3 +17,8 @@ services:
           - 8000:80
         volumes:
           - /gallery-files:/gallery-files
+
+networks:
+    apinet:
+        driver: bridge
+
