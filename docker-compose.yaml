@@ -9,7 +9,7 @@ services:
         depends_on:
           - api
         networks:
-            - api-gw-net
+          - apinet
 
 
     api:
@@ -19,6 +19,6 @@ services:
         volumes:
           - /gallery-files:/gallery-files
 
-api-gw-net:
+apinet:
         driver: bridge
 
