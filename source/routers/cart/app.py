@@ -1,5 +1,3 @@
-import time
-
 import jdatetime
 from fastapi import FastAPI, HTTPException, Response, responses, Path, Depends
 from starlette.exceptions import HTTPException as starletteHTTPException
@@ -177,11 +175,11 @@ def get_cart(response: Response, auth_header=Depends(auth_handler.check_current_
 
                 price = storage_price if storage_price else customer_type_price if customer_type_price else main_price
 
-                now_formated_date_time = time.strptime(str(jdatetime.datetime.now()).split(".")[0],
-                                                       "%Y-%m-%d %H:%M:%S")
+                now_formated_date_time = jdatetime.datetime.strptime(
+                    jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
 
-                special_formated_date_time = time.strptime(price.get(
-                    "special_to_date"), "%Y-%m-%d %H:%M:%S")
+                special_formated_date_time = jdatetime.datetime.strptime(price.get("special_to_date"),
+                                                                         "%Y-%m-%d %H:%M:%S")
 
                 if not price.get("special"):
                     product["price"] = price.get("regular")
