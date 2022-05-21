@@ -5,6 +5,12 @@ from typing import Optional
 
 class Type(str, Enum):
     order = "order"
+
+
+class ChargeType(str, Enum):
+    charge_wallet = "charge_wallet"
+
+
 class CancelType(str, Enum):
     cancel_order = "cancel_order"
 
@@ -15,6 +21,10 @@ class ActionType(str, Enum):
 
 class CheckoutBalance(str, Enum):
     consume = "consume"
+
+
+class ChargeBalance(str, Enum):
+    charge = "charge"
 
 
 class OrderBalance(str, Enum):
@@ -57,3 +67,15 @@ class CancelOrder(BaseModel):
     order_number: int = Field(..., alias="orderNumber")
     amount: int = Field(..., alias="amount", isRequired=True)
     type: Optional[CancelType] = Field(..., alias="type")
+
+
+class ChargeWallet:
+    action_type: Optional[ActionType] = Field(..., alias="ActionType")
+    amount: int = Field(..., alias="amount", isRequired=True)
+    customer_id: str = Field(..., alias="customerId", isRequired=True)
+    payment_id: int = Field(..., alias="paymentId", isRequired=True)
+    payment_date: str = Field(..., alias="paymentDate", isRequired=True)
+    payment_method: str = Field(..., alias="paymentMethod")
+    balance: Optional[ChargeBalance] = Field(..., alias="balance")
+    wallet_id: int = Field(..., alias="walletId")
+    type: Optional[ChargeType] = Field(..., alias="type")

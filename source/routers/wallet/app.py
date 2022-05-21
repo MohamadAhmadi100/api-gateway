@@ -8,7 +8,7 @@ from source.routers.wallet.validators.update_wallet import UpdateData
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.wallet.validators.charge_wallet import Charge
 from source.routers.payment.modules import payment_modules
-from source.routers.wallet.validators.checkout_wallet import Reserve, Order, OrderWallet, CancelOrder
+from source.routers.wallet.validators.checkout_wallet import Reserve, Order, OrderWallet, CancelOrder,ChargeWallet
 
 """
 * this rout is for wallet that have two branch(back office side/ customer side)
@@ -365,12 +365,13 @@ def get_customer_wallet_customer_side(
                             detail={"error": wallet_response.get("error", "Wallet service Internal error")})
 
 
-@app.put("/charge", tags=["customer side"])
+@app.put("/charge_wallet", tags=["charge wallet amount"])
 def charge_wallet(
-        charge_data: Charge,
+        charge_data: ChargeWallet,
         response: Response,
 ):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+
         rpc.response_len_setter(response_len=1)
         wallet_response = rpc.publish(
             message={
@@ -422,9 +423,10 @@ def charge_wallet(
                                     detail={"error": payment_result.get("error", "Something went wrong")})
 
             response.status_code = payment_result.get("status_code", 200)
-            token_result = payment_modules.request_bank(
+            token_result = payment_modules.request_bank_handler(
                 payment_result.get("message", {}).get("url"),
-                payment_result.get("message", {}).get("bank_data")
+                payment_result.get("message", {}).get("bank_data"),
+                payment_result.get("message", {}).get("bank_name")
             )
             if not token_result.get("success"):
                 raise HTTPException(status_code=token_result.get("status_code", 500),
@@ -436,7 +438,7 @@ def charge_wallet(
                         "action": "check_token",
                         "body": {
                             "response": token_result.get("message"),
-                            "bank_name": payment_result.get("bank_name")
+                            "bank_name": payment_result.get("message", {}).get("bank_name")
                         }
                     }
                 },
@@ -453,9 +455,9 @@ def charge_wallet(
                     "payment": {
                         "action": "redirect_url",
                         "body": {
-                            "token": token_result,
-                            "payment_id": payment_result.get("payment_id"),
-                            "bank_name": payment_result.get("bank_name")
+                            "data": check_token_result.get("message", {}),
+                            "payment_id": payment_result.get("message", {}).get("payment_id"),
+                            "bank_name": payment_result.get("message", {}).get("bank_name")
                         }
                     }
                 },
@@ -467,6 +469,7 @@ def charge_wallet(
                                     detail={"error": url_result.get("error", "Something went wrong")})
             response.status_code = url_result.get("status_code", 200)
             return url_result.get("message")
+
 
 
 @app.post("/reserve-wallet", tags=["customer side"])
