@@ -470,7 +470,6 @@ def charge_wallet(
             return url_result.get("message")
 
 
-
 @app.post("/reserve-wallet", tags=["customer side"])
 def reserve_wallet(data: Reserve, response: Response,
                    auth_header=Depends(auth.check_current_user_tokens)
@@ -547,8 +546,6 @@ def order_result(response: Response,
                             detail={"error": wallet_response.get("error", "Wallet service Internal error")})
 
 
-# ----------------------------------- end customer endpoints --------------------------------------- #
-
 @app.post("/order-wallet", tags=["customer side"])
 def order_wallet(response: Response,
                  order_data: OrderWallet,
@@ -623,3 +620,5 @@ def cancel_order(response: Response,
             return wallet_response
         raise HTTPException(status_code=wallet_response.get("status_code", 500),
                             detail={"error": wallet_response.get("error", "Wallet service Internal error")})
+
+# ----------------------------------- end customer endpoints --------------------------------------- #

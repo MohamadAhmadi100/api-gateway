@@ -69,7 +69,7 @@ class CancelOrder(BaseModel):
     type: Optional[CancelType] = Field(..., alias="type")
 
 
-class ChargeWallet:
+class ChargeWallet(BaseModel):
     action_type: Optional[ActionType] = Field(..., alias="ActionType")
     amount: int = Field(..., alias="amount", isRequired=True)
     customer_id: str = Field(..., alias="customerId", isRequired=True)
