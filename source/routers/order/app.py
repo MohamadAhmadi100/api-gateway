@@ -6,6 +6,7 @@ from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.cart.helpers.get_cart_helper import get_cart
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.order.helpers.initial_data import initial
+from source.routers.order.helpers.place_order import place_order
 from source.routers.shipment.validators.shipment_per_stock import PerStock
 from source.routers.order.validators.order import wallet, payment
 
@@ -41,7 +42,7 @@ rpc.consume()
 auth_handler = AuthHandler()
 
 
-@app.get("/initial/", tags=["Cart"])
+@app.get("/initial/", tags=["initial object and delete all selected method from customer"])
 def initial_order(auth_header=Depends(auth_handler.check_current_user_tokens)) -> str:
     """
         all process for creating an order is here
@@ -151,3 +152,13 @@ def payment_detail(
             return cart
         raise HTTPException(status_code=order_response.get("status_code", 500),
                             detail={"error": order_response.get("error", "Order service Internal error")})
+
+
+@app.put("/final", tags=["final steps and create order"])
+def final_order(
+        response: Response,
+        auth_header=Depends(auth_handler.check_current_user_tokens)
+):
+    cart = get_cart(auth_header[0])
+    create_order = place_order(auth_header, cart)
+

@@ -56,11 +56,11 @@ def get_cart(user):
 
                 price = storage_price if storage_price else customer_type_price if customer_type_price else main_price
 
-                now_formated_date_time = time.strptime(str(jdatetime.datetime.now()).split(".")[0],
-                                                       "%Y-%m-%d %H:%M:%S")
+                now_formated_date_time = jdatetime.datetime.strptime(
+                    jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
 
-                special_formated_date_time = time.strptime(price.get(
-                    "special_to_date"), "%Y-%m-%d %H:%M:%S")
+                special_formated_date_time = jdatetime.datetime.strptime(price.get("special_to_date"),
+                                                                         "%Y-%m-%d %H:%M:%S")
 
                 if not price.get("special"):
                     product["price"] = price.get("regular")
@@ -85,6 +85,9 @@ def get_cart(user):
             if cart_result["message"].get("shipment"):
                 for storage_id, shipment in cart_result["message"]["shipment"].items():
                     total_price += shipment.get("customerPrice", 0)
+
+            if cart_result["message"].get("payment") and cart_result["message"].get("payment").get("walletAmount"):
+                total_price -= cart_result["message"]["payment"]['walletAmount']
 
             cart_result["message"]["total_price"] = total_price
 
