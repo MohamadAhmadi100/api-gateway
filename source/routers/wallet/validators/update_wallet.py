@@ -16,7 +16,7 @@ class Type(str, Enum):
 
 
 class ActionType(str, Enum):
-    auto = "auto"
+    manual = "manual"
 
 
 class UpdateData(BaseModel):

@@ -45,7 +45,7 @@ class Reserve(BaseModel):
     balance: Optional[CheckoutBalance] = Field(..., alias="balance")
 
 
-class Order(BaseModel):
+class ResultOrder(BaseModel):
     order_number: int = Field(..., alias="orderNumber")
     amount: int = Field(..., alias="amount", isRequired=True)
     type: Optional[Type] = Field(..., alias="type")
@@ -54,7 +54,7 @@ class Order(BaseModel):
     balance: Optional[OrderBalance] = Field(..., alias="balance")
 
 
-class OrderWallet(BaseModel):
+class CompleteOrderWallet(BaseModel):
     order_number: int = Field(..., alias="orderNumber")
     amount: int = Field(..., alias="amount", isRequired=True)
     type: Optional[Type] = Field(..., alias="type")
@@ -79,3 +79,5 @@ class ChargeWallet(BaseModel):
     balance: Optional[ChargeBalance] = Field(..., alias="balance")
     wallet_id: int = Field(..., alias="walletId")
     type: Optional[ChargeType] = Field(..., alias="type")
+    status: Optional[Status] = Field(..., description="success/failed", isRequired=True)
+

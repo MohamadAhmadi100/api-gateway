@@ -7,7 +7,8 @@ from source.routers.wallet.validators.wallets import Wallet
 from source.routers.wallet.validators.update_wallet import UpdateData
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.payment.modules import payment_modules
-from source.routers.wallet.validators.checkout_wallet import Reserve, Order, OrderWallet, CancelOrder,ChargeWallet
+from source.routers.wallet.validators.checkout_wallet import Reserve, ResultOrder, CompleteOrderWallet, CancelOrder, \
+    ChargeWallet
 
 """
 * this rout is for wallet that have two branch(back office side/ customer side)
@@ -364,7 +365,7 @@ def get_customer_wallet_customer_side(
                             detail={"error": wallet_response.get("error", "Wallet service Internal error")})
 
 
-@app.put("/charge_wallet", tags=["charge wallet amount"])
+@app.put("/charge_wallet", tags=["customer side"])
 def charge_wallet(
         charge_data: ChargeWallet,
         response: Response,
@@ -508,11 +509,11 @@ def reserve_wallet(data: Reserve, response: Response,
                             detail={"error": wallet_response.get("error", "Wallet service Internal error")})
 
 
-@app.put("/order-result", tags=["customer side"])
-def order_result(response: Response,
-                 order_data: Order,
-                 auth_header=Depends(auth.check_current_user_tokens)
-                 ):
+@app.put("/result-checkout-to-wallet", tags=["customer side"])
+def result_checkout_to_wallet(response: Response,
+                              order_data: ResultOrder,
+                              auth_header=Depends(auth.check_current_user_tokens)
+                              ):
     sub_data, token_data = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
 
@@ -527,7 +528,7 @@ def order_result(response: Response,
         wallet_response = rpc.publish(
             message={
                 "wallet": {
-                    "action": "order_result",
+                    "action": "result_checkout_to_wallet",
                     "body": {
                         "data": last_data
                     }
@@ -546,11 +547,11 @@ def order_result(response: Response,
                             detail={"error": wallet_response.get("error", "Wallet service Internal error")})
 
 
-@app.post("/order-wallet", tags=["customer side"])
-def order_wallet(response: Response,
-                 order_data: OrderWallet,
-                 auth_header=Depends(auth.check_current_user_tokens)
-                 ):
+@app.post("/complete-order-wallet", tags=["customer side"])
+def use_complete_order_from_wallet(response: Response,
+                                   order_data: CompleteOrderWallet,
+                                   auth_header=Depends(auth.check_current_user_tokens)
+                                   ):
     sub_data, token_data = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
 
@@ -565,7 +566,7 @@ def order_wallet(response: Response,
         wallet_response = rpc.publish(
             message={
                 "wallet": {
-                    "action": "order_wallet",
+                    "action": "use_complete_order_from_wallet",
                     "body": {
                         "data": last_data
                     }
