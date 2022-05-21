@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import HTTPException, Response, APIRouter, Query
 
 from source.helpers.case_converter import convert_case
@@ -110,6 +112,43 @@ def get_categories_products(
                     "action": "get_categories_products",
                     "body": {
                         "system_code": system_code,
+                        "page": page,
+                        "per_page": per_page
+                    }
+                }
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(product_result.get("message"), 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
+
+
+@router.get("/get_custom_category_list/", tags=["Custom Category"])
+def get_custom_category_list(
+        response: Response,
+        visible_in_site: Optional[bool] = Query(None, alias="visibleInSite"),
+        created_at_from: Optional[str] = Query(None, alias="createdAtFrom"),
+        created_at_to: Optional[str] = Query(None, alias="createdAtTo"),
+        page: Optional[int] = Query(1),
+        per_page: Optional[int] = Query(15)
+):
+    """
+    get custom category list
+    """
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_custom_category_list",
+                    "body": {
+                        "visible_in_site": visible_in_site,
+                        "created_at_from": created_at_from,
+                        "created_at_to": created_at_to,
                         "page": page,
                         "per_page": per_page
                     }
