@@ -108,9 +108,9 @@ class KowsarCustomCategory(BaseModel):
     system_code: str = Field(..., title="شناسه محصول", maxLength=12, minLength=12, placeholder="100104021006",
                              isRequired=True,
                              alias="systemCode")
-    custom_name: str = Field(..., title="نام محصول", maxLength=256, minLength=3, placeholder="محصول سفارشی",
-                             isRequired=True,
-                             alias="customName")
+    custom_name: Optional[str] = Field(..., title="نام محصول", maxLength=256, minLength=3, placeholder="محصول سفارشی",
+                                       isRequired=True,
+                                       alias="customName")
     visible_in_site: bool = Field(..., title="نمایش در سایت", isRequired=True, alias="visibleInSite")
 
     image: Optional[str] = Field(..., title="تصویر محصول", maxLength=256, minLength=3, placeholder="تصویر محصول",
