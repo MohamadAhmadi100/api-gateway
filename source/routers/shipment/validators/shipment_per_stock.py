@@ -21,4 +21,5 @@ class PerStock(BaseModel):
     shippingMobile: Optional[str]
     receiverName: Optional[str]
     receiverNationalId: Optional[str]
+    receiverPhoneNumber: Optional[str]
     insurance: Union[Insurance]
