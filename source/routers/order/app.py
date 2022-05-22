@@ -1,14 +1,14 @@
-from fastapi import FastAPI, responses, Depends, Response
+from fastapi import FastAPI, HTTPException, Response, responses, Depends
 from starlette.exceptions import HTTPException as starletteHTTPException, HTTPException
 
 from source.config import settings
 from source.message_broker.rabbit_server import RabbitRPC
-from source.routers.cart.helpers.get_cart_helper import get_cart
+from source.routers.cart.app import get_cart
 from source.routers.customer.module.auth import AuthHandler
-from source.routers.order.helpers.initial_data import initial
-from source.routers.order.helpers.place_order import place_order
-from source.routers.shipment.validators.shipment_per_stock import PerStock
+from source.routers.order.helpers.check_out import check_price_qty
+from source.routers.order.helpers.shipment_requests import shipment_detail
 from source.routers.order.validators.order import wallet, payment
+from source.routers.shipment.validators.shipment_per_stock import PerStock
 
 TAGS = [
     {
@@ -34,24 +34,34 @@ def validation_exception_handler(request, exc):
     return responses.JSONResponse(exc.detail, status_code=exc.status_code)
 
 
-# initialize rabbit mq
-rpc = RabbitRPC(exchange_name='headers_exchange', timeout=5)
-rpc.connect()
-rpc.consume()
-
 auth_handler = AuthHandler()
 
 
-@app.get("/initial/", tags=["initial object and delete all selected method from customer"])
-def initial_order(auth_header=Depends(auth_handler.check_current_user_tokens)) -> str:
+@app.get("/cart_detail/", tags=["get cart detail and checkout"])
+def get_cart_detail(response: Response, auth_header=Depends(auth_handler.check_current_user_tokens)) -> dict:
+    cart = get_cart(response=response, auth_header=auth_header)
+    check_out = check_price_qty(auth_header, cart, response)
+    if check_out.get("success"):
+        return cart
+    else:
+        return {"success": False, "message": check_out.get("message")}
+
+
+@app.get("/shipment_detail/", tags=["get shipment detail per stocks"])
+def get_shipment(response: Response, auth_header=Depends(auth_handler.check_current_user_tokens)) -> dict:
     """
         all process for creating an order is here
     """
-    response = initial(auth_header)
-    return response
+    response_result = shipment_detail(auth_header, response)
+    if response_result.get("status_code") != 200:
+        raise HTTPException(status_code=500,
+                            detail={"error": "Something went wrong"})
+
+    response.status_code = response_result.get("status_code")
+    return {"success": True, "message": response_result.get("message")}
 
 
-@app.put("/shipment", tags=["add shipment to cart and get new cart"])
+@app.put("/add_shipment", tags=["add shipment to cart and get new cart"])
 def shipment_per_stock(
         response: Response,
         data: PerStock,
@@ -71,6 +81,7 @@ def shipment_per_stock(
             },
             headers={'shipment': True}
         ).get("shipment", {})
+
         if shipment_response.get("success"):
             rpc.response_len_setter(response_len=1)
             cart_response = rpc.publish(
@@ -87,9 +98,9 @@ def shipment_per_stock(
                 },
                 headers={'cart': True}
             ).get("cart", {})
-
             if cart_response.get("success"):
-                cart = get_cart(user)
+                response.status_code = 200
+                cart = get_cart(response=response, auth_header=auth_header)
                 response.status_code = cart.get("status_code", 200)
                 return cart
             raise HTTPException(status_code=cart_response.get("status_code", 500),
@@ -118,7 +129,7 @@ def wallet_detail(
             headers={'cart': True}
         ).get("cart", {})
         if order_response.get("success"):
-            cart = get_cart(user)
+            cart = get_cart(response=response, auth_header=auth_header)
             response.status_code = cart.get("status_code", 200)
             return cart
         raise HTTPException(status_code=order_response.get("status_code", 500),
@@ -147,7 +158,7 @@ def payment_detail(
             headers={'cart': True}
         ).get("cart", {})
         if order_response.get("success"):
-            cart = get_cart(user)
+            cart = get_cart(response=response, auth_header=auth_header)
             response.status_code = cart.get("status_code", 200)
             return cart
         raise HTTPException(status_code=order_response.get("status_code", 500),
@@ -159,6 +170,8 @@ def final_order(
         response: Response,
         auth_header=Depends(auth_handler.check_current_user_tokens)
 ):
-    cart = get_cart(auth_header[0])
-    create_order = place_order(auth_header, cart)
-
+    # cart = get_cart(auth_header[0])
+    # create_order = place_order(auth_header, cart)
+    cart = get_cart(response=response, auth_header=auth_header)
+    response.status_code = cart.get("status_code")
+    return cart
