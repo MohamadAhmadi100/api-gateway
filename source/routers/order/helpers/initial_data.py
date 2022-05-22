@@ -1,7 +1,7 @@
 from starlette.exceptions import HTTPException
 
 from source.message_broker.rabbit_server import RabbitRPC
-from source.routers.cart.helpers.get_cart_helper import get_cart
+from source.routers.cart.app import get_cart
 from source.routers.customer.helpers.profile_view import get_profile_info
 from source.routers.order.helpers.check_out import check_price_qty
 from source.routers.order.helpers.shipment_requests import ship_address_object
@@ -12,10 +12,18 @@ from source.routers.order.helpers.shipment_requests import ship_address_object
 # TODO reciver info api
 
 
-def initial(user):
+class EditQuantity:
+    def __init__(self, parent_system_code, system_code, storage_id, count):
+        self.parent_system_code = parent_system_code
+        self.system_code = system_code
+        self.storage_id = storage_id
+        self.count = count
+
+def initial(auth_header, response):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        cart = get_cart(user[0])['message']
-        check_out = check_price_qty(user[0], cart)
+
+        cart = get_cart(response=response, auth_header=auth_header)
+        check_out = check_price_qty(auth_header[0], cart)
         if check_out['success']:
             rpc.response_len_setter(response_len=1)
             cart_result = rpc.publish(
@@ -23,15 +31,15 @@ def initial(user):
                     "cart": {
                         "action": "remove_cart",
                         "body": {
-                            "user_id": user[0].get("user_id")
+                            "user_id": auth_header[0].get("user_id")
                         }
                     }
                 },
                 headers={'cart': True}
             ).get("cart", {})
             if cart_result['success']:
-                initial_data = ship_address_object(user, cart)
-                customer = get_profile_info(user[0])
+                initial_data = ship_address_object(auth_header, cart)
+                customer = get_profile_info(auth_header[0])
                 address = initial_data[1]
                 shipment = initial_data[0]
 
@@ -56,7 +64,7 @@ def initial(user):
                             "wallet": {
                                 "action": "get_customer_wallet_customer_side",
                                 "body": {
-                                    "customer_id": user[0].get("user_id")
+                                    "customer_id": auth_header[0].get("user_id")
                                 }
                             }
                         },
