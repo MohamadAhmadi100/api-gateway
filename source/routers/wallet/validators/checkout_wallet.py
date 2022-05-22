@@ -11,10 +11,6 @@ class ChargeType(str, Enum):
     charge_wallet = "charge_wallet"
 
 
-class CancelType(str, Enum):
-    cancel_order = "cancel_order"
-
-
 class ActionType(str, Enum):
     auto = "auto"
 
@@ -63,12 +59,6 @@ class CompleteOrderWallet(BaseModel):
     balance: Optional[CheckoutBalance] = Field(..., alias="balance")
 
 
-class CancelOrder(BaseModel):
-    order_number: int = Field(..., alias="orderNumber")
-    amount: int = Field(..., alias="amount", isRequired=True)
-    type: Optional[CancelType] = Field(..., alias="type")
-
-
 class ChargeWallet(BaseModel):
     action_type: Optional[ActionType] = Field(..., alias="ActionType")
     amount: int = Field(..., alias="amount", isRequired=True)
@@ -80,4 +70,3 @@ class ChargeWallet(BaseModel):
     wallet_id: int = Field(..., alias="walletId")
     type: Optional[ChargeType] = Field(..., alias="type")
     status: Optional[Status] = Field(..., description="success/failed", isRequired=True)
-

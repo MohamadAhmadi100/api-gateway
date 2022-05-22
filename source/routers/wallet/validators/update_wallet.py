@@ -13,6 +13,7 @@ class Balance(str, Enum):
 class Type(str, Enum):
     staff_charge = "staffCharge"
     staff_consume = "staffConsume"
+    customer_charge = "customerCharge"
 
 
 class ActionType(str, Enum):
@@ -27,7 +28,7 @@ class UpdateData(BaseModel):
     action_type: Optional[ActionType] = Field(..., alias="ActionType")
     type: Optional[Type] = Field(..., alias="type")
     description: str = Field(min_length=5, max_length=300, isRequired=False)
-    reason: str = Field(min_length=5, max_length=50, isRequired=True)
+    reason: dict = Field(alias="reason", isRequired=True)
 
     @validator("description")
     def validate_description(cls, description):
@@ -36,11 +37,3 @@ class UpdateData(BaseModel):
         if not match:
             raise HTTPException(status_code=422, detail={"error": "توضیحات صحیح نیست"})
         return description
-
-    @validator("reason")
-    def validate_reason(cls, reason):
-        pattern = r"^[\u0600-\u06FF ]{5,50}$"
-        match = re.findall(pattern, reason)
-        if not match:
-            raise HTTPException(status_code=422, detail={"error": "توضیحات صحیح نیست"})
-        return reason

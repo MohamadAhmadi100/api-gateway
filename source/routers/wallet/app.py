@@ -7,8 +7,7 @@ from source.routers.wallet.validators.wallets import Wallet
 from source.routers.wallet.validators.update_wallet import UpdateData
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.payment.modules import payment_modules
-from source.routers.wallet.validators.checkout_wallet import Reserve, ResultOrder, CompleteOrderWallet, CancelOrder, \
-    ChargeWallet
+from source.routers.wallet.validators.checkout_wallet import Reserve, ResultOrder, CompleteOrderWallet, ChargeWallet
 
 """
 * this rout is for wallet that have two branch(back office side/ customer side)
@@ -106,9 +105,9 @@ def create_wallet(response: Response,
 
 
 @app.get("/customer-wallet-back", tags=["back-office side"])
-def get_customer_wallet_back_side(response: Response,
-                                  auth_header=Depends(auth.check_current_user_tokens)
-                                  ):
+def get__wallet_by_customer_id(response: Response,
+                               auth_header=Depends(auth.check_current_user_tokens)
+                               ):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         sub_data, token_data = auth_header
         response.headers["accessToken"] = token_data.get("access_token")
@@ -169,7 +168,7 @@ def get_wallets(response: Response, data: Wallet,
                             detail={"error": wallet_response.get("error", "Wallet service Internal error")})
 
 
-@app.put("/update_wallet", tags=["back-office side"])
+@app.put("/update-wallet", tags=["back-office side"])
 def update_wallet(data: UpdateData, response: Response,
                   auth_header=Depends(auth.check_current_user_tokens)
                   ):
@@ -244,7 +243,7 @@ def get_transactions(response: Response, data: Transaction,
                             detail={"error": wallet_response.get("error", "Wallet service Internal error")})
 
 
-@app.put("/change_wallet_status", tags=["back-office side"])
+@app.put("/change-wallet-status", tags=["back-office side"])
 def change_wallet_status(response: Response,
                          auth_header=Depends(auth.check_current_user_tokens)
                          ):
@@ -257,16 +256,13 @@ def change_wallet_status(response: Response,
         rpc.response_len_setter(response_len=1)
 
         # get customer data from token and send that for create wallet
-        data = {
-            "customer_id": sub_data.get("user_id"),
-        }
 
         wallet_response = rpc.publish(
             message={
                 "wallet": {
                     "action": "change_wallet_status",
                     "body": {
-                        "data": data
+                        "customer_id": sub_data.get("user_id"),
                     }
                 }
             },
@@ -287,10 +283,10 @@ def change_wallet_status(response: Response,
 # ---------------------------------- start customer endpoints -------------------------------------- #
 
 
-@app.post("/transaction", tags=["customer side"])
-def get_transaction(response: Response, data: Transaction,
-                    auth_header=Depends(auth.check_current_user_tokens)
-                    ):
+@app.post("/transactions-customer", tags=["customer side"])
+def get_transactions_(response: Response, data: Transaction,
+                      auth_header=Depends(auth.check_current_user_tokens)
+                      ):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
 
         sub_data, token_data = auth_header
@@ -333,7 +329,7 @@ def get_transaction(response: Response, data: Transaction,
 
 
 @app.get("/customer-wallet", tags=["customer side"])
-def get_customer_wallet_customer_side(
+def get_wallet_by_customer_id_(
         response: Response,
         auth_header=Depends(auth.check_current_user_tokens)
 ):
@@ -346,9 +342,9 @@ def get_customer_wallet_customer_side(
         wallet_response = rpc.publish(
             message={
                 "wallet": {
-                    "action": "get_customer_wallet_customer_side",
+                    "action": "get_wallet_by_customer_id_",
                     "body": {
-                        "customer_id": sub_data.get("user_id")
+                        "data": sub_data.get("user_id")
                     }
                 }
             },
@@ -567,44 +563,6 @@ def use_complete_order_from_wallet(response: Response,
             message={
                 "wallet": {
                     "action": "use_complete_order_from_wallet",
-                    "body": {
-                        "data": last_data
-                    }
-                }
-            },
-            headers={'wallet': True}
-        ).get("wallet", {})
-
-        if wallet_response.get("success"):
-            response.status_code = wallet_response.get("status_code", 200)
-            return wallet_response
-        elif not wallet_response.get("success"):
-            response.status_code = wallet_response.get("status_code", 417)
-            return wallet_response
-        raise HTTPException(status_code=wallet_response.get("status_code", 500),
-                            detail={"error": wallet_response.get("error", "Wallet service Internal error")})
-
-
-@app.post("/cancel-order", tags=["customer side"])
-def cancel_order(response: Response,
-                 order_data: CancelOrder,
-                 auth_header=Depends(auth.check_current_user_tokens)
-                 ):
-    sub_data, token_data = auth_header
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-
-        # send refresh and access token to front in header
-        response.headers["accessToken"] = token_data.get("access_token")
-        response.headers["refreshToken"] = token_data.get("refresh_token")
-        rpc.response_len_setter(response_len=1)
-
-        last_data = dict(order_data)
-        last_data["customer_id"] = sub_data["user_id"]
-
-        wallet_response = rpc.publish(
-            message={
-                "wallet": {
-                    "action": "cancel_order",
                     "body": {
                         "data": last_data
                     }
