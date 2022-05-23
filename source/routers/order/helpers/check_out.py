@@ -39,74 +39,72 @@ def check_price_qty(auth_header, cart, response):
             },
             headers={'quantity': True}
         )
-        response_result = []
         for checkout_data in quantity_result['quantity']['message'][0]:
-            item_name = checkout_data.get('name')
+            edited_result = []
             rpc.response_len_setter(response_len=1)
             # get product data
-            parent_system_code_result = rpc.publish(
-                message={
-                    "product": {
-                        "action": "get_product_by_system_code",
-                        "body": {
-                            "system_code": checkout_data['parent_system_code'],
-                            "lang": "fa_ir"
+            if checkout_data['quantity_checkout'] == 'system code not found':
+                rpc.response_len_setter(response_len=1)
+                result = rpc.publish(
+                    message={
+                        "cart": {
+                            "action": "remove_product_from_cart",
+                            "body": {
+                                "user_id": auth_header[0].get("user_id"),
+                                "system_code": checkout_data['systemCode'],
+                                "storage_id": checkout_data['storage_id']
+                            }
                         }
-                    }
-                },
-                headers={'product': True}
-            )
-            parent_system_code_result = parent_system_code_result['product'].get("message").copy()
-            final_result = dict()
-            final_result["user_info"] = {"user_id": auth_header[0].get("user_id")}
-            for product in parent_system_code_result.get("products", []):
-                if product.get("system_code") == checkout_data['systemCode']:
-                    final_result["product"] = product
-                    break
-            # edit cart after checking
-            # TODO response error handeling
-            if checkout_data['quantity_checkout'] == "pass":  # and checkout_data['price_checkout'] == "pass"
-                pass
-            elif checkout_data['quantity_checkout'] == "edited":  # and checkout_data['price_checkout'] == "pass"
-                object_to_edit = EditQuantity(checkout_data['parent_system_code'], checkout_data['systemCode'],
-                                              checkout_data['storage_id'],
-                                              checkout_data['new_quantity'] - checkout_data['count'])
+                    },
+                    headers={'cart': True}
+                )
+                edited_result.append({
+                    "name": checkout_data['name'],
+                    "status": "removed",
+                    "qty": checkout_data['count'],
+                    "message": f"{checkout_data['name']} از سبد خرید حذف شد"
+                })
+            else:
 
-                add_and_edit_product(item=object_to_edit, response=response, auth_header=auth_header)
-                pass
-                # cart_result = rpc.publish(
-                #     message={
-                #         "cart": {
-                #             "action": "add_and_edit_product_in_cart",
-                #             "body": {
-                #                 "user_info": final_result.get("user_info"),
-                #                 "product": final_result.get('product'),
-                #                 "count": checkout_data.get("new_quantity"),
-                #                 "storage_id": checkout_data.get("storage_id")
-                #             }
-                #         }
-                #     },
-                #     headers={'cart': True}
-                # )
-                # response_result.append(f'{item_name} quantity edited')
+                parent_system_code_result = rpc.publish(
+                    message={
+                        "product": {
+                            "action": "get_product_by_system_code",
+                            "body": {
+                                "system_code": checkout_data['parent_system_code'],
+                                "lang": "fa_ir"
+                            }
+                        }
+                    },
+                    headers={'product': True}
+                )
+                parent_system_code_result = parent_system_code_result['product'].get("message").copy()
+                final_result = dict()
+                final_result["user_info"] = {"user_id": auth_header[0].get("user_id")}
+                for product in parent_system_code_result.get("products", []):
+                    if product.get("system_code") == checkout_data['systemCode']:
+                        final_result["product"] = product
+                        break
+                # edit cart after checking
+                # TODO response error handeling
+                if checkout_data['quantity_checkout'] == "pass":  # and checkout_data['price_checkout'] == "pass"
+                    pass
+                elif checkout_data['quantity_checkout'] == "edited":  # and checkout_data['price_checkout'] == "pass"
+                    object_to_edit = EditQuantity(checkout_data['parent_system_code'], checkout_data['systemCode'],
+                                                  checkout_data['storage_id'],
+                                                  checkout_data['new_quantity'] - checkout_data['count'])
 
-            elif checkout_data[
-                'quantity_checkout'] == "system code not found":  # or checkout_data['price_checkout'] == "system code not found"
-                pass
-                # cart_result = rpc.publish(
-                #     message={
-                #         "cart": {
-                #             "action": "remove_product_from_cart",
-                #             "body": {
-                #                 "user_id": user.get("user_id"),
-                #                 "system_code": checkout_data["systemCode"],
-                #                 "storage_id": checkout_data["storage_id"]
-                #             }
-                #         }
-                #     },
-                #     headers={'cart': True})
-                # response_result.append(f'{item_name} not found and removed')
-        if not response_result:
-            return {"success": True, "message": "checkout completed"}
-        else:
-            return {"success": False, "message": response_result}
+                    add_and_edit_product(item=object_to_edit, response=response, auth_header=auth_header)
+
+                    edited_result.append({
+                        "name": checkout_data['name'],
+                        "status": "edited",
+                        "qty": checkout_data['count'],
+                        "message": f"{checkout_data['name']} موجودی کافی نیست"
+                    })
+                    pass
+
+            if not edited_result:
+                return {"success": True, "message": "checkout completed"}
+            else:
+                return {"success": False, "message": edited_result}
