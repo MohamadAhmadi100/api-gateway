@@ -94,7 +94,26 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
 
             quantity = storage_quantity if storage_quantity else cusomer_type_quantity if cusomer_type_quantity else main_quantity
 
-            if quantity.get("stock_for_sale", 0) >= item.count:
+            rpc.response_len_setter(response_len=1)
+            user_cart = rpc.publish(
+                message={
+                    "cart": {
+                        "action": "get_cart",
+                        "body": {
+                            "user_id": user.get("user_id")
+                        }
+                    }
+                },
+                headers={'cart': True}
+            ).get('cart', {}).get('message', {})
+            now_count = 0
+            for cart_product in user_cart.get("products", []):
+                if cart_product.get("system_code") == item.system_code:
+                    now_count = cart_product.get("count", 0)
+                    break
+
+            allowed_count = (quantity.get("stock_for_sale", 0) - quantity.get('reserved', 0))
+            if allowed_count >= (now_count + item.count):
                 final_result["count"] = item.count
                 final_result["storage_id"] = item.storage_id
             else:
