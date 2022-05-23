@@ -45,7 +45,7 @@ def ship_address_object(user, cart):
                 "origin": items['warehouse_city_id'],
                 "destination": result[1]['cityId'],
                 "weight": 0,
-                "totalPrice": 0,
+                "totalPrice": cart['totalPrice'],
                 "totalItem": 0
             })
         return_result = {
