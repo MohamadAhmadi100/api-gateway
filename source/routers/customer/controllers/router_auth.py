@@ -6,6 +6,7 @@ from fastapi import status, APIRouter
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.customer.validators import validation_auth
+from source.routers.customer.helpers.allowed_storages_token import allowed_storages
 
 # from customer.modules import log
 
@@ -109,6 +110,7 @@ def verify_otp_code(value: validation_auth.CustomerVerifyOTP, response: Response
         "user_id": customer_info.get('customerID'),
         "customer_type": customer_info.get('customerType'),
         "phone_number": customer_info.get('customerPhoneNumber'),
+        "allowed_storages": allowed_storages(customer_info.get('customerID'))
     }
     response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
     response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
@@ -156,6 +158,7 @@ def checking_login_otp_code(
         "user_id": customer_info.get('customerID'),
         "customer_type": customer_info.get('customerType'),
         "phone_number": customer_info.get('customerPhoneNumber'),
+        "allowed_storages": allowed_storages(customer_info.get('customerID'))
     }
     response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
     response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
@@ -200,6 +203,7 @@ def checking_login_password(
         "user_id": customer_info.get('customerID'),
         "customer_type": customer_info.get('customerType'),
         "phone_number": customer_info.get('customerPhoneNumber'),
+        "allowed_storages": allowed_storages(customer_info.get('customerID'))
     }
     response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
     response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
