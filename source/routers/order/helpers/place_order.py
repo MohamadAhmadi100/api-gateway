@@ -23,4 +23,7 @@ def place_order(auth_header, cart):
             },
             headers={'order': True}
         )
-        return result_to_order
+        if result_to_order.get("success"):
+            return result_to_order
+        else:
+            return {"success": False, "message": "something went wrong!"}
