@@ -39,8 +39,9 @@ def check_price_qty(auth_header, cart, response):
             },
             headers={'quantity': True}
         )
+        edited_result = []
         for checkout_data in quantity_result['quantity']['message'][0]:
-            edited_result = []
+
             rpc.response_len_setter(response_len=1)
             # get product data
             if checkout_data['quantity_checkout'] == 'system code not found':

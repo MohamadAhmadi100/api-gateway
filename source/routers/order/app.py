@@ -41,6 +41,8 @@ auth_handler = AuthHandler()
 @app.get("/cart_detail/", tags=["get cart detail and checkout"])
 def get_cart_detail(response: Response, auth_header=Depends(auth_handler.check_current_user_tokens)) -> dict:
     cart = get_cart(response=response, auth_header=auth_header)
+    if not cart['products']:
+        return {"success": True, "message": "سبد خرید خالی است"}
     check_out = check_price_qty(auth_header, cart, response)
     if check_out.get("success"):
         return {"success": True, "message": "checkout pass", "response": cart}
@@ -54,12 +56,13 @@ def get_shipment(response: Response, auth_header=Depends(auth_handler.check_curr
         all process for creating an order is here
     """
     response_result = shipment_detail(auth_header, response)
-    if response_result.get("status_code") != 200:
+    if response_result.get("success"):
+        response.status_code = response_result.get("status_code")
+        return {"success": True, "message": response_result.get("message")}
+    else:
         raise HTTPException(status_code=500,
-                            detail={"error": "Something went wrong"})
+                            detail={"success": False, "message": response_result.get("message")})
 
-    response.status_code = response_result.get("status_code")
-    return {"success": True, "message": response_result.get("message")}
 
 
 @app.put("/add_shipment", tags=["add shipment to cart and get new cart"])
@@ -173,8 +176,14 @@ def final_order(
 ) -> dict:
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         cart = get_cart(response=response, auth_header=auth_header)
+
+        if cart.get('shipment') == {}:
+            pass
+        elif cart.get('payment') == {}:
+            pass
         check_out = check_price_qty(auth_header, cart, response)
         if check_out.get("success"):
+
             create_order = place_order(auth_header, cart)
             response.status_code = cart.get("status_code")
             if create_order.get("success"):
@@ -194,3 +203,7 @@ def final_order(
 
             return {"success": False, "message": check_out.get("message"),
                     "response": shipment_detail(auth_header, response)}
+
+
+# eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2NTMzMDgzNTksImlhdCI6MTY1MzMwNzE1OSwic3ViIjp7InVzZXJfaWQiOjExLCJjdXN0b21lcl90eXBlIjpbIkIyQiJdLCJwaG9uZV9udW1iZXIiOiIwOTM1NTA1NTgyNSJ9LCJzY29wZSI6ImFjY2VzcyJ9.mwpNP_NVo3t-dmrSlVdLS007Z7H6KuE8hsar8DzGb9s
+# eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2NTUwMzUxNTksImlhdCI6MTY1MzMwNzE1OSwic3ViIjp7InVzZXJfaWQiOjExLCJjdXN0b21lcl90eXBlIjpbIkIyQiJdLCJwaG9uZV9udW1iZXIiOiIwOTM1NTA1NTgyNSJ9LCJzY29wZSI6InJlZnJlc2gifQ.Yy24lJvwblu_1kYmQ_c4X1CK7yhWKIaPv0dNzFUELa4
