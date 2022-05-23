@@ -100,11 +100,11 @@ def check_price_qty(auth_header, cart, response):
                         "name": checkout_data['name'],
                         "status": "edited",
                         "qty": checkout_data['count'],
-                        "message": f"{checkout_data['name']} موجودی کافی نیست"
+                        "message": f"{checkout_data['name']} موجودی کافی نیست, موجودی قابل فروش : {checkout_data['new_quantity']}"
                     })
                     pass
 
-            if not edited_result:
-                return {"success": True, "message": "checkout completed"}
-            else:
-                return {"success": False, "message": edited_result}
+        if not edited_result:
+            return {"success": True, "message": "checkout completed"}
+        else:
+            return {"success": False, "message": edited_result}

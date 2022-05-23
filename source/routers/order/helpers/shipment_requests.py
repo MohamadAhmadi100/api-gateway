@@ -64,7 +64,6 @@ def ship_address_object(user, cart):
             },
             headers={'shipment': True}
         ).get("shipment", {})['message']
-
         return shipment_response, address
 
 
