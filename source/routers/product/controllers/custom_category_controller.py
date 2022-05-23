@@ -121,6 +121,33 @@ def get_categories_products(
         )
         product_result = product_result.get("product", {})
         if product_result.get("success"):
+            message_product = product_result.get("message", {})
+            product_list = list()
+            for product in message_product['data']:
+                rpc_result = rpc.publish(
+                    message={
+                        "quantity": {
+                            "action": "get_quantity",
+                            "body": {
+                                "system_code": product.get("system_code")
+                            }
+                        }
+                    },
+                    headers={"quantity": True}
+                )
+                quantity_result = rpc_result.get("quantity", {})
+                # price_tuples = list()
+                if product.get('products'):
+                    for config in product['products']:
+                        if quantity_result.get("success"):
+                            system_code = config.get("system_code")
+                            config['quantity'] = quantity_result.get("message", {}).get("products", {}).get(system_code,
+                                                                                                            {})
+
+                product_system_code = product.get("system_code")
+                product['system_code'] = product_system_code[:9] + "-" + product_system_code[9:]
+                product_list.append(product)
+            message_product['data'] = product_list
             response.status_code = product_result.get("status_code", 200)
             return convert_case(product_result.get("message"), 'camel')
         raise HTTPException(status_code=product_result.get("status_code", 500),
