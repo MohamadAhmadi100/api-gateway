@@ -1,5 +1,6 @@
 from typing import Optional, List, Tuple
 
+import jdatetime
 from fastapi import HTTPException, Response, Path, Body, Query, Header, APIRouter
 
 from source.helpers.case_converter import convert_case
@@ -298,6 +299,16 @@ def get_product_by_system_code(
                                                                                              {}).get("storages",
                                                                                                      {}).items():
 
+                            now_formated_date_time = jdatetime.datetime.strptime(
+                                jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
+
+                            special_formated_date_time = jdatetime.datetime.strptime(
+                                price.get("special_to_date", jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+                                "%Y-%m-%d %H:%M:%S")
+
+                            if price.get("special") and not (now_formated_date_time < special_formated_date_time):
+                                price["special"] = None
+
                             if quantity.get("storage_id") == price.get("storage_id"):
                                 item = dict()
                                 item["warehouse_id"] = quantity.get("storage_id")
@@ -306,7 +317,6 @@ def get_product_by_system_code(
                                 item["quantity"] = quantity.get("stock_for_sale")
                                 item['max_qty'] = quantity.get("max_qty")
                                 item['min_qty'] = quantity.get("min_qty")
-                                item['order_limit'] = quantity.get("order_limit")
                                 item["warehouse_state"] = quantity.get("warehouse_state")
                                 item["warehouse_city"] = quantity.get("warehouse_city")
                                 item["warehouse_state_id"] = quantity.get("warehouse_state_id")
@@ -318,9 +328,23 @@ def get_product_by_system_code(
                     product["price"] = pricing_result.get("message", {}).get("products", {}).get(
                         list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
                         "B2B", {}).get("storages", {}).get("1", {}).get("regular", 0)
-                    product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
+
+                    special_price = pricing_result.get("message", {}).get("products", {}).get(
                         list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
-                        "B2B", {}).get("storages", {}).get("1", {}).get("special", 0)
+                        "B2B", {}).get("storages", {}).get("1", {})
+
+                    now_formated_date_time = jdatetime.datetime.strptime(
+                        jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
+
+                    special_formated_date_time = jdatetime.datetime.strptime(
+                        special_price.get("special_to_date", jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+                        "%Y-%m-%d %H:%M:%S")
+
+                    if special_price.get("special") and now_formated_date_time < special_formated_date_time:
+                        product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
+                            list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
+                            "B2B", {}).get("storages", {}).get("1", {}).get("special", 0)
+
             return convert_case(final_result, 'camel')
 
 

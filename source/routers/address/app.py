@@ -1,9 +1,11 @@
-from fastapi import FastAPI, HTTPException, Response, responses
+from fastapi import FastAPI, HTTPException, Response, responses, Depends
 from source.config import settings
 from starlette.exceptions import HTTPException as starletteHTTPException
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.address.validators.address import Address
 from source.routers.address.validators.update_address import UpdateAddress
+from source.routers.customer.module.auth import AuthHandler
+
 
 TAGS = [
     {
@@ -21,6 +23,8 @@ app = FastAPI(
     debug=settings.DEBUG_MODE
 )
 
+
+auth_handler = AuthHandler()
 
 @app.exception_handler(starletteHTTPException)
 def validation_exception_handler(request, exc):
@@ -129,6 +133,33 @@ def customer_addresses(customerId: str, response: Response):
                     "action": "get_customer_addresses",
                     "body": {
                         "customerId": customerId
+                    }
+                }
+            },
+            headers={'address': True}
+        ).get("address", {})
+
+        if address_response.get("success"):
+            response.status_code = address_response.get("status_code", 200)
+            return address_response
+        raise HTTPException(status_code=address_response.get("status_code", 500),
+                            detail={"error": address_response.get("error", "Address service Internal error")})
+
+
+
+
+@app.delete("/delete_address", tags=["Address"])
+def delete_address(addressId: int, response: Response, auth_header=Depends(auth_handler.check_current_user_tokens)):
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        user, token_dict = auth_header
+        rpc.response_len_setter(response_len=1)
+        address_response = rpc.publish(
+            message={
+                "address": {
+                    "action": "delete_customer_address",
+                    "body": {
+                        "customerId": user.get("user_id"),
+                        "addressId": addressId
                     }
                 }
             },

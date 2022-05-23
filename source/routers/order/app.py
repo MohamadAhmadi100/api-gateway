@@ -6,6 +6,7 @@ from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.cart.app import get_cart
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.order.helpers.check_out import check_price_qty
+from source.routers.order.helpers.place_order import place_order
 from source.routers.order.helpers.shipment_requests import shipment_detail
 from source.routers.order.validators.order import wallet, payment
 from source.routers.shipment.validators.shipment_per_stock import PerStock
@@ -42,9 +43,9 @@ def get_cart_detail(response: Response, auth_header=Depends(auth_handler.check_c
     cart = get_cart(response=response, auth_header=auth_header)
     check_out = check_price_qty(auth_header, cart, response)
     if check_out.get("success"):
-        return cart
+        return {"success": True, "message": "checkout pass", "response": cart}
     else:
-        return {"success": False, "message": check_out.get("message")}
+        return {"success": False, "message": check_out.get("message"), "response": cart}
 
 
 @app.get("/shipment_detail/", tags=["get shipment detail per stocks"])
@@ -169,9 +170,27 @@ def payment_detail(
 def final_order(
         response: Response,
         auth_header=Depends(auth_handler.check_current_user_tokens)
-):
-    # cart = get_cart(auth_header[0])
-    # create_order = place_order(auth_header, cart)
-    cart = get_cart(response=response, auth_header=auth_header)
-    response.status_code = cart.get("status_code")
-    return cart
+) -> dict:
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        cart = get_cart(response=response, auth_header=auth_header)
+        check_out = check_price_qty(auth_header, cart, response)
+        if check_out.get("success"):
+            create_order = place_order(auth_header, cart)
+            response.status_code = cart.get("status_code")
+            if create_order.get("success"):
+                pass
+        else:
+            rpc.publish(
+                message={
+                    "cart": {
+                        "action": "remove_cart",
+                        "body": {
+                            "user_id": auth_header[0].get("user_id")
+                        }
+                    }
+                },
+                headers={'cart': True}
+            ).get("cart", {})
+
+            return {"success": False, "message": check_out.get("message"),
+                    "response": shipment_detail(auth_header, response)}
