@@ -7,9 +7,10 @@ from pydantic import BaseModel, validator, Field
 class StoragesModel(BaseModel):
     storage_id: str = Field(..., alias="storageId")
     regular: int
+    informal: Optional[int] = None
     special: Optional[int] = None
-    special_from_date: str = Field(..., alias='specialFromDate')
-    special_to_date: str = Field(..., alias='specialToDate')
+    special_from_date: Optional[str] = Field(..., alias='specialFromDate')
+    special_to_date: Optional[str] = Field(..., alias='specialToDate')
 
     @validator("storage_id")
     def storage_id_validator(cls, value):
@@ -33,6 +34,14 @@ class StoragesModel(BaseModel):
             raise HTTPException(status_code=422, detail={"error": "special must be int"})
         elif 100_000_000_000_000 < value or value < 1:
             raise HTTPException(status_code=422, detail={"error": "special must be between 1 and 100_000_000_000_000"})
+        return value
+
+    @validator('informal')
+    def informal_validator(cls, value):
+        if not isinstance(value, int):
+            raise HTTPException(status_code=422, detail={"error": "informal must be int"})
+        elif 100_000_000_000_000 < value or value < 1:
+            raise HTTPException(status_code=422, detail={"error": "informal must be between 1 and 100_000_000_000_000"})
         return value
 
     @validator("special_from_date")
