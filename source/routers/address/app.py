@@ -6,7 +6,6 @@ from source.routers.address.validators.address import Address
 from source.routers.address.validators.update_address import UpdateAddress
 from source.routers.customer.module.auth import AuthHandler
 
-
 TAGS = [
     {
         "name": "Address",
@@ -23,14 +22,12 @@ app = FastAPI(
     debug=settings.DEBUG_MODE
 )
 
-
 auth_handler = AuthHandler()
+
 
 @app.exception_handler(starletteHTTPException)
 def validation_exception_handler(request, exc):
     return responses.JSONResponse(exc.detail, status_code=exc.status_code)
-
-
 
 
 @app.get("/states", tags=["City and States"])
@@ -55,7 +52,7 @@ def states(response: Response):
 
 
 @app.get("/cities", tags=["City and States"])
-def cities(CityId: str, response: Response):
+def cities(cityId: str, response: Response):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         address_response = rpc.publish(
@@ -63,7 +60,7 @@ def cities(CityId: str, response: Response):
                 "address": {
                     "action": "cities",
                     "body": {
-                        "CityId": CityId
+                        "CityId": cityId
                     }
                 }
             },
@@ -144,8 +141,6 @@ def customer_addresses(customerId: str, response: Response):
             return address_response
         raise HTTPException(status_code=address_response.get("status_code", 500),
                             detail={"error": address_response.get("error", "Address service Internal error")})
-
-
 
 
 @app.delete("/delete_address", tags=["Address"])
