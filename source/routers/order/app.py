@@ -211,5 +211,28 @@ def final_order(
             return {"success": False, "message": check_out.get("message"),
                     "response": shipment_detail(auth_header, response)}
 
-# eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2NTMzMDgzNTksImlhdCI6MTY1MzMwNzE1OSwic3ViIjp7InVzZXJfaWQiOjExLCJjdXN0b21lcl90eXBlIjpbIkIyQiJdLCJwaG9uZV9udW1iZXIiOiIwOTM1NTA1NTgyNSJ9LCJzY29wZSI6ImFjY2VzcyJ9.mwpNP_NVo3t-dmrSlVdLS007Z7H6KuE8hsar8DzGb9s
-# eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2NTUwMzUxNTksImlhdCI6MTY1MzMwNzE1OSwic3ViIjp7InVzZXJfaWQiOjExLCJjdXN0b21lcl90eXBlIjpbIkIyQiJdLCJwaG9uZV9udW1iZXIiOiIwOTM1NTA1NTgyNSJ9LCJzY29wZSI6InJlZnJlc2gifQ.Yy24lJvwblu_1kYmQ_c4X1CK7yhWKIaPv0dNzFUELa4
+
+@app.get("/orders_list", tags=["Get all orders of customer"])
+def get_orders(response: Response,
+
+               auth_header=Depends(auth_handler.check_current_user_tokens)):
+    user, token_dict = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        order_response = rpc.publish(
+            message={
+                "order": {
+                    "action": "get_customer_orders",
+                    "body": {
+                        "customerId": user.get("user_id"),
+                    }
+                }
+            },
+            headers={'order': True}
+        ).get("order", {})
+        if order_response.get("success"):
+            response.status_code = order_response.get("status_code", 200)
+            return order_response
+        raise HTTPException(status_code=order_response.get("status_code", 500),
+                            detail={"error": order_response.get("error", "Order service Internal error")})
+
