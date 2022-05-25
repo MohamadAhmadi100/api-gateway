@@ -1,5 +1,6 @@
-from fastapi import FastAPI, HTTPException, Response, responses, Depends
+from fastapi import FastAPI, HTTPException, Response, responses, Depends, Query
 from starlette.exceptions import HTTPException as starletteHTTPException, HTTPException
+from  typing  import Union
 
 from source.config import settings
 from source.message_broker.rabbit_server import RabbitRPC
@@ -215,7 +216,9 @@ def final_order(
 
 @app.get("/orders_list", tags=["Get all orders of customer"])
 def get_orders(response: Response,
-
+               order_number: Union[int, None] = Query(default=None),
+               date_from: Union[str, None] = Query(default=None),
+               date_to: Union[str, None] = Query(default=None),
                auth_header=Depends(auth_handler.check_current_user_tokens)):
     user, token_dict = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
@@ -226,6 +229,9 @@ def get_orders(response: Response,
                     "action": "get_customer_orders",
                     "body": {
                         "customerId": user.get("user_id"),
+                        "orderNumber": order_number,
+                        "dateFrom": date_from,
+                        "dateTo": date_to
                     }
                 }
             },
