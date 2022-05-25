@@ -244,9 +244,11 @@ def get_product_by_system_code(
     Get a product by system_code in main collection in database.
     """
     customer_type = None
+    allowed_storages = list()
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", ["B2B"])[0]
+        allowed_storages = user_data.get("allowed_storages", [])
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=3)
         result = rpc.publish(
@@ -288,42 +290,46 @@ def get_product_by_system_code(
             final_result = product_result.get("message").copy()
             for product in final_result.get("products", []):
                 if customer_type:
-                    product['config']["warehouse"] = list()
-                    for quantity_key, quantity in quantity_result.get("message", {}).get("products", {}).get(
-                            product.get("system_code"), {}).get("customer_types", {}).get(customer_type,
-                                                                                          {}).get("storages",
-                                                                                                  {}).items():
+                    if allowed_storages:
+                        product['config']["warehouse"] = list()
+                        for quantity_key, quantity in quantity_result.get("message", {}).get("products", {}).get(
+                                product.get("system_code"), {}).get("customer_types", {}).get(customer_type,
+                                                                                              {}).get("storages",
+                                                                                                      {}).items():
+                            if str(quantity.get("storage_id")) in allowed_storages:
 
-                        for price_key, price in pricing_result.get("message", {}).get("products", {}).get(
-                                product.get("system_code"), {}).get("customer_type", {}).get(customer_type,
-                                                                                             {}).get("storages",
-                                                                                                     {}).items():
+                                for price_key, price in pricing_result.get("message", {}).get("products", {}).get(
+                                        product.get("system_code"), {}).get("customer_type", {}).get(customer_type,
+                                                                                                     {}).get("storages",
+                                                                                                             {}).items():
 
-                            now_formated_date_time = jdatetime.datetime.strptime(
-                                jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
+                                    now_formated_date_time = jdatetime.datetime.strptime(
+                                        jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
 
-                            special_formated_date_time = jdatetime.datetime.strptime(
-                                price.get("special_to_date", jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-                                "%Y-%m-%d %H:%M:%S")
+                                    special_formated_date_time = jdatetime.datetime.strptime(
+                                        price.get("special_to_date",
+                                                  jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+                                        "%Y-%m-%d %H:%M:%S")
 
-                            if price.get("special") and not (now_formated_date_time < special_formated_date_time):
-                                price["special"] = None
+                                    if price.get("special") and not (
+                                            now_formated_date_time < special_formated_date_time):
+                                        price["special"] = None
 
-                            if quantity.get("storage_id") == price.get("storage_id"):
-                                item = dict()
-                                item["warehouse_id"] = quantity.get("storage_id")
-                                item["price"] = price.get("regular")
-                                item["special_price"] = price.get("special")
-                                item["quantity"] = quantity.get("stock_for_sale")
-                                item['max_qty'] = quantity.get("max_qty")
-                                item['min_qty'] = quantity.get("min_qty")
-                                item["warehouse_state"] = quantity.get("warehouse_state")
-                                item["warehouse_city"] = quantity.get("warehouse_city")
-                                item["warehouse_state_id"] = quantity.get("warehouse_state_id")
-                                item["warehouse_city_id"] = quantity.get("warehouse_city_id")
-                                item["warehouse_label"] = quantity.get("warehouse_label")
-                                item["attribute_label"] = quantity.get("attribute_label")
-                                product['config']["warehouse"].append(item)
+                                    if quantity.get("storage_id") == price.get("storage_id"):
+                                        item = dict()
+                                        item["warehouse_id"] = quantity.get("storage_id")
+                                        item["price"] = price.get("regular")
+                                        item["special_price"] = price.get("special")
+                                        item["quantity"] = quantity.get("stock_for_sale")
+                                        item['max_qty'] = quantity.get("max_qty")
+                                        item['min_qty'] = quantity.get("min_qty")
+                                        item["warehouse_state"] = quantity.get("warehouse_state")
+                                        item["warehouse_city"] = quantity.get("warehouse_city")
+                                        item["warehouse_state_id"] = quantity.get("warehouse_state_id")
+                                        item["warehouse_city_id"] = quantity.get("warehouse_city_id")
+                                        item["warehouse_label"] = quantity.get("warehouse_label")
+                                        item["attribute_label"] = quantity.get("attribute_label")
+                                        product['config']["warehouse"].append(item)
                 else:
                     product["price"] = pricing_result.get("message", {}).get("products", {}).get(
                         list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
