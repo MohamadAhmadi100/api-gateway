@@ -48,6 +48,7 @@ def get_cart_detail(response: Response, auth_header=Depends(auth_handler.check_c
     if check_out.get("success"):
         return {"success": True, "message": "checkout pass", "response": cart}
     else:
+        cart = get_cart(response=response, auth_header=auth_header)
         return {"success": False, "message": check_out.get("message"), "response": cart}
 
 
@@ -178,11 +179,11 @@ def final_order(
         cart = get_cart(response=response, auth_header=auth_header)
 
         # check if customer select all the shipment methods per stock
-        check_shipment_result = check_shipment_per_stock(cart)
-        if len(cart['shipment']) != len(check_shipment_result):
-            return {"success": False, "message": "!روش ارسال برای همه انبار ها را انتخاب کنید"}
-        elif len(cart['payment']) < 1:
-            return {"success": False, "message": "!روش پرداخت را انتخاب کنید"}
+        # check_shipment_result = check_shipment_per_stock(cart)
+        # if len(cart['shipment']) != len(check_shipment_result):
+        #     return {"success": False, "message": "!روش ارسال برای همه انبار ها را انتخاب کنید"}
+        # elif len(cart['payment']) < 1:
+        #     return {"success": False, "message": "!روش پرداخت را انتخاب کنید"}
 
         # check quantity
 
