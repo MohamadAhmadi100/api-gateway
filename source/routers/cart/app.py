@@ -1,5 +1,7 @@
+from typing import Optional
+
 import jdatetime
-from fastapi import FastAPI, HTTPException, Response, responses, Path, Depends
+from fastapi import FastAPI, HTTPException, Response, responses, Path, Depends, Query
 from starlette.exceptions import HTTPException as starletteHTTPException
 
 from source.config import settings
@@ -140,7 +142,10 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
 
 
 @app.get("/cart/", tags=["Cart"])
-def get_cart(response: Response, auth_header=Depends(auth_handler.check_current_user_tokens)) -> dict:
+def get_cart(response: Response,
+             informal: Optional[bool] = Query(False),
+             auth_header=Depends(auth_handler.check_current_user_tokens)
+             ) -> dict:
     """
     get user cart
     """
@@ -209,6 +214,9 @@ def get_cart(response: Response, auth_header=Depends(auth_handler.check_current_
                         product["price"] = price.get("special")
                     else:
                         product["price"] = price.get("regular")
+
+                if informal:
+                    product["price"] = price.get("informal") if price.get("informal") else product["price"]
 
                 product["quantity"] = quantity_result.get("message", {}).get("products", {}).get(
                     product.get("system_code"), {}).get("customer_types", {}).get(customer_type, {}).get("storages",
@@ -421,7 +429,8 @@ def checkout(response: Response, auth_header=Depends(auth_handler.check_current_
                                 }
                             }
                         },
-                        headers={'cart': True})
+                        headers={'cart': True}
+                    )
                     response_result.append(f'{item_name} not found and removed')
             if not response_result:
                 return {"success": True, "message": "checkout completed"}
