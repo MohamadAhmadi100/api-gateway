@@ -28,23 +28,7 @@ def get_profile_info(user_data: dict) -> dict or Exception:
             status_code=customer_result.get("status_code", 500),
             detail={"error": customer_result.get("error", "Something went wrong")}
         )
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        address_response = rpc.publish(
-            message={
-                "address": {
-                    "action": "get_customer_addresses",
-                    "body": {
-                        "customerId": user_data.get("user_id")
-                    }
-                }
-            },
-            headers={'address': True}
-        ).get("address", {})
 
-        if not address_response.get("success"):
-            raise HTTPException(status_code=address_response.get("status_code", 500),
-                                detail={"error": address_response.get("error", "Address service Internal error")})
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         result = rpc.publish(
@@ -68,5 +52,34 @@ def get_profile_info(user_data: dict) -> dict or Exception:
         if customer_data.get(attr.get("name")) is None or not None:
             attr["value"] = customer_data.get(attr.get("name"))
             customer_data[attr['name']] = attr['value']
-    customer_data["address"] = address_response.get("fullAddress")
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        address_response = rpc.publish(
+            message={
+                "address": {
+                    "action": "get_customer_addresses",
+                    "body": {
+                        "customerId": str(user_data.get("user_id"))
+                    }
+                }
+            },
+            headers={'address': True}
+        ).get("address", {})
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        address_response = rpc.publish(
+            message={
+                "address": {
+                    "action": "get_customer_addresses",
+                    "body": {
+                        "customerId": str(user_data.get("user_id"))
+                    }
+                }
+            },
+            headers={'address': True}
+        ).get("address", {})
+
+        if not address_response.get("success"):
+            return customer_data
+    customer_data['customerAddress'] = address_response['result'][0].get("fullAddress")
     return customer_data

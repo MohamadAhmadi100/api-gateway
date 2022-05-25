@@ -40,7 +40,7 @@ def allowed_storages(customer_id):
                         headers={'address': True}
                     ).get("address", {})
                     if msm_warehouses.get("success"):
-                        storage_id = msm_warehouses.get('warehouse_id')
+                        storage_id = msm_warehouses.get('message').get('warehouse_id')
                         return [str(storage_id), '1']
                     else:
                         return ['1']
