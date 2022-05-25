@@ -3,11 +3,12 @@ from starlette.exceptions import HTTPException as starletteHTTPException, HTTPEx
 
 from source.config import settings
 from source.message_broker.rabbit_server import RabbitRPC
+from source.routers.customer.helpers.profile_view import get_profile_info
 from source.routers.cart.app import get_cart
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.order.helpers.check_out import check_price_qty
 from source.routers.order.helpers.place_order import place_order
-from source.routers.order.helpers.shipment_requests import shipment_detail
+from source.routers.order.helpers.shipment_requests import shipment_detail, check_shipment_per_stock
 from source.routers.order.validators.order import wallet, payment
 from source.routers.shipment.validators.shipment_per_stock import PerStock
 
@@ -62,7 +63,6 @@ def get_shipment(response: Response, auth_header=Depends(auth_handler.check_curr
     else:
         raise HTTPException(status_code=500,
                             detail={"success": False, "message": response_result.get("message")})
-
 
 
 @app.put("/add_shipment", tags=["add shipment to cart and get new cart"])
@@ -177,16 +177,23 @@ def final_order(
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         cart = get_cart(response=response, auth_header=auth_header)
 
-        if cart.get('shipment') == {}:
-            pass
-        elif cart.get('payment') == {}:
-            pass
+        # check if customer select all the shipment methods per stock
+        check_shipment_result = check_shipment_per_stock(cart)
+        if len(cart['shipment']) != len(check_shipment_result):
+            return {"success": False, "message": "!روش ارسال برای همه انبار ها را انتخاب کنید"}
+        elif len(cart['payment']) < 1:
+            return {"success": False, "message": "!روش پرداخت را انتخاب کنید"}
+
+        # check quantity
+
         check_out = check_price_qty(auth_header, cart, response)
         if check_out.get("success"):
-
-            create_order = place_order(auth_header, cart)
+            # create order if all data completed
+            customer = get_profile_info(auth_header[0])
+            create_order = place_order(auth_header, cart, customer)
             response.status_code = cart.get("status_code")
             if create_order.get("success"):
+
                 pass
         else:
             rpc.publish(
@@ -203,7 +210,6 @@ def final_order(
 
             return {"success": False, "message": check_out.get("message"),
                     "response": shipment_detail(auth_header, response)}
-
 
 # eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2NTMzMDgzNTksImlhdCI6MTY1MzMwNzE1OSwic3ViIjp7InVzZXJfaWQiOjExLCJjdXN0b21lcl90eXBlIjpbIkIyQiJdLCJwaG9uZV9udW1iZXIiOiIwOTM1NTA1NTgyNSJ9LCJzY29wZSI6ImFjY2VzcyJ9.mwpNP_NVo3t-dmrSlVdLS007Z7H6KuE8hsar8DzGb9s
 # eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2NTUwMzUxNTksImlhdCI6MTY1MzMwNzE1OSwic3ViIjp7InVzZXJfaWQiOjExLCJjdXN0b21lcl90eXBlIjpbIkIyQiJdLCJwaG9uZV9udW1iZXIiOiIwOTM1NTA1NTgyNSJ9LCJzY29wZSI6InJlZnJlc2gifQ.Yy24lJvwblu_1kYmQ_c4X1CK7yhWKIaPv0dNzFUELa4

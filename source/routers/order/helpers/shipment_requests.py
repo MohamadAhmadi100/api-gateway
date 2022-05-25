@@ -80,7 +80,6 @@ def shipment_detail(auth_header, response):
                 customer = get_profile_info(auth_header[0])
                 address = ship_address_data.get("address_response")
                 shipment = ship_address_data.get("shipment_response")
-
                 rpc.response_len_setter(response_len=1)
                 reciver_info = rpc.publish(
                     message={
@@ -111,7 +110,6 @@ def shipment_detail(auth_header, response):
                     },
                     headers={'cart': True}
                 ).get("cart", {})
-
                 result = {
                     "customerData": {
                         "customerName": f'{customer["customerFirstName"]} {customer["customerLastName"]}',
@@ -137,3 +135,23 @@ def shipment_detail(auth_header, response):
         else:
             # cart response
             return {"success": False, "message": "سبد خرید خالی است", "status_code": 404}
+
+
+def check_shipment_per_stock(cart):
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        storage_result = rpc.publish(
+            message={
+                "order": {
+                    "action": "shipment_storage_detail",
+                    "body": {
+                        "cart_data": cart,
+                    }
+                }
+            },
+            headers={"order": True}
+        ).get("order").get("message")
+        response = []
+        for items in storage_result:
+            response.append(items['warehouse_id'])
+        return response
