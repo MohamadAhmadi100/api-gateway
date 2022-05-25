@@ -70,7 +70,7 @@ def get_profile_info(user_data: dict) -> dict or Exception:
         address_response = rpc.publish(
             message={
                 "address": {
-                    "action": "get_customer_addresses",
+                    "action": "get_default_address",
                     "body": {
                         "customerId": str(user_data.get("user_id"))
                     }
@@ -81,5 +81,10 @@ def get_profile_info(user_data: dict) -> dict or Exception:
 
         if not address_response.get("success"):
             return customer_data
-    customer_data['customerAddress'] = address_response['result'][0].get("fullAddress")
+        else:
+            customer_data['customerAddress'] = address_response['result'].get("fullAddress")
+            customer_data['customerCity'] = address_response['result'].get('cityName')
+            customer_data['customerProvince'] = address_response['result'].get('stateName')
+            customer_data['cityID'] = address_response['result'].get('cityId')
+            customer_data['stateId'] = address_response['result'].get('stateId')
     return customer_data
