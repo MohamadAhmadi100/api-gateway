@@ -3,7 +3,6 @@ from starlette.exceptions import HTTPException as starletteHTTPException
 from source.config import settings
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.wallet.validators.transaction import Transaction
-from source.routers.wallet.validators.wallets import Wallet
 from source.routers.wallet.validators.update_wallet import UpdateData
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.payment.modules import payment_modules
@@ -38,7 +37,7 @@ def validation_exception_handler(request, exc):
     return responses.JSONResponse(exc.detail, status_code=exc.status_code)
 
 
-@app.put("/update-wallet", tags=["back-office side"])
+@app.put("/update-wallet", tags=["customer side"])
 def update_wallet(data: UpdateData, response: Response,
                   auth_header=Depends(auth.check_current_user_tokens)
                   ):
@@ -77,11 +76,10 @@ def update_wallet(data: UpdateData, response: Response,
                             detail={"error": wallet_response.get("error", "Wallet service Internal error")})
 
 
-
 @app.post("/transactions-customer", tags=["customer side"])
 def get_transactions(response: Response, data: Transaction,
-                      auth_header=Depends(auth.check_current_user_tokens)
-                      ):
+                     auth_header=Depends(auth.check_current_user_tokens)
+                     ):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
 
         sub_data, token_data = auth_header
@@ -139,7 +137,7 @@ def get_wallet_by_customer_id_(
                 "wallet": {
                     "action": "get_wallet_by_customer_id",
                     "body": {
-                        "data": sub_data.get("user_id")
+                        "customer_id": sub_data.get("user_id")
                     }
                 }
             },
