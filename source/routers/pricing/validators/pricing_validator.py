@@ -44,6 +44,7 @@ class Price(BaseModel):
                                 {
                                     "storageId": "0",
                                     "regular": 30000000,
+                                    'informal': 33000000,
                                     "special": 22000000,
                                     "specialFromDate": "2020-01-01",
                                     "specialToDate": "2020-01-01"
@@ -51,6 +52,7 @@ class Price(BaseModel):
                                 {
                                     "storageId": "1",
                                     "regular": 60000000,
+                                    'informal': 33000000,
                                     "special": 42000000,
                                     "specialFromDate": "2020-01-01",
                                     "specialToDate": "2020-01-01"
@@ -74,9 +76,10 @@ class UpdatePrice(BaseModel):
     customer_type: str = Field(..., alias='customerType')
     storage_id: str = Field(..., alias='storageId')
     regular: int
-    special: int
-    special_from_date: str = Field(..., alias='specialFromDate')
-    special_to_date: str = Field(..., alias='specialToDate')
+    informal: Optional[int] = None
+    special: Optional[int] = None
+    special_from_date: Optional[str] = Field(..., alias='specialFromDate')
+    special_to_date: Optional[str] = Field(..., alias='specialToDate')
 
     @validator("system_code")
     def system_code_validator(cls, value):
@@ -144,6 +147,15 @@ class UpdatePrice(BaseModel):
             elif 100000000000000 < len(value) or len(value) < 1:
                 raise HTTPException(status_code=422,
                                     detail={"error": "special_to_date must be between 1 and 100000000000000"})
+            return value
+
+    @validator("informal")
+    def informal_validator(cls, value):
+        if value is not None:
+            if not isinstance(value, int):
+                raise HTTPException(status_code=422, detail={"error": "informal must be int"})
+            elif value < 0 or value > 1000000000:
+                raise HTTPException(status_code=422, detail={"error": "informal must be between 0 and 1000000000"})
             return value
 
     class Config:
