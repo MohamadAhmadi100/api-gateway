@@ -15,6 +15,9 @@ from source.routers.order.validators.order import wallet, payment
 from source.routers.payment.app import get_url
 from source.routers.shipment.validators.shipment_per_stock import PerStock
 from source.routers.payment.validators.payment import SendData
+from source.routers.order.helpers.final_helper import Reserve
+from source.routers.wallet.app import reserve_wallet
+
 TAGS = [
     {
         "name": "Order",
@@ -304,7 +307,14 @@ def final_order(
             create_order = place_order(auth_header, cart, customer)
             if create_order.get("success"):
                 if cart['payment'].get("walletAmount") is not None:
-                    pass
+                    if create_order['totalPrice'] == 0:
+                        data_reserve_wallet = Reserve(cart['payment'].get("walletAmount"),
+                                                      create_order['orderNumber'])
+                        wallet_response = reserve_wallet(data=data_reserve_wallet, response=response,
+                                                         auth_header=auth_header)
+                    else:
+                        pass
+
                 if create_order.get("Type") == "pending_payment":
                     send_data = SendData(
                         amount=create_order.get("bank_request").get("amount"),
@@ -328,7 +338,6 @@ def final_order(
                 return create_order.get("message")
         else:
             return check_out.get("message")
-
 
 
 @app.get("/orders_list", tags=["Get all orders of customer"])
