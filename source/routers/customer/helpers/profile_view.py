@@ -86,5 +86,5 @@ def get_profile_info(user_data: dict) -> dict or Exception:
             customer_data['customerCity'] = address_response['result'].get('cityName')
             customer_data['customerProvince'] = address_response['result'].get('stateName')
             customer_data['cityID'] = address_response['result'].get('cityId')
-            customer_data['stateId'] = address_response['result'].get('stateId')
+            customer_data['customerProvinceCode'] = address_response['result'].get('stateId')
     return customer_data
