@@ -7,12 +7,10 @@ class BaseCart(BaseModel):
 
 
 class wallet(BaseModel):
-    user_id: int
     wallet_amount: int
 
 
 class payment(BaseModel):
-    user_id: int
     payment_method: str
 
     @validator("payment_method")

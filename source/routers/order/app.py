@@ -3,6 +3,7 @@ from starlette.exceptions import HTTPException as starletteHTTPException, HTTPEx
 from typing import Union
 
 from source.config import settings
+from source.helpers.case_converter import convert_case
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.helpers.profile_view import get_profile_info
 from source.routers.cart.app import get_cart
@@ -11,8 +12,9 @@ from source.routers.order.helpers.check_out import check_price_qty
 from source.routers.order.helpers.place_order import place_order
 from source.routers.order.helpers.shipment_requests import shipment_detail, check_shipment_per_stock
 from source.routers.order.validators.order import wallet, payment
+from source.routers.payment.app import get_url
 from source.routers.shipment.validators.shipment_per_stock import PerStock
-
+from source.routers.payment.validators.payment import SendData
 TAGS = [
     {
         "name": "Order",
@@ -222,7 +224,6 @@ def wallet_detail(
         ).get("wallet", {})
         if wallet_response.get("success"):
             if data.wallet_amount <= wallet_response['message'].get('remainingAmount'):
-
                 rpc.response_len_setter(response_len=1)
                 order_response = rpc.publish(
                     message={
@@ -264,7 +265,7 @@ def payment_detail(
                 "cart": {
                     "action": "add_payment_to_cart",
                     "body": {
-                        "user_id": data.user_id,
+                        "user_id": user.get("user_id"),
                         "payment_method": data.payment_method,
                     }
                 }
@@ -288,11 +289,11 @@ def final_order(
         cart = get_cart(response=response, auth_header=auth_header)
 
         # check if customer select all the shipment methods per stock
-        # check_shipment_result = check_shipment_per_stock(cart)
-        # if len(cart['shipment']) != len(check_shipment_result):
-        #     return {"success": False, "message": "!روش ارسال برای همه انبار ها را انتخاب کنید"}
-        # elif len(cart['payment']) < 1:
-        #     return {"success": False, "message": "!روش پرداخت را انتخاب کنید"}
+        check_shipment_result = check_shipment_per_stock(cart)
+        if len(cart['shipment']) != len(check_shipment_result):
+            return {"success": False, "message": "!روش ارسال برای همه انبار ها را انتخاب کنید"}
+        elif len(cart['payment']) < 1:
+            return {"success": False, "message": "!روش پرداخت را انتخاب کنید"}
 
         # check quantity
 
@@ -301,24 +302,33 @@ def final_order(
             # create order if all data completed
             customer = get_profile_info(auth_header[0])
             create_order = place_order(auth_header, cart, customer)
-            response.status_code = cart.get("status_code")
             if create_order.get("success"):
-                pass
+                if cart['payment'].get("walletAmount") is not None:
+                    pass
+                if create_order.get("Type") == "pending_payment":
+                    send_data = SendData(
+                        amount=create_order.get("bank_request").get("amount"),
+                        bankName=create_order.get("bank_request").get("bankName"),
+                        customerId=create_order.get("bank_request").get("customerId"),
+                        serviceName=create_order.get("bank_request").get("serviceName"),
+                        orderId=create_order.get("bank_request").get("orderId"),
+                    )
+                    send_data = convert_case(send_data, "snake")
+                    payment_result = get_url(
+                        data=send_data,
+                        response=Response
+                    )
+                    response.status_code = create_order.get("status_code")
+                    return payment_result
+                else:
+                    response.status_code = create_order.get("status_code")
+                    return create_order.get("message")
+            else:
+                response.status_code = create_order.get("status_code")
+                return create_order.get("message")
         else:
-            rpc.publish(
-                message={
-                    "cart": {
-                        "action": "remove_cart",
-                        "body": {
-                            "user_id": auth_header[0].get("user_id")
-                        }
-                    }
-                },
-                headers={'cart': True}
-            ).get("cart", {})
+            return check_out.get("message")
 
-            return {"success": False, "message": check_out.get("message"),
-                    "response": shipment_detail(auth_header, response)}
 
 
 @app.get("/orders_list", tags=["Get all orders of customer"])
