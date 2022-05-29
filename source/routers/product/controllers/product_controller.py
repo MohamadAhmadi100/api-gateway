@@ -574,36 +574,81 @@ def get_product_list_back_office(
         response: Response,
         brands: Optional[List[str]] = Query(None),
         warehouses: Optional[List[str]] = Query(None),
-        price: Optional[Tuple[str, str]] = Query(None),
+        price_from: Optional[int] = Query(None),
+        price_to: Optional[int] = Query(None),
         sellers: Optional[List[str]] = Query(None),
         colors: Optional[List[str]] = Query(None),
-        quantity: Optional[Tuple[str, str]] = Query(None),
-        date: Optional[list] = Query([], description="Date range in tuple format (from, to)"),
+        quantity_from: Optional[int] = Query(None),
+        quantity_to: Optional[int] = Query(None),
+        date_from: Optional[str] = Query(None),
+        date_to: Optional[str] = Query(None),
         guarantees: Optional[List[str]] = Query(None),
         steps: Optional[List[int]] = Query(None),
         visible_in_site: Optional[bool] = Query(None, alias='visibleInSite'),
         approved: Optional[bool] = Query(None),
         available: Optional[bool] = Query(None),
         page: Optional[int] = Query(1),
-        per_page: Optional[int] = Query(15)
+        per_page: Optional[int] = Query(15),
+        lang: Optional[str] = Query("fa_ir")
 ):
     """
     Get product list in  back office
     """
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
+
+        system_codes_list = []
+
+        quantity_result_filter = rpc.publish(
+            message={
+                "quantity": {
+                    "action": "quantity_filter",
+                    "body": {
+                        "quantity_range": [quantity_from, quantity_to] if quantity_from or quantity_to else None,
+                        "warehouses": warehouses,
+                    }
+                }
+            },
+            headers={'quantity': True}
+        )
+
+        if (quantity_from or quantity_to) and not quantity_result_filter.get("quantity", {}).get("message", {}).get(
+                'system_codes', None):
+            raise HTTPException(status_code=404, detail={"error": "No products found"})
+
+        if quantity_from or quantity_to:
+            system_codes_list = quantity_result_filter.get("quantity", {}).get("message", {}).get('system_codes', [])
+
+        if price_from or price_to:
+            system_codes = []
+            if quantity_result_filter.get("quantity", {}).get("message", {}).get('system_codes', None):
+                system_codes = quantity_result_filter.get("quantity", {}).get("message", {}).get('system_codes', [])
+            price_result = rpc.publish(
+                message={
+                    "pricing": {
+                        "action": "pricing_filter",
+                        "body": {
+                            "pricing_range": [price_from, price_to] if price_from or price_to else None,
+                            "system_codes": system_codes
+                        }
+                    }
+                },
+                headers={'pricing': True}
+            )
+            if not price_result.get("pricing", {}).get("success", {}):
+                raise HTTPException(status_code=404, detail={"error": "No products found"})
+
+            system_codes_list = price_result.get("pricing", {}).get("message", {})
+
         product_result = rpc.publish(
             message={
                 "product": {
                     "action": "get_product_list_back_office",
                     "body": {
                         "brands": brands,
-                        "warehouses": warehouses,
-                        "price": price,
                         "sellers": sellers,
                         "colors": colors,
-                        "quantity": quantity,
-                        "date": date if len(date) == 2 else [date[0], None] if len(date) == 1 else [None, None],
+                        "date": [date_from, date_to] if date_from or date_to else None,
                         "guarantees": guarantees,
                         "steps": steps,
                         "visible_in_site": visible_in_site,
@@ -611,6 +656,8 @@ def get_product_list_back_office(
                         "available": available,
                         "page": page,
                         "per_page": per_page,
+                        "system_codes_list": system_codes_list,
+                        "lang": lang
                     }
                 }
             },
@@ -656,6 +703,8 @@ def get_product_list_back_office(
             product['system_code'] = product_system_code[:9] + "-" + product_system_code[9:]
             product_list.append(product)
         message_product['products'] = product_list
+        message_product['filters'][3]['options'] = quantity_result_filter.get("quantity", {}).get("message", {}).get(
+            'storages', [])
         if product_result.get("success"):
             response.status_code = product_result.get("status_code", 200)
             return convert_case(message_product, 'camel')
