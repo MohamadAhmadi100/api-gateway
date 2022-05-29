@@ -67,7 +67,8 @@ def shipment_per_stock(
 ):
     user, token_dict = auth_header
     delivery = {
-        "deliveryFirstName": data.receiverName,
+        "deliveryFirstName": data.receiverFirstName,
+        "deliveryLastName": data.receiverLastName,
         "deliveryMobileNumber": data.receiverPhoneNumber,
         "deliveryNationalId": data.receiverNationalId,
     }
