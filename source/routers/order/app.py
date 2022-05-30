@@ -9,14 +9,15 @@ from source.routers.customer.helpers.profile_view import get_profile_info
 from source.routers.cart.app import get_cart
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.order.helpers.check_out import check_price_qty
+from source.routers.order.helpers.final_helper import wallet_final_consume
 from source.routers.order.helpers.place_order import place_order
-from source.routers.order.helpers.shipment_requests import shipment_detail, check_shipment_per_stock
+from source.routers.order.helpers.shipment_helper import shipment_detail, check_shipment_per_stock
+from source.routers.order.helpers.payment_helper import get_remaining_wallet, unofficial_to_cart
 from source.routers.order.validators.order import wallet, payment
 from source.routers.payment.app import get_url
 from source.routers.shipment.validators.shipment_per_stock import PerStock
 from source.routers.payment.validators.payment import SendData
-from source.routers.order.helpers.final_helper import Reserve
-from source.routers.wallet.app import reserve_wallet
+from source.routers.wallet.app import reserve_wallet, use_complete_order_from_wallet
 
 TAGS = [
     {
@@ -87,25 +88,13 @@ def get_payment_official(response: Response, auth_header=Depends(auth_handler.ch
             if len(cart['shipment']) != len(check_shipment_result):
                 return {"success": False, "message": "!روش ارسال برای همه انبار ها را انتخاب کنید"}
 
-            rpc.response_len_setter(response_len=1)
-            wallet_response = rpc.publish(
-                message={
-                    "wallet": {
-                        "action": "get_wallet_by_customer_id",
-                        "body": {
-                            "customer_id": user.get("user_id")
-                        }
-                    }
-                },
-                headers={'wallet': True}
-            ).get("wallet", {})
-            wallet_amount = 0
-            if wallet_response.get("success"):
-                wallet_amount = wallet_response['message'].get('remainingAmount')
+            wallet_amount = get_remaining_wallet(user)
+
             if cart['totalPrice'] > 50000000:
-                payment_method = ["deposit"]
+                payment_method = [{"methodName": "deposit", "methodLabe": "واریز به حساب"}]
             else:
-                payment_method = ['cashondelivery', 'bank_melli', 'bank_mellat', 'bank_saman']
+                payment_method = [{"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"},
+                                  {"methodName": "aiBanking", "methodLabe": "درگاه هوشمند"}]
 
             response_result = {
                 "walletAmount": wallet_amount,
@@ -128,26 +117,10 @@ def get_payment_unofficial(response: Response, auth_header=Depends(auth_handler.
         try:
             cart = get_cart(response=response, informal=True, auth_header=auth_header)
             # check if customer select all the shipment methods per stock
-            check_shipment_result = check_shipment_per_stock(cart)
-            if len(cart['shipment']) != len(check_shipment_result):
-                return {"success": False, "message": "!روش ارسال برای همه انبار ها را انتخاب کنید"}
             # TODO add customer request
-            rpc.response_len_setter(response_len=1)
-            wallet_response = rpc.publish(
-                message={
-                    "wallet": {
-                        "action": "get_wallet_by_customer_id",
-                        "body": {
-                            "customer_id": user.get("user_id")
-                        }
-                    }
-                },
-                headers={'wallet': True}
-            ).get("wallet", {})
-            wallet_amount = 0
-            if wallet_response.get("success"):
-                wallet_amount = wallet_response['message'].get('remainingAmount')
-            payment_method = ['cashondelivery']
+            wallet_amount = get_remaining_wallet(user)
+
+            payment_method = [{"cashondelivery": "deposit", "methodLabe": "پرداخت در محل"}]
             response_result = {
                 "walletAmount": wallet_amount,
                 "allowPaymentMethods": payment_method,
@@ -304,38 +277,34 @@ def final_order(
         if check_out.get("success"):
             # create order if all data completed
             customer = get_profile_info(auth_header[0])
-            create_order = place_order(auth_header, cart, customer)
-            if create_order.get("success"):
+            place_order_result = place_order(auth_header, cart, customer)
+            if place_order_result.get("success"):
                 if cart['payment'].get("walletAmount") is not None:
-                    if create_order['totalPrice'] == 0:
-                        data_reserve_wallet = Reserve(cart['payment'].get("walletAmount"),
-                                                      create_order['orderNumber'])
-                        wallet_response = reserve_wallet(data=data_reserve_wallet, response=response,
-                                                         auth_header=auth_header)
-                    else:
-                        pass
+                    wallet_final_consume(place_order_result, cart, auth_header, response)
 
-                if create_order.get("Type") == "pending_payment":
+                else:
+                    pass
+
+                if place_order_result.get("Type") == "pending_payment":
                     send_data = SendData(
-                        amount=create_order.get("bank_request").get("amount"),
-                        bankName=create_order.get("bank_request").get("bankName"),
-                        customerId=create_order.get("bank_request").get("customerId"),
-                        serviceName=create_order.get("bank_request").get("serviceName"),
-                        orderId=create_order.get("bank_request").get("orderId"),
+                        amount=place_order_result.get("bank_request").get("amount"),
+                        customerId=place_order_result.get("bank_request").get("customerId"),
+                        serviceName=place_order_result.get("bank_request").get("serviceName"),
+                        serviceId=place_order_result.get("bank_request").get("orderId"),
                     )
                     send_data = convert_case(send_data, "snake")
                     payment_result = get_url(
                         data=send_data,
                         response=Response
                     )
-                    response.status_code = create_order.get("status_code")
+                    response.status_code = place_order_result.get("status_code")
                     return payment_result
                 else:
-                    response.status_code = create_order.get("status_code")
-                    return create_order.get("message")
+                    response.status_code = place_order_result.get("status_code")
+                    return place_order_result.get("message")
             else:
-                response.status_code = create_order.get("status_code")
-                return create_order.get("message")
+                response.status_code = place_order_result.get("status_code")
+                return place_order_result.get("message")
         else:
             return check_out.get("message")
 
@@ -368,3 +337,28 @@ def get_orders(response: Response,
             return order_response
         raise HTTPException(status_code=order_response.get("status_code", 500),
                             detail={"error": order_response.get("error", "Order service Internal error")})
+
+
+@app.get("/cancele_wallet", tags=["payment for order"])
+def cancele_wallet(response: Response,
+                   auth_header=Depends(auth_handler.check_current_user_tokens)):
+    user, token_dict = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        cart = rpc.publish(
+            message={
+                "cart": {
+                    "action": "remove_wallet",
+                    "body": {
+                        "user_id": user.get("user_id")
+                    }
+                }
+            },
+            headers={'cart': True}
+        ).get("cart", {})
+        if cart.get("success"):
+            get_payment_detail = get_payment_official(response, auth_header)
+            response.status_code = 200
+            return {"success": True, "message": "استفاده از کیف پول لغو شد", "payment_detail": get_payment_detail}
+        else:
+            return {"success": False, "message": "cart internal server error"}

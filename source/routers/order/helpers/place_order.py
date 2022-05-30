@@ -22,7 +22,7 @@ def place_order(auth_header, cart, customer):
                 }
             },
             headers={'order': True}
-        )
+        ).get("order")
         if result_to_order.get("success"):
             return result_to_order
         else:
