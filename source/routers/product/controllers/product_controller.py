@@ -329,6 +329,8 @@ def get_product_by_system_code(
                                     item["warehouse_label"] = quantity.get("warehouse_label")
                                     item["attribute_label"] = quantity.get("attribute_label")
                                     product['config']["warehouse"].append(item)
+                    if not product['config']["warehouse"]:
+                        raise HTTPException(status_code=404, detail={"error": "product not found"})
                 else:
                     product["price"] = pricing_result.get("message", {}).get("products", {}).get(
                         list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
@@ -426,9 +428,11 @@ def get_product_list_by_system_code(
     Get product list by brand
     """
     customer_type = None
+    allowed_storages = list()
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", ["B2B"])[0]
+        allowed_storages = user_data.get("allowed_storages", [])
 
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
@@ -448,6 +452,7 @@ def get_product_list_by_system_code(
         product_result = product_result.get("product", {})
         if product_result.get("success"):
             message_product = product_result.get("message", {})
+            products_list = list()
             for product in message_product['products']:
                 pricing_result = rpc.publish(
                     message={
@@ -463,19 +468,16 @@ def get_product_list_by_system_code(
                 pricing_result = pricing_result.get("pricing", {})
 
                 if pricing_result.get("success"):
-                    if not customer_type:
-                        product["price"] = pricing_result.get("message", {}).get("products", {}).get(
-                            list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
-                            "B2B", {}).get("storages", {}).get("1", {}).get("regular", 0)
-                        product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
-                            list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
-                            "B2B", {}).get("storages", {}).get("1", {}).get("special", 0)
-                    else:
+                    if customer_type and allowed_storages:
                         price_tuples = list()
                         for system_code, prices in pricing_result.get("message", {}).get("products", {}).items():
                             customer_type_price = prices.get("customer_type", {}).get(customer_type, {})
                             for storage, storage_prices in customer_type_price.get("storages", {}).items():
-                                price_tuples.append((storage_prices.get("regular"), storage_prices.get("special")))
+                                if str(storage) in allowed_storages:
+                                    price_tuples.append((storage_prices.get("regular"), storage_prices.get("special")))
+
+                        if not price_tuples:
+                            continue
 
                         price_tuples.sort(key=lambda x: x[1])
                         price, special_price = (None, None)
@@ -483,10 +485,23 @@ def get_product_list_by_system_code(
                             price, special_price = price_tuples[0]
                         product["price"] = price
                         product["special_price"] = special_price
+                    else:
+                        product["price"] = pricing_result.get("message", {}).get("products", {}).get(
+                            list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
+                            "B2B", {}).get("storages", {}).get("1", {}).get("regular", None)
+                        product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
+                            list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
+                            "B2B", {}).get("storages", {}).get("1", {}).get("special", None)
+                        if not product["special_price"] or not product["price"]:
+                            continue
                 else:
-                    product["price"] = None
-                    product["special_price"] = None
+                    continue
 
+                products_list.append(product)
+
+            if not products_list:
+                raise HTTPException(status_code=404, detail={"error": "products not found"})
+            message_product['products'] = products_list
             response.status_code = product_result.get("status_code", 200)
             return convert_case(message_product, 'camel')
         raise HTTPException(status_code=product_result.get("status_code", 500),
@@ -503,9 +518,11 @@ def get_category_list(
     Get category list
     """
     customer_type = None
+    allowed_storages = list()
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", ["B2B"])[0]
+        allowed_storages = user_data.get("allowed_storages", [])
 
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
@@ -541,13 +558,16 @@ def get_category_list(
                 )
                 pricing_result = pricing_result.get("pricing", {})
                 if pricing_result.get("success"):
-                    if customer_type:
+                    if customer_type and allowed_storages:
                         price_tuples = list()
                         for system_code, prices in pricing_result.get("message", {}).get("products", {}).items():
                             customer_type_price = prices.get("customer_type", {}).get(customer_type, {})
                             for storage, storage_prices in customer_type_price.get("storages", {}).items():
-                                price_tuples.append((storage_prices.get("regular"), storage_prices.get("special")))
+                                if str(storage) in allowed_storages:
+                                    price_tuples.append((storage_prices.get("regular"), storage_prices.get("special")))
 
+                        if not price_tuples:
+                            continue
                         price_tuples.sort(key=lambda x: x[1])
                         price, special_price = (None, None)
                         if price_tuples:
@@ -557,11 +577,15 @@ def get_category_list(
                     else:
                         product["price"] = pricing_result.get("message", {}).get("products", {}).get(
                             list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
-                            "B2B", {}).get("storages", {}).get("1", {}).get("regular", 0)
+                            "B2B", {}).get("storages", {}).get("1", {}).get("regular", None)
                         product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
                             list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
-                            "B2B", {}).get("storages", {}).get("1", {}).get("special", 0)
+                            "B2B", {}).get("storages", {}).get("1", {}).get("special", None)
+                        if not product["special_price"] or not product["price"]:
+                            continue
                     product_list.append(product)
+            if not product_list:
+                raise HTTPException(status_code=404, detail={"error": "products not found"})
             message_product['product']['items'] = product_list
             response.status_code = product_result.get("status_code", 200)
             return convert_case(message_product, 'camel')
