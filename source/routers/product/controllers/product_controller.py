@@ -288,6 +288,7 @@ def get_product_by_system_code(
         else:
             response.status_code = product_result.get("status_code", 200)
             final_result = product_result.get("message").copy()
+            product_list = list()
             for product in final_result.get("products", []):
                 if customer_type and allowed_storages:
                     product['config']["warehouse"] = list()
@@ -330,7 +331,8 @@ def get_product_by_system_code(
                                     item["attribute_label"] = quantity.get("attribute_label")
                                     product['config']["warehouse"].append(item)
                     if not product['config']["warehouse"]:
-                        raise HTTPException(status_code=404, detail={"error": "product not found"})
+                        continue
+                    product_list.append(product)
                 else:
                     product["price"] = pricing_result.get("message", {}).get("products", {}).get(
                         list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
@@ -352,6 +354,7 @@ def get_product_by_system_code(
                             list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
                             "B2B", {}).get("storages", {}).get("1", {}).get("special", 0)
 
+            final_result['products'] = product_list
             return convert_case(final_result, 'camel')
 
 
