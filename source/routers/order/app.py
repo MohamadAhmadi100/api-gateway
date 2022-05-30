@@ -339,7 +339,7 @@ def get_orders(response: Response,
                             detail={"error": order_response.get("error", "Order service Internal error")})
 
 
-@app.put("/cancele_wallet", tags=["payment for order"])
+@app.put("/cancel_wallet", tags=["payment for order"])
 def cancele_wallet(response: Response,
                    auth_header=Depends(auth_handler.check_current_user_tokens)):
     user, token_dict = auth_header
