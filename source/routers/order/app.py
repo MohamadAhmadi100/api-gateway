@@ -6,6 +6,7 @@ from source.config import settings
 from source.helpers.case_converter import convert_case
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.helpers.profile_view import get_profile_info
+
 from source.routers.cart.app import get_cart
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.order.helpers.check_out import check_price_qty
@@ -79,32 +80,31 @@ def get_payment_official(response: Response, auth_header=Depends(auth_handler.ch
         payment and wallet detail for creating payment step
     """
     user, token = auth_header
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        try:
-            cart = get_cart(response=response, auth_header=auth_header)
+    try:
+        cart = get_cart(response=response, auth_header=auth_header)
 
-            # check if customer select all the shipment methods per stock
-            check_shipment_result = check_shipment_per_stock(cart)
-            if len(cart['shipment']) != len(check_shipment_result):
-                return {"success": False, "message": "!روش ارسال برای همه انبار ها را انتخاب کنید"}
+        # check if customer select all the shipment methods per stock
+        check_shipment_result = check_shipment_per_stock(cart)
+        if len(cart['shipment']) != len(check_shipment_result):
+            return {"success": False, "message": "!روش ارسال برای همه انبار ها را انتخاب کنید"}
 
-            wallet_amount = get_remaining_wallet(user)
+        wallet_amount = get_remaining_wallet(user)
 
-            if cart['totalPrice'] > 50000000:
-                payment_method = [{"methodName": "deposit", "methodLabe": "واریز به حساب"}]
-            else:
-                payment_method = [{"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"},
-                                  {"methodName": "aiBanking", "methodLabe": "درگاه هوشمند"}]
+        if cart['totalPrice'] > 50000000:
+            payment_method = [{"methodName": "deposit", "methodLabe": "واریز به حساب"}]
+        else:
+            payment_method = [{"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"},
+                              {"methodName": "aiBanking", "methodLabe": "درگاه هوشمند"}]
 
-            response_result = {
-                "walletAmount": wallet_amount,
-                "allowPaymentMethods": payment_method,
-            }
-            response.status_code = 200
-            return {"success": True, "message": response_result, "cart": cart}
-        except:
-            response.status_code = 404
-            return {"success": False, "message": "something went wrong!", "cart": None}
+        response_result = {
+            "walletAmount": wallet_amount,
+            "allowPaymentMethods": payment_method,
+        }
+        response.status_code = 200
+        return {"success": True, "message": response_result, "cart": cart}
+    except:
+        response.status_code = 404
+        return {"success": False, "message": "something went wrong!", "cart": None}
 
 
 @app.get("/payment_detail_unofficial/", tags=["payment for order"])
@@ -113,26 +113,25 @@ def get_payment_unofficial(response: Response, auth_header=Depends(auth_handler.
         payment and wallet detail for creating payment step
     """
     user, token = auth_header
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        try:
-            cart = get_cart(response=response, informal=True, auth_header=auth_header)
-            # check if customer select all the shipment methods per stock
-            # TODO add customer request
-            wallet_amount = get_remaining_wallet(user)
+    try:
+        cart = get_cart(response=response, informal=True, auth_header=auth_header)
+        # check if customer select all the shipment methods per stock
+        # TODO add customer request
+        wallet_amount = get_remaining_wallet(user)
 
-            payment_method = [{"cashondelivery": "deposit", "methodLabe": "پرداخت در محل"}]
-            response_result = {
-                "walletAmount": wallet_amount,
-                "allowPaymentMethods": payment_method,
-            }
-            response.status_code = 200
-            return {"success": True, "message": response_result, "cart": cart}
-        except:
-            response.status_code = 404
-            return {"success": False, "message": "something went wrong!", "cart": None}
+        payment_method = [{"cashondelivery": "deposit", "methodLabe": "پرداخت در محل"}]
+        response_result = {
+            "walletAmount": wallet_amount,
+            "allowPaymentMethods": payment_method,
+        }
+        response.status_code = 200
+        return {"success": True, "message": response_result, "cart": cart}
+    except:
+        response.status_code = 404
+        return {"success": False, "message": "something went wrong!", "cart": None}
 
 
-@app.put("/add_shipment", tags=["shipment for order"])
+@app.put("/add_shipment/", tags=["shipment for order"])
 def shipment_per_stock(
         response: Response,
         data: PerStock,
@@ -178,7 +177,7 @@ def shipment_per_stock(
                                 detail={"error": cart_response.get("error", "Cart service Internal error")})
 
 
-@app.put("/wallet", tags=["payment for order"])
+@app.put("/wallet/", tags=["payment for order"])
 def wallet_detail(
         response: Response,
         data: wallet,
@@ -227,7 +226,7 @@ def wallet_detail(
                                 detail={"error": wallet_response.get("error", "wallet service Internal error")})
 
 
-@app.put("/payment", tags=["payment for order"])
+@app.put("/payment/", tags=["payment for order"])
 def payment_detail(
         response: Response,
         data: payment,
@@ -256,7 +255,7 @@ def payment_detail(
                             detail={"error": order_response.get("error", "Order service Internal error")})
 
 
-@app.put("/final", tags=["final steps and create order"])
+@app.put("/final/", tags=["final steps and create order"])
 def final_order(
         response: Response,
         auth_header=Depends(auth_handler.check_current_user_tokens)
@@ -309,7 +308,7 @@ def final_order(
             return check_out.get("message")
 
 
-@app.get("/orders_list", tags=["Get all orders of customer"])
+@app.get("/orders_list/", tags=["Get all orders of customer"])
 def get_orders(response: Response,
                order_number: Union[int, None] = Query(default=None),
                date_from: Union[str, None] = Query(default=None),
@@ -339,7 +338,7 @@ def get_orders(response: Response,
                             detail={"error": order_response.get("error", "Order service Internal error")})
 
 
-@app.put("/cancel_wallet", tags=["payment for order"])
+@app.put("/cancel_wallet/", tags=["payment for order"])
 def cancele_wallet(response: Response,
                    auth_header=Depends(auth_handler.check_current_user_tokens)):
     user, token_dict = auth_header
