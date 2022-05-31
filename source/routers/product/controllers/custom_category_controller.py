@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import HTTPException, Response, APIRouter, Query
 
@@ -207,6 +207,46 @@ def delete_custom_category(
                     "action": "delete_custom_category",
                     "body": {
                         "name": name
+                    }
+                }
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case({"message": product_result.get("message")}, 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
+
+
+@router.put("/custom_categories/{name}", tags=["Custom Category"])
+def edit_custom_category(
+        response: Response,
+        name: str,
+        new_name: Optional[str] = Query(None, alias="newName"),
+        products: Optional[List[str]] = Query(None, alias="products"),
+        label: Optional[str] = Query(None, alias="label"),
+        visible_in_site: Optional[bool] = Query(None, alias="visibleInSite"),
+        image: Optional[str] = Query(None, alias="image")
+
+):
+    """
+    edit custom category
+    """
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "edit_custom_category",
+                    "body": {
+                        "name": name,
+                        "new_name": new_name,
+                        "products": products,
+                        "label": label,
+                        "visible_in_site": visible_in_site,
+                        "image": image
                     }
                 }
             },
