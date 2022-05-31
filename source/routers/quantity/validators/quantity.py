@@ -97,7 +97,7 @@ class UpdateQuantity(BaseModel):
     def stock_for_sale_validator(cls, value):
         if not isinstance(value, int):
             raise HTTPException(status_code=422, detail={"error": "stock_for_sale must be int"})
-        elif value <= 0 or value > 100000000000:
+        elif value < 0 or value > 100000000000:
             raise HTTPException(status_code=422, detail={"error": "stock_for_sale must be between 0 and 100000000000"})
         return value
 
