@@ -274,15 +274,13 @@ def final_order(
 
         check_out = check_price_qty(auth_header, cart, response)
         if check_out.get("success"):
+
             # create order if all data completed
             customer = get_profile_info(auth_header[0])
             place_order_result = place_order(auth_header, cart, customer)
             if place_order_result.get("success"):
                 if cart['payment'].get("walletAmount") is not None:
                     wallet_final_consume(place_order_result, cart, auth_header, response)
-
-                else:
-                    pass
 
                 if place_order_result.get("Type") == "pending_payment":
                     send_data = SendData(
