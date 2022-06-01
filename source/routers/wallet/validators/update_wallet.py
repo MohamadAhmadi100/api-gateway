@@ -22,6 +22,7 @@ class ActionType(str, Enum):
 
 class UpdateData(BaseModel):
     staff_name: str = Field(..., alias="staffName")
+    wallet_id = int = Field(..., alias="walletId")
     staff_id: int = Field(..., alias="staffId")
     amount: int = Field(..., alias="amount", isRequired=True)
     balance: Optional[Balance] = Field(..., description="charge/consume", isRequired=True)

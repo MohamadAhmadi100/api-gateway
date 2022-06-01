@@ -1,3 +1,8 @@
+"""
+* this rout is for wallet that have two branch(back office side/ customer side)
+* in this rout all of customers data get in token
+* all of api objects first validated in "validators" directory then send to services
+"""
 from fastapi import FastAPI, HTTPException, Response, responses, Depends
 from starlette.exceptions import HTTPException as starletteHTTPException
 from source.config import settings
@@ -7,12 +12,6 @@ from source.routers.wallet.validators.update_wallet import UpdateData
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.payment.modules import payment_modules
 from source.routers.wallet.validators.checkout_wallet import Reserve, ResultOrder, CompleteOrderWallet, ChargeWallet
-
-"""
-* this rout is for wallet that have two branch(back office side/ customer side)
-* in this rout all of customers data get in token
-* all of api objects first validated in "validators" directory then send to services
-"""
 
 TAGS = [
     {
@@ -76,7 +75,7 @@ def update_wallet(data: UpdateData, response: Response,
                             detail={"error": wallet_response.get("error", "Wallet service Internal error")})
 
 
-@app.post("/transactions-customer", tags=["customer side"])
+@app.post("/get-transactions", tags=["customer side"])
 def get_transactions(response: Response, data: Transaction,
                      auth_header=Depends(auth.check_current_user_tokens)
                      ):
@@ -121,7 +120,7 @@ def get_transactions(response: Response, data: Transaction,
                             detail={"error": wallet_response.get("error", "Wallet service Internal error")})
 
 
-@app.get("/customer-wallet", tags=["customer side"])
+@app.get("/get-customer-wallet", tags=["customer side"])
 def get_wallet_by_customer_id_(
         response: Response,
         auth_header=Depends(auth.check_current_user_tokens)
@@ -154,7 +153,121 @@ def get_wallet_by_customer_id_(
                             detail={"error": wallet_response.get("error", "Wallet service Internal error")})
 
 
-@app.put("/charge_wallet", tags=["customer side"])
+@app.post("/reserve-wallet", tags=["customer side"])
+def reserve_wallet(data: Reserve, response: Response,
+                   auth_header=Depends(auth.check_current_user_tokens)
+                   ):
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+
+        sub_data, token_data = auth_header
+        response.headers["accessToken"] = token_data.get("access_token")
+        response.headers["refreshToken"] = token_data.get("refresh_token")
+        rpc.response_len_setter(response_len=1)
+
+        # get customer data from token and send that for create wallet
+        last_data = dict(data)
+        # get customer id and add that to update object
+        last_data["customer_id"] = sub_data.get("user_id")
+
+        wallet_response = rpc.publish(
+            message={
+                "wallet": {
+                    "action": "reserve_wallet",
+                    "body": {
+                        "data": last_data
+                    }
+                }
+            },
+            headers={'wallet': True}
+        ).get("wallet", {})
+
+        if wallet_response.get("success"):
+            response.status_code = wallet_response.get("status_code", 200)
+            return wallet_response
+        elif not wallet_response.get("success"):
+            response.status_code = wallet_response.get("status_code", 417)
+            return wallet_response
+        raise HTTPException(status_code=wallet_response.get("status_code", 500),
+                            detail={"error": wallet_response.get("error", "Wallet service Internal error")})
+
+
+@app.put("/result-checkout", tags=["customer side"])
+def result_checkout(response: Response,
+                    order_data: ResultOrder,
+                    auth_header=Depends(auth.check_current_user_tokens)
+                    ):
+    sub_data, token_data = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+
+        # send refresh and access token to front in header
+        response.headers["accessToken"] = token_data.get("access_token")
+        response.headers["refreshToken"] = token_data.get("refresh_token")
+        rpc.response_len_setter(response_len=1)
+
+        last_data = dict(order_data)
+        last_data["customer_id"] = sub_data["user_id"]
+
+        wallet_response = rpc.publish(
+            message={
+                "wallet": {
+                    "action": "result_checkout",
+                    "body": {
+                        "data": last_data
+                    }
+                }
+            },
+            headers={'wallet': True}
+        ).get("wallet", {})
+
+        if wallet_response.get("success"):
+            response.status_code = wallet_response.get("status_code", 200)
+            return wallet_response
+        elif not wallet_response.get("success"):
+            response.status_code = wallet_response.get("status_code", 417)
+            return wallet_response
+        raise HTTPException(status_code=wallet_response.get("status_code", 500),
+                            detail={"error": wallet_response.get("error", "Wallet service Internal error")})
+
+
+@app.post("/complete-order-wallet", tags=["customer side"])
+def complete_order_wallet(response: Response,
+                          order_data: CompleteOrderWallet,
+                          auth_header=Depends(auth.check_current_user_tokens)
+                          ):
+    sub_data, token_data = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+
+        # send refresh and access token to front in header
+        response.headers["accessToken"] = token_data.get("access_token")
+        response.headers["refreshToken"] = token_data.get("refresh_token")
+        rpc.response_len_setter(response_len=1)
+
+        last_data = dict(order_data)
+        last_data["customer_id"] = sub_data["user_id"]
+
+        wallet_response = rpc.publish(
+            message={
+                "wallet": {
+                    "action": "complete_order_wallet",
+                    "body": {
+                        "data": last_data
+                    }
+                }
+            },
+            headers={'wallet': True}
+        ).get("wallet", {})
+
+        if wallet_response.get("success"):
+            response.status_code = wallet_response.get("status_code", 200)
+            return wallet_response
+        elif not wallet_response.get("success"):
+            response.status_code = wallet_response.get("status_code", 417)
+            return wallet_response
+        raise HTTPException(status_code=wallet_response.get("status_code", 500),
+                            detail={"error": wallet_response.get("error", "Wallet service Internal error")})
+
+
+@app.put("/charge-wallet", tags=["customer side"])
 def charge_wallet(
         charge_data: ChargeWallet,
         response: Response,
@@ -258,119 +371,3 @@ def charge_wallet(
                                     detail={"error": url_result.get("error", "Something went wrong")})
             response.status_code = url_result.get("status_code", 200)
             return url_result.get("message")
-
-
-@app.post("/reserve-wallet", tags=["customer side"])
-def reserve_wallet(data: Reserve, response: Response,
-                   auth_header=Depends(auth.check_current_user_tokens)
-                   ):
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-
-        sub_data, token_data = auth_header
-        response.headers["accessToken"] = token_data.get("access_token")
-        response.headers["refreshToken"] = token_data.get("refresh_token")
-        rpc.response_len_setter(response_len=1)
-
-        # get customer data from token and send that for create wallet
-        last_data = dict(data)
-        # get customer id and add that to update object
-        last_data["customer_id"] = sub_data.get("user_id")
-
-        wallet_response = rpc.publish(
-            message={
-                "wallet": {
-                    "action": "reserve_wallet",
-                    "body": {
-                        "data": last_data
-                    }
-                }
-            },
-            headers={'wallet': True}
-        ).get("wallet", {})
-
-        if wallet_response.get("success"):
-            response.status_code = wallet_response.get("status_code", 200)
-            return wallet_response
-        elif not wallet_response.get("success"):
-            response.status_code = wallet_response.get("status_code", 417)
-            return wallet_response
-        raise HTTPException(status_code=wallet_response.get("status_code", 500),
-                            detail={"error": wallet_response.get("error", "Wallet service Internal error")})
-
-
-@app.put("/result-checkout-to-wallet", tags=["customer side"])
-def result_checkout_to_wallet(response: Response,
-                              order_data: ResultOrder,
-                              auth_header=Depends(auth.check_current_user_tokens)
-                              ):
-    sub_data, token_data = auth_header
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-
-        # send refresh and access token to front in header
-        response.headers["accessToken"] = token_data.get("access_token")
-        response.headers["refreshToken"] = token_data.get("refresh_token")
-        rpc.response_len_setter(response_len=1)
-
-        last_data = dict(order_data)
-        last_data["customer_id"] = sub_data["user_id"]
-
-        wallet_response = rpc.publish(
-            message={
-                "wallet": {
-                    "action": "result_checkout_to_wallet",
-                    "body": {
-                        "data": last_data
-                    }
-                }
-            },
-            headers={'wallet': True}
-        ).get("wallet", {})
-
-        if wallet_response.get("success"):
-            response.status_code = wallet_response.get("status_code", 200)
-            return wallet_response
-        elif not wallet_response.get("success"):
-            response.status_code = wallet_response.get("status_code", 417)
-            return wallet_response
-        raise HTTPException(status_code=wallet_response.get("status_code", 500),
-                            detail={"error": wallet_response.get("error", "Wallet service Internal error")})
-
-
-@app.post("/complete-order-wallet", tags=["customer side"])
-def use_complete_order_from_wallet(response: Response,
-                                   order_data: CompleteOrderWallet,
-                                   auth_header=Depends(auth.check_current_user_tokens)
-                                   ):
-    sub_data, token_data = auth_header
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-
-        # send refresh and access token to front in header
-        response.headers["accessToken"] = token_data.get("access_token")
-        response.headers["refreshToken"] = token_data.get("refresh_token")
-        rpc.response_len_setter(response_len=1)
-
-        last_data = dict(order_data)
-        last_data["customer_id"] = sub_data["user_id"]
-
-        wallet_response = rpc.publish(
-            message={
-                "wallet": {
-                    "action": "use_complete_order_from_wallet",
-                    "body": {
-                        "data": last_data
-                    }
-                }
-            },
-            headers={'wallet': True}
-        ).get("wallet", {})
-
-        if wallet_response.get("success"):
-            response.status_code = wallet_response.get("status_code", 200)
-            return wallet_response
-        elif not wallet_response.get("success"):
-            response.status_code = wallet_response.get("status_code", 417)
-            return wallet_response
-        raise HTTPException(status_code=wallet_response.get("status_code", 500),
-                            detail={"error": wallet_response.get("error", "Wallet service Internal error")})
-
-# ----------------------------------- end customer endpoints --------------------------------------- #
