@@ -1,3 +1,6 @@
+from fastapi import HTTPException
+from starlette.exceptions import HTTPException
+
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.wallet.app import reserve_wallet, use_complete_order_from_wallet
 
@@ -21,6 +24,7 @@ def get_remaining_wallet(user):
             wallet_amount = wallet_response['message'].get('remainingAmount')
         return wallet_amount
 
+
 def unofficial_to_cart(user):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
@@ -39,6 +43,7 @@ def unofficial_to_cart(user):
             return "اطلاعات با موفقیت در کارت ثبت شد"
         else:
             return None
+
 
 def wallet_final_consume(palceorder_result, cart, auth_header, response):
     wallet_amount = cart['payment'].get("walletAmount")

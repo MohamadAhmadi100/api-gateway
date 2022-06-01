@@ -10,7 +10,7 @@ from source.routers.customer.helpers.profile_view import get_profile_info
 from source.routers.cart.app import get_cart
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.order.helpers.check_out import check_price_qty
-from source.routers.order.helpers.final_helper import wallet_final_consume
+from source.routers.order.helpers.payment_helper import wallet_final_consume
 from source.routers.order.helpers.place_order import place_order
 from source.routers.order.helpers.shipment_helper import shipment_detail, check_shipment_per_stock
 from source.routers.order.helpers.payment_helper import get_remaining_wallet, unofficial_to_cart
