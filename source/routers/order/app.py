@@ -10,7 +10,7 @@ from source.routers.customer.helpers.profile_view import get_profile_info
 from source.routers.cart.app import get_cart
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.order.helpers.check_out import check_price_qty
-from source.routers.order.helpers.final_helper import wallet_final_consume
+from source.routers.order.helpers.payment_helper import wallet_final_consume
 from source.routers.order.helpers.place_order import place_order
 from source.routers.order.helpers.shipment_helper import shipment_detail, check_shipment_per_stock
 from source.routers.order.helpers.payment_helper import get_remaining_wallet, unofficial_to_cart
@@ -274,15 +274,13 @@ def final_order(
 
         check_out = check_price_qty(auth_header, cart, response)
         if check_out.get("success"):
+
             # create order if all data completed
             customer = get_profile_info(auth_header[0])
             place_order_result = place_order(auth_header, cart, customer)
             if place_order_result.get("success"):
                 if cart['payment'].get("walletAmount") is not None:
                     wallet_final_consume(place_order_result, cart, auth_header, response)
-
-                else:
-                    pass
 
                 if place_order_result.get("Type") == "pending_payment":
                     send_data = SendData(
@@ -300,10 +298,10 @@ def final_order(
                     return payment_result
                 else:
                     response.status_code = place_order_result.get("status_code")
-                    return place_order_result.get("message")
+                    return place_order_result
             else:
                 response.status_code = place_order_result.get("status_code")
-                return place_order_result.get("message")
+                return place_order_result
         else:
             return check_out.get("message")
 
