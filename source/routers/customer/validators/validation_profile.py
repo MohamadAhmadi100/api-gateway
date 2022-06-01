@@ -491,3 +491,7 @@ class Delivery(BaseModel):
         if not match:
             raise HTTPException(status_code=422, detail={"error": "کد ملی وارد شده صحیح نمیباشد"})
         return delivery_national_id
+
+
+class Person(BaseModel):
+    data: dict
