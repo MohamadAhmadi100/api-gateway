@@ -354,7 +354,11 @@ def get_product_by_system_code(
                             list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
                             "B2B", {}).get("storages", {}).get("1", {}).get("special", 0)
 
+                    product_list.append(product)
+
             final_result['products'] = product_list
+            if not product_list:
+                raise HTTPException(status_code=404, detail={"error": "No products found"})
             return convert_case(final_result, 'camel')
 
 
