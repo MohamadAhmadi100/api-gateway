@@ -11,7 +11,7 @@ from source.routers.wallet.validators.transaction import Transaction
 from source.routers.wallet.validators.update_wallet import UpdateData
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.payment.modules import payment_modules
-from source.routers.wallet.validators.checkout_wallet import Reserve, ResultOrder, CompleteOrderWallet, ChargeWallet
+from source.routers.wallet.validators.checkout_wallet import Reserve, ResultOrder, CompleteOrderWallet
 
 TAGS = [
     {
