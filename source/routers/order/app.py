@@ -298,10 +298,10 @@ def final_order(
                     return payment_result
                 else:
                     response.status_code = place_order_result.get("status_code")
-                    return place_order_result.get("message")
+                    return place_order_result
             else:
                 response.status_code = place_order_result.get("status_code")
-                return place_order_result.get("message")
+                return place_order_result
         else:
             return check_out.get("message")
 
