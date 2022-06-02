@@ -269,7 +269,7 @@ def complete_order_wallet(response: Response,
 
 @app.put("/charge-wallet", tags=["customer side"])
 def charge_wallet(
-        charge_data: ChargeWallet,
+        charge_data: UpdateData,
         response: Response,
 ):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:

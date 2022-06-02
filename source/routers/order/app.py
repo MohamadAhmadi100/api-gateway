@@ -18,7 +18,7 @@ from source.routers.order.validators.order import wallet, payment
 from source.routers.payment.app import get_url
 from source.routers.shipment.validators.shipment_per_stock import PerStock
 from source.routers.payment.validators.payment import SendData
-from source.routers.wallet.app import reserve_wallet, use_complete_order_from_wallet
+from source.routers.wallet.app import reserve_wallet, complete_order_wallet
 
 TAGS = [
     {
