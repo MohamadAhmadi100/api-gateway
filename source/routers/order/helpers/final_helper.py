@@ -19,15 +19,22 @@ def handle_order_bank_callback(payment_detail):
             return order_response
         else:
             rpc.response_len_setter(response_len=2)
-            order_response = rpc.publish(
+            final_response = rpc.publish(
                 message={
                     "order": {
                         "action": "order_bank_callback_cancel",
                         "body": {
                             "peyment_data": payment_detail
                         }
+                    },
+                    "quantity": {
+                        "action": "remove_from_reserve",
+                        "body": {
+                            "order_id": payment_detail['order_id']
+                        }
                     }
                 },
-                headers={'order': True}
-            ).get("order", {})
+                headers={'order': True, 'quantity': True}
+            )
+
             return order_response
