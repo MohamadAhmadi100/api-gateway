@@ -11,7 +11,7 @@ from source.routers.wallet.validators.transaction import Transaction
 from source.routers.wallet.validators.update_wallet import UpdateData
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.payment.modules import payment_modules
-from source.routers.wallet.validators.checkout_wallet import Reserve, ResultOrder, CompleteOrderWallet, ChargeWallet
+from source.routers.wallet.validators.checkout_wallet import Reserve, ResultOrder, CompleteOrderWallet
 
 TAGS = [
     {
@@ -269,7 +269,7 @@ def complete_order_wallet(response: Response,
 
 @app.put("/charge-wallet", tags=["customer side"])
 def charge_wallet(
-        charge_data: ChargeWallet,
+        charge_data: UpdateData,
         response: Response,
 ):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
