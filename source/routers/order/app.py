@@ -309,6 +309,18 @@ def final_order(
                     #     },
                     #     headers={"quantity": True}
                     # ).get("order", {})
+                    rpc.response_len_setter(response_len=1)
+                    result = rpc.publish(
+                        message={
+                            "cart": {
+                                "action": "delete_cart",
+                                "body": {
+                                    "user_id": auth_header[0].get("user_id")
+                                }
+                            }
+                        },
+                        headers={'cart': True}
+                    )
                     response.status_code = place_order_result.get("status_code")
                     return place_order_result
             else:
