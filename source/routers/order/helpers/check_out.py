@@ -108,7 +108,7 @@ def check_price_qty(auth_header, cart, response):
         rpc.publish(
             message={
                 "cart": {
-                    "action": "remove_all_data",
+                    "action": "remove_cart",
                     "body": {
                         "user_id": auth_header[0].get("user_id"),
                     }
