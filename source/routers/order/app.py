@@ -297,17 +297,18 @@ def final_order(
                     response.status_code = place_order_result.get("status_code")
                     return payment_result
                 else:
-                    reserve_response = rpc.publish(
-                        message={
-                            "quantity": {
-                                "action": "add_to_reserve",
-                                "body": {
-                                    "order_id": payment_detail['order_id']
-                                }
-                            }
-                        },
-                        headers={"quantity": True}
-                    ).get("order", {})
+                    # rpc.response_len_setter(response_len=1)
+                    # reserve_response = rpc.publish(
+                    #     message={
+                    #         "quantity": {
+                    #             "action": "add_to_reserve",
+                    #             "body": {
+                    #                 "order_id": place_order_result.get('orderNumber')
+                    #             }
+                    #         }
+                    #     },
+                    #     headers={"quantity": True}
+                    # ).get("order", {})
                     response.status_code = place_order_result.get("status_code")
                     return place_order_result
             else:
