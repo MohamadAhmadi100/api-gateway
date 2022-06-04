@@ -110,7 +110,8 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
             ).get('cart', {}).get('message', {})
             now_count = 0
             for cart_product in user_cart.get("products", []):
-                if cart_product.get("system_code") == item.system_code:
+                if cart_product.get("system_code") == item.system_code and cart_product.get(
+                        'storage_id' == item.storage_id):
                     now_count = cart_product.get("count", 0)
                     break
 

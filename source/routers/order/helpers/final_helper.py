@@ -4,9 +4,15 @@ from source.message_broker.rabbit_server import RabbitRPC
 def handle_order_bank_callback(payment_detail):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         if payment_detail['is_paid']:
-            rpc.response_len_setter(response_len=1)
+            rpc.response_len_setter(response_len=2)
             order_response = rpc.publish(
                 message={
+                    "quantity": {
+                        "action": "add_to_reserve",
+                        "body": {
+                            "order_id": payment_detail['order_id']
+                        }
+                    },
                     "order": {
                         "action": "order_bank_callback_processing",
                         "body": {
@@ -14,12 +20,12 @@ def handle_order_bank_callback(payment_detail):
                         }
                     }
                 },
-                headers={'order': True}
+                headers={'order': True, "quantity": True}
             ).get("order", {})
             return order_response
         else:
             rpc.response_len_setter(response_len=2)
-            final_response = rpc.publish(
+            order_response = rpc.publish(
                 message={
                     "order": {
                         "action": "order_bank_callback_cancel",

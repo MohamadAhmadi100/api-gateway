@@ -278,6 +278,7 @@ def final_order(
             customer = get_profile_info(auth_header[0])
             place_order_result = place_order(auth_header, cart, customer)
             if place_order_result.get("success"):
+
                 if cart['payment'].get("walletAmount") is not None:
                     wallet_final_consume(place_order_result, cart, auth_header, response)
 
@@ -296,6 +297,17 @@ def final_order(
                     response.status_code = place_order_result.get("status_code")
                     return payment_result
                 else:
+                    reserve_response = rpc.publish(
+                        message={
+                            "quantity": {
+                                "action": "add_to_reserve",
+                                "body": {
+                                    "order_id": payment_detail['order_id']
+                                }
+                            }
+                        },
+                        headers={"quantity": True}
+                    ).get("order", {})
                     response.status_code = place_order_result.get("status_code")
                     return place_order_result
             else:
