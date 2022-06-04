@@ -104,7 +104,18 @@ def check_price_qty(auth_header, cart, response):
                         "message": f"{checkout_data['name']} موجودی کافی نیست, موجودی قابل فروش : {checkout_data['new_quantity']}"
                     })
                     pass
-
+        rpc.response_len_setter(response_len=1)
+        rpc.publish(
+            message={
+                "cart": {
+                    "action": "remove_all_data",
+                    "body": {
+                        "user_id": auth_header[0].get("user_id"),
+                    }
+                }
+            },
+            headers={'cart': True}
+        )
         if not edited_result:
             return {"success": True, "message": "checkout completed"}
         else:
