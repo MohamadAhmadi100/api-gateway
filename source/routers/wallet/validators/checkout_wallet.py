@@ -35,6 +35,7 @@ class Status(str, Enum):
 
 class Reserve(BaseModel):
     amount: int = Field(..., alias="amount")
+    # wallet_id = int = Field(..., alias="walletId")
     order_number: int = Field(..., alias="orderNumber")
     type: Optional[Type] = Field(..., alias="type")
     action_type: Optional[ActionType] = Field(..., alias="ActionType")
@@ -43,6 +44,7 @@ class Reserve(BaseModel):
 
 class ResultOrder(BaseModel):
     order_number: int = Field(..., alias="orderNumber")
+    # wallet_id = int = Field(..., alias="walletId")
     amount: int = Field(..., alias="amount", isRequired=True)
     type: Optional[Type] = Field(..., alias="type")
     status: Optional[Status] = Field(..., description="success/failed", isRequired=True)
@@ -52,21 +54,9 @@ class ResultOrder(BaseModel):
 
 class CompleteOrderWallet(BaseModel):
     order_number: int = Field(..., alias="orderNumber")
+    # wallet_id = int = Field(..., alias="walletId")
     amount: int = Field(..., alias="amount", isRequired=True)
     type: Optional[Type] = Field(..., alias="type")
     status: Optional[Status] = Field(..., description="success/failed", isRequired=True)
     action_type: Optional[ActionType] = Field(..., alias="ActionType")
     balance: Optional[CheckoutBalance] = Field(..., alias="balance")
-
-
-class ChargeWallet(BaseModel):
-    action_type: Optional[ActionType] = Field(..., alias="ActionType")
-    amount: int = Field(..., alias="amount", isRequired=True)
-    customer_id: str = Field(..., alias="customerId", isRequired=True)
-    payment_id: int = Field(..., alias="paymentId", isRequired=True)
-    payment_date: str = Field(..., alias="paymentDate", isRequired=True)
-    payment_method: str = Field(..., alias="paymentMethod")
-    balance: Optional[ChargeBalance] = Field(..., alias="balance")
-    wallet_id: int = Field(..., alias="walletId")
-    type: Optional[ChargeType] = Field(..., alias="type")
-    status: Optional[Status] = Field(..., description="success/failed", isRequired=True)

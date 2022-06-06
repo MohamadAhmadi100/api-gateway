@@ -43,7 +43,7 @@ class CreateClass:
                 value_type = int
             elif value.get('input_type') == "Number":
                 value_type = int
-            if value.get("required") or value.get("is_required"):
+            if value.get("required") or value.get("is_required") or value.get("isRequired"):
                 self._class_attributes_dict[key] = (value_type, Field(**value))
             else:
                 self._class_attributes_dict[key] = (Optional[value_type], Field(**value))
@@ -55,11 +55,11 @@ class CreateClass:
                 self.make_validator_function)
 
     def make_validator_function(self, value: any) -> any:
+        print(self._key)
         value_type = self._attributes_dict.get(self._key, {}).get("type")
         regex_pattern = self._attributes_dict.get(self._key, {}).get("regex_pattern")
-        max_length = self._attributes_dict.get(self._key, {}).get("maxlength")
-        min_length = self._attributes_dict.get(self._key, {}).get("minlength")
-        keys: list = list(self._attributes_dict.keys())
+        max_length = self._attributes_dict.get(self._key, {}).get("maxLength")
+        min_length = self._attributes_dict.get(self._key, {}).get("minLength")
         if regex_pattern:
             match = re.fullmatch(regex_pattern, value)
             if not match:

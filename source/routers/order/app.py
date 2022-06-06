@@ -1,23 +1,23 @@
+from typing import Union
+
 from fastapi import FastAPI, HTTPException, Response, responses, Depends, Query
 from starlette.exceptions import HTTPException as starletteHTTPException, HTTPException
-from typing import Union
 
 from source.config import settings
 from source.helpers.case_converter import convert_case
 from source.message_broker.rabbit_server import RabbitRPC
-from source.routers.customer.helpers.profile_view import get_profile_info
 from source.routers.cart.app import get_cart
+from source.routers.customer.helpers.profile_view import get_profile_info
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.order.helpers.check_out import check_price_qty
-from source.routers.order.helpers.final_helper import wallet_final_consume
+from source.routers.order.helpers.payment_helper import get_remaining_wallet
+from source.routers.order.helpers.payment_helper import wallet_final_consume
 from source.routers.order.helpers.place_order import place_order
 from source.routers.order.helpers.shipment_helper import shipment_detail, check_shipment_per_stock
-from source.routers.order.helpers.payment_helper import get_remaining_wallet, unofficial_to_cart
 from source.routers.order.validators.order import wallet, payment
 from source.routers.payment.app import get_url
-from source.routers.shipment.validators.shipment_per_stock import PerStock
 from source.routers.payment.validators.payment import SendData
-from source.routers.wallet.app import reserve_wallet, use_complete_order_from_wallet
+from source.routers.shipment.validators.shipment_per_stock import PerStock
 
 TAGS = [
     {
@@ -79,32 +79,33 @@ def get_payment_official(response: Response, auth_header=Depends(auth_handler.ch
         payment and wallet detail for creating payment step
     """
     user, token = auth_header
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        try:
-            cart = get_cart(response=response, auth_header=auth_header)
+    try:
+        cart = get_cart(response=response, auth_header=auth_header)
 
-            # check if customer select all the shipment methods per stock
-            check_shipment_result = check_shipment_per_stock(cart)
-            if len(cart['shipment']) != len(check_shipment_result):
-                return {"success": False, "message": "!روش ارسال برای همه انبار ها را انتخاب کنید"}
+        # check if customer select all the shipment methods per stock
+        check_shipment_result = check_shipment_per_stock(cart)
+        if len(cart['shipment']) != len(check_shipment_result):
+            return {"success": False, "message": "!روش ارسال برای همه انبار ها را انتخاب کنید"}
 
-            wallet_amount = get_remaining_wallet(user)
+        wallet_amount = get_remaining_wallet(user)
 
-            if cart['totalPrice'] > 50000000:
-                payment_method = [{"methodName": "deposit", "methodLabe": "واریز به حساب"}]
-            else:
-                payment_method = [{"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"},
-                                  {"methodName": "aiBanking", "methodLabe": "درگاه هوشمند"}]
+        if cart['totalPrice'] > 50000000:
+            payment_method = [{"methodName": "deposit", "methodLabe": "واریز به حساب"}]
+        elif cart['totalPrice'] == 0:
+            payment_method = []
+        else:
+            payment_method = [{"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"},
+                              {"methodName": "aiBanking", "methodLabe": "درگاه هوشمند"}]
 
-            response_result = {
-                "walletAmount": wallet_amount,
-                "allowPaymentMethods": payment_method,
-            }
-            response.status_code = 200
-            return {"success": True, "message": response_result, "cart": cart}
-        except:
-            response.status_code = 404
-            return {"success": False, "message": "something went wrong!", "cart": None}
+        response_result = {
+            "walletAmount": wallet_amount,
+            "allowPaymentMethods": payment_method,
+        }
+        response.status_code = 200
+        return {"success": True, "message": response_result, "cart": cart}
+    except:
+        response.status_code = 404
+        return {"success": False, "message": "something went wrong!", "cart": None}
 
 
 @app.get("/payment_detail_unofficial/", tags=["payment for order"])
@@ -113,26 +114,25 @@ def get_payment_unofficial(response: Response, auth_header=Depends(auth_handler.
         payment and wallet detail for creating payment step
     """
     user, token = auth_header
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        try:
-            cart = get_cart(response=response, informal=True, auth_header=auth_header)
-            # check if customer select all the shipment methods per stock
-            # TODO add customer request
-            wallet_amount = get_remaining_wallet(user)
+    try:
+        cart = get_cart(response=response, informal=True, auth_header=auth_header)
+        # check if customer select all the shipment methods per stock
+        # TODO add customer request
+        wallet_amount = get_remaining_wallet(user)
 
-            payment_method = [{"cashondelivery": "deposit", "methodLabe": "پرداخت در محل"}]
-            response_result = {
-                "walletAmount": wallet_amount,
-                "allowPaymentMethods": payment_method,
-            }
-            response.status_code = 200
-            return {"success": True, "message": response_result, "cart": cart}
-        except:
-            response.status_code = 404
-            return {"success": False, "message": "something went wrong!", "cart": None}
+        payment_method = [{"cashondelivery": "deposit", "methodLabe": "پرداخت در محل"}]
+        response_result = {
+            "walletAmount": wallet_amount,
+            "allowPaymentMethods": payment_method,
+        }
+        response.status_code = 200
+        return {"success": True, "message": response_result, "cart": cart}
+    except:
+        response.status_code = 404
+        return {"success": False, "message": "something went wrong!", "cart": None}
 
 
-@app.put("/add_shipment", tags=["shipment for order"])
+@app.put("/add_shipment/", tags=["shipment for order"])
 def shipment_per_stock(
         response: Response,
         data: PerStock,
@@ -178,7 +178,7 @@ def shipment_per_stock(
                                 detail={"error": cart_response.get("error", "Cart service Internal error")})
 
 
-@app.put("/wallet", tags=["payment for order"])
+@app.put("/wallet/", tags=["payment for order"])
 def wallet_detail(
         response: Response,
         data: wallet,
@@ -215,8 +215,9 @@ def wallet_detail(
                 ).get("cart", {})
                 if order_response.get("success"):
                     cart = get_cart(response=response, auth_header=auth_header)
+                    get_payment_detail = get_payment_official(response, auth_header)
                     response.status_code = cart.get("status_code", 200)
-                    return cart
+                    return {"success": True, "message": "مبلغ از کیف پول شما کسر شد", "payment_detail": get_payment_detail}
                 raise HTTPException(status_code=order_response.get("status_code", 500),
                                     detail={"error": order_response.get("error", "Order service Internal error")})
             else:
@@ -227,7 +228,7 @@ def wallet_detail(
                                 detail={"error": wallet_response.get("error", "wallet service Internal error")})
 
 
-@app.put("/payment", tags=["payment for order"])
+@app.put("/payment/", tags=["payment for order"])
 def payment_detail(
         response: Response,
         data: payment,
@@ -256,7 +257,7 @@ def payment_detail(
                             detail={"error": order_response.get("error", "Order service Internal error")})
 
 
-@app.put("/final", tags=["final steps and create order"])
+@app.put("/final/", tags=["final steps and create order"])
 def final_order(
         response: Response,
         auth_header=Depends(auth_handler.check_current_user_tokens)
@@ -275,15 +276,14 @@ def final_order(
 
         check_out = check_price_qty(auth_header, cart, response)
         if check_out.get("success"):
+
             # create order if all data completed
             customer = get_profile_info(auth_header[0])
             place_order_result = place_order(auth_header, cart, customer)
             if place_order_result.get("success"):
+
                 if cart['payment'].get("walletAmount") is not None:
                     wallet_final_consume(place_order_result, cart, auth_header, response)
-
-                else:
-                    pass
 
                 if place_order_result.get("Type") == "pending_payment":
                     send_data = SendData(
@@ -300,16 +300,40 @@ def final_order(
                     response.status_code = place_order_result.get("status_code")
                     return payment_result
                 else:
+                    # rpc.response_len_setter(response_len=1)
+                    # reserve_response = rpc.publish(
+                    #     message={
+                    #         "quantity": {
+                    #             "action": "add_to_reserve",
+                    #             "body": {
+                    #                 "order_id": place_order_result.get('orderNumber')
+                    #             }
+                    #         }
+                    #     },
+                    #     headers={"quantity": True}
+                    # ).get("order", {})
+                    rpc.response_len_setter(response_len=1)
+                    result = rpc.publish(
+                        message={
+                            "cart": {
+                                "action": "delete_cart",
+                                "body": {
+                                    "user_id": auth_header[0].get("user_id")
+                                }
+                            }
+                        },
+                        headers={'cart': True}
+                    )
                     response.status_code = place_order_result.get("status_code")
-                    return place_order_result.get("message")
+                    return place_order_result
             else:
                 response.status_code = place_order_result.get("status_code")
-                return place_order_result.get("message")
+                return place_order_result
         else:
             return check_out.get("message")
 
 
-@app.get("/orders_list", tags=["Get all orders of customer"])
+@app.get("/orders_list/", tags=["Get all orders of customer"])
 def get_orders(response: Response,
                order_number: Union[int, None] = Query(default=None),
                date_from: Union[str, None] = Query(default=None),
@@ -339,7 +363,7 @@ def get_orders(response: Response,
                             detail={"error": order_response.get("error", "Order service Internal error")})
 
 
-@app.put("/cancel_wallet", tags=["payment for order"])
+@app.put("/cancel_wallet/", tags=["payment for order"])
 def cancele_wallet(response: Response,
                    auth_header=Depends(auth_handler.check_current_user_tokens)):
     user, token_dict = auth_header

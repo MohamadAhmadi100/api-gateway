@@ -320,7 +320,7 @@ def get_product_by_system_code(
                                     item["warehouse_id"] = quantity.get("storage_id")
                                     item["price"] = price.get("regular")
                                     item["special_price"] = price.get("special")
-                                    item["quantity"] = quantity.get("stock_for_sale")
+                                    item["quantity"] = quantity.get("stock_for_sale") - quantity.get('reserved')
                                     item['max_qty'] = quantity.get("max_qty")
                                     item['min_qty'] = quantity.get("min_qty")
                                     item["warehouse_state"] = quantity.get("warehouse_state")
@@ -354,7 +354,11 @@ def get_product_by_system_code(
                             list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
                             "B2B", {}).get("storages", {}).get("1", {}).get("special", 0)
 
+                    product_list.append(product)
+
             final_result['products'] = product_list
+            if not product_list:
+                raise HTTPException(status_code=404, detail={"error": "No products found"})
             return convert_case(final_result, 'camel')
 
 
@@ -546,7 +550,20 @@ def get_category_list(
             for key in message_product.keys():
                 if key != "latest_product":
                     for obj in message_product[key]['items']:
-                        obj['image'] = "default.png"
+                        product_kowsar_result = rpc.publish(
+                            message={
+                                "product": {
+                                    "action": "get_kowsar",
+                                    "body": {
+                                        "system_code": obj.get("system_code"),
+                                    }
+                                }
+                            },
+                            headers={'product': True}
+                        )
+                        product_kowsar_result = product_kowsar_result.get("product", {})
+                        if product_kowsar_result.get("success"):
+                            obj['image'] = product_kowsar_result.get("message", {}).get("image", None)
             for product in message_product['product']['items']:
                 pricing_result = rpc.publish(
                     message={

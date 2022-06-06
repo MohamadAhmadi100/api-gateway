@@ -7,7 +7,7 @@ from source.routers.customer.helpers.allowed_storages_token import allowed_stora
 from source.routers.customer.module.auth import AuthHandler
 from source.helpers.create_class import CreateClass
 from source.routers.customer.validators import validation_profile
-from source.routers.customer.validators.validation_profile import EditProfile, Delivery
+from source.routers.customer.validators.validation_profile import EditProfile, Delivery, Person
 from source.helpers import case_converter
 
 router_profile = APIRouter(
@@ -256,3 +256,68 @@ def add_delivery_person(response: Response,
     response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
     response.status_code = customer_result.get("status_code", 200)
     return customer_result.get("message", 200)
+
+
+# ================================================= informal ===========================================================
+
+
+@router_profile.post("/informal")
+def create_informal(person: Person, response: Response, auth_header=Depends(auth_handler.check_current_user_tokens)):
+    user_data, header = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
+            message={
+                "attribute": {
+                    "action": "get_all_attributes_by_assignee",
+                    "body": {
+                        "name": "informal"
+                    }
+                }
+            },
+            headers={'attribute': True}
+        )
+    attribute_result = result.get("attribute", {})
+    if not attribute_result.get("success"):
+        return HTTPException(status_code=attribute_result.get("status_code", 500),
+                             detail={"error": attribute_result.get("error", "Something went wrong")})
+    attrs = case_converter.convert_case(attribute_result.get("message"), "camel")
+    attrs = {obj.get("name"): obj for obj in attrs}
+    person_model = CreateClass(class_name="InformalPersonModel", attributes=attrs).get_pydantic_class()
+    try:
+        person_object = person_model(**person.data)
+    except ValidationError as e:
+        raise HTTPException(status_code=422, detail={"error": e.errors()}) from e
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
+            message={
+                "customer": {
+                    "action": "create_informal",
+                    "body": {
+                        "data": {
+                            "customer_mobile_number": user_data.get("phone_number"),
+                            "informal": person_object.json()
+                        }
+                    }
+                }
+            },
+            headers={'customer': True}
+        )
+    customer_result = result.get("customer", {})
+    if not customer_result.get("success"):
+        raise HTTPException(
+            status_code=customer_result.get("status_code", 500),
+            detail={"error": customer_result.get("error", "Something went wrong")}
+        )
+    sub_dict = {
+        "user_id": user_data.get('user_id'),
+        "customer_type": user_data.get('customer_type'),
+        "phone_number": user_data.get('phone_number'),
+        "allowed_storages": allowed_storages(user_data.get('customerID'))
+    }
+    response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
+    response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
+    response.status_code = customer_result.get("status_code", 200)
+    return customer_result.get("message", 200)
+

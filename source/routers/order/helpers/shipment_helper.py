@@ -94,7 +94,7 @@ def shipment_detail(auth_header, response):
                     },
                     headers={'customer': True}
                 ).get("customer")
-                reciver_data = {}
+                reciver_data = []
                 if reciver_info['success']:
                     reciver_data = reciver_info.get("message").get("data")
 
