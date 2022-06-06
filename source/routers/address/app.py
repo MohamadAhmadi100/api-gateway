@@ -191,3 +191,28 @@ def customer_addresses(response: Response, auth_header=Depends(auth_handler.chec
             return address_response
         raise HTTPException(status_code=address_response.get("status_code", 500),
                             detail={"error": address_response.get("error", "Address service Internal error")})
+
+
+
+
+@app.get("/warehouses", tags=["get customer warehouses"])
+def states(cityId: str, response: Response):
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        address_response = rpc.publish(
+            message={
+                "address": {
+                    "action": "get_stock_by_city_id",
+                    "body": {
+                        "cityId": cityId
+                    }
+                }
+            },
+            headers={'address': True}
+        ).get("address", {})
+
+        if address_response.get("success"):
+            response.status_code = address_response.get("status_code", 200)
+            return address_response
+        raise HTTPException(status_code=address_response.get("status_code", 500),
+                            detail={"error": address_response.get("error", "Address service Internal error")})
