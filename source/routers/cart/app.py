@@ -124,8 +124,8 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
                                     detail={"error": "Not enough quantity"})
 
             if (now_count + item.count) < quantity.get('min_qty') or (now_count + item.count) > quantity.get('max_qty'):
-                raise HTTPException(status_code=400,
-                                    detail={"error": "Quantity not allowed"})
+                response.status_code = 400
+                return {"error": "Quantity not allowed"}
 
             rpc.response_len_setter(response_len=1)
             cart_result = rpc.publish(
