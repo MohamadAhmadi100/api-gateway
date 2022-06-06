@@ -122,7 +122,7 @@ def check_price_qty(auth_header, cart, response):
                         "name": checkout_data['name'],
                         "status": "edited",
                         "qty": checkout_data['count'],
-                        "message": f"{checkout_data['name']} موجودی کافی نیست, موجودی قابل فروش : {checkout_data['new_quantity']}"
+                        "message": f"{checkout_data['name']} از سبد خرید به دلیل محدودیت موجودی تغییر کرد"
                     })
                     pass
         rpc.response_len_setter(response_len=1)
