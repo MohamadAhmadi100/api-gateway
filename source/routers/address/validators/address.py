@@ -115,3 +115,10 @@ class Address(BaseModel):
         if is_default not in [False, True]:
             raise HTTPException(status_code=422, detail={"error": "Please enter a valid is_default"})
         return is_default
+
+
+
+
+
+class AddressId(BaseModel):
+    address_id: int = Field(alias="addressId")

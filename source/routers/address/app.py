@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Response, responses, Depends
 from source.config import settings
 from starlette.exceptions import HTTPException as starletteHTTPException
 from source.message_broker.rabbit_server import RabbitRPC
-from source.routers.address.validators.address import Address
+from source.routers.address.validators.address import Address, AddressId
 from source.routers.address.validators.update_address import UpdateAddress
 from source.routers.customer.module.auth import AuthHandler
 
@@ -98,7 +98,10 @@ def create_address(data: Address, response: Response):
 
 
 @app.put("/update_fields", tags=["Address"])
-def update_address(data: UpdateAddress, response: Response):
+def update_address(data: UpdateAddress,
+                   response: Response,
+                   auth_header=Depends(auth_handler.check_current_user_tokens)):
+    user, token_dict = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         address_response = rpc.publish(
@@ -106,7 +109,8 @@ def update_address(data: UpdateAddress, response: Response):
                 "address": {
                     "action": "update_address",
                     "body": {
-                        "data": dict(data)
+                        "data": dict(data),
+                        "customerId": str(user.get("user_id"))
                     }
                 }
             },
@@ -121,7 +125,9 @@ def update_address(data: UpdateAddress, response: Response):
 
 
 @app.get("/customer_addresses", tags=["Address"])
-def customer_addresses(customerId: str, response: Response):
+def customer_addresses(response: Response,
+                       auth_header=Depends(auth_handler.check_current_user_tokens)):
+    user, token_dict = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         address_response = rpc.publish(
@@ -129,7 +135,7 @@ def customer_addresses(customerId: str, response: Response):
                 "address": {
                     "action": "get_customer_addresses",
                     "body": {
-                        "customerId": customerId
+                        "customerId": str(user.get("user_id"))
                     }
                 }
             },
@@ -144,7 +150,7 @@ def customer_addresses(customerId: str, response: Response):
 
 
 @app.delete("/delete_address", tags=["Address"])
-def delete_address(addressId: int, response: Response, auth_header=Depends(auth_handler.check_current_user_tokens)):
+def delete_address(addressId: AddressId, response: Response, auth_header=Depends(auth_handler.check_current_user_tokens)):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         user, token_dict = auth_header
         rpc.response_len_setter(response_len=1)
@@ -154,7 +160,7 @@ def delete_address(addressId: int, response: Response, auth_header=Depends(auth_
                     "action": "delete_customer_address",
                     "body": {
                         "customerId": user.get("user_id"),
-                        "addressId": addressId
+                        "addressId": int(addressId.address_id)
                     }
                 }
             },
