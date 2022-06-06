@@ -325,6 +325,8 @@ def final_order(
                         headers={'cart': True}
                     )
                     response.status_code = place_order_result.get("status_code")
+                    for items in place_order_result:
+                        del items['order_object']
                     return place_order_result
             else:
                 response.status_code = place_order_result.get("status_code")
