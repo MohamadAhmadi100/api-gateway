@@ -320,7 +320,7 @@ def get_product_by_system_code(
                                     item["warehouse_id"] = quantity.get("storage_id")
                                     item["price"] = price.get("regular")
                                     item["special_price"] = price.get("special")
-                                    item["quantity"] = quantity.get("stock_for_sale")
+                                    item["quantity"] = quantity.get("stock_for_sale") - quantity.get('reserved')
                                     item['max_qty'] = quantity.get("max_qty")
                                     item['min_qty'] = quantity.get("min_qty")
                                     item["warehouse_state"] = quantity.get("warehouse_state")
