@@ -41,9 +41,11 @@ def allowed_storages(customer_id):
                     ).get("address", {})
                     if msm_warehouses.get("success"):
                         storage_id = msm_warehouses.get('message').get('warehouse_id')
+                        if str(storage_id) == '1':
+                            return ['1']
                         return [str(storage_id), '1']
                     else:
-                        return ['1']
+                        return []
                 else:
                     return ['7']
             else:
