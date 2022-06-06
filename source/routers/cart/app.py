@@ -111,7 +111,7 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
             now_count = 0
             for cart_product in user_cart.get("products", []):
                 if cart_product.get("system_code") == item.system_code and cart_product.get(
-                        'storage_id' == item.storage_id):
+                        'storage_id') == item.storage_id:
                     now_count = cart_product.get("count", 0)
                     break
 
@@ -122,6 +122,10 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
             else:
                 raise HTTPException(status_code=400,
                                     detail={"error": "Not enough quantity"})
+
+            if (now_count + item.count) < quantity.get('min_qty') or (now_count + item.count) > quantity.get('max_qty'):
+                raise HTTPException(status_code=400,
+                                    detail={"error": "Quantity not allowed"})
 
             rpc.response_len_setter(response_len=1)
             cart_result = rpc.publish(
