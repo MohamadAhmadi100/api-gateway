@@ -550,7 +550,20 @@ def get_category_list(
             for key in message_product.keys():
                 if key != "latest_product":
                     for obj in message_product[key]['items']:
-                        obj['image'] = "default.png"
+                        product_kowsar_result = rpc.publish(
+                            message={
+                                "product": {
+                                    "action": "get_kowsar",
+                                    "body": {
+                                        "system_code": obj.get("system_code"),
+                                    }
+                                }
+                            },
+                            headers={'product': True}
+                        )
+                        product_kowsar_result = product_kowsar_result.get("product", {})
+                        if product_kowsar_result.get("success"):
+                            obj['image'] = product_kowsar_result.get("message", {}).get("image", None)
             for product in message_product['product']['items']:
                 pricing_result = rpc.publish(
                     message={
