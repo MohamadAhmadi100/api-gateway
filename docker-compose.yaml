@@ -5,6 +5,9 @@ services:
         build: nginx
         expose:
           - 80
+        ports:
+          - 8080:80
+          - 4433:443
         depends_on:
           - api
         networks:
