@@ -16,7 +16,7 @@ def handle_order_bank_callback(payment_detail):
                     "order": {
                         "action": "order_bank_callback_processing",
                         "body": {
-                            "peyment_data": payment_detail
+                            "payment_data": payment_detail
                         }
                     }
                 },
@@ -30,7 +30,7 @@ def handle_order_bank_callback(payment_detail):
                     "order": {
                         "action": "order_bank_callback_cancel",
                         "body": {
-                            "peyment_data": payment_detail
+                            "payment_data": payment_detail
                         }
                     },
                     # "quantity": {
