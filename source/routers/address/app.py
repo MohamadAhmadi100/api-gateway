@@ -75,7 +75,10 @@ def cities(cityId: str, response: Response):
 
 
 @app.post("/create", tags=["Address"])
-def create_address(data: Address, response: Response):
+def create_address(data: Address,
+                   response: Response,
+                   auth_header=Depends(auth_handler.check_current_user_tokens)):
+    user, token_dict = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         address_response = rpc.publish(
@@ -83,7 +86,8 @@ def create_address(data: Address, response: Response):
                 "address": {
                     "action": "insert_address",
                     "body": {
-                        "data": dict(data)
+                        "data": dict(data),
+                        "customerId": str(user.get("user_id"))
                     }
                 }
             },
@@ -145,8 +149,9 @@ def customer_addresses(response: Response,
         if address_response.get("success"):
             response.status_code = address_response.get("status_code", 200)
             return address_response
-        raise HTTPException(status_code=address_response.get("status_code", 500),
-                            detail={"error": address_response.get("error", "Address service Internal error")})
+        return address_response
+        # raise HTTPException(status_code=address_response.get("status_code", 500),
+        #                     detail={"error": address_response.get("error", "Address service Internal error")})
 
 
 @app.delete("/delete_address", tags=["Address"])
