@@ -7,7 +7,6 @@ from pydantic import BaseModel, Field, validator
 
 class Address(BaseModel):
     customer_name: str = Field(alias="customerName")
-    customer_id: str = Field(alias="customerId")
     state_name: str = Field(alias="stateName")
     state_id: str = Field(alias="stateId")
     city_id: str = Field(alias="cityId")
@@ -28,14 +27,6 @@ class Address(BaseModel):
         if not match:
             raise HTTPException(status_code=422, detail={"error": "Please enter a valid customer name"})
         return customer_name
-
-    @validator("customer_id")
-    def validate_customer_id(cls, customer_id):
-        pattern = r"^[0-9]{1,6}$"
-        match = re.fullmatch(pattern, customer_id)
-        if not match:
-            raise HTTPException(status_code=422, detail={"error": "Please enter a valid customer id"})
-        return customer_id
 
     @validator("state_name")
     def validate_customer_state_name(cls, state_name):
