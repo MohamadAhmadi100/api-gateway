@@ -10,8 +10,11 @@ from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.wallet.validators.transaction import Transaction
 from source.routers.wallet.validators.update_wallet import UpdateData
 from source.routers.customer.module.auth import AuthHandler
-from source.routers.payment.modules import payment_modules
 from source.routers.wallet.validators.checkout_wallet import Reserve, ResultOrder, CompleteOrderWallet
+from source.routers.wallet.validators.charge_wallet import Charge
+from source.routers.payment.validators.payment import SendData
+from source.helpers.case_converter import convert_case
+from source.routers.payment.app import get_url
 
 TAGS = [
     {
@@ -269,11 +272,14 @@ def complete_order_wallet(response: Response,
 
 @app.put("/charge-wallet", tags=["customer side"])
 def charge_wallet(
-        charge_data: UpdateData,
+        charge_data: Charge,
         response: Response,
+        auth_header=Depends(auth.check_current_user_tokens)
 ):
+    sub_data, token_data = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-
+        response.headers["accessToken"] = token_data.get("access_token")
+        response.headers["refreshToken"] = token_data.get("refresh_token")
         rpc.response_len_setter(response_len=1)
         wallet_response = rpc.publish(
             message={
@@ -281,14 +287,13 @@ def charge_wallet(
                     "action": "create_transaction",
                     "body": {
                         "data": {
-                            "customer_id": charge_data.customer_id,
-                            "action_type": charge_data.action_type,
+                            "customer_id": sub_data["user_id"],
                             "amount": charge_data.amount,
-                            "payment_method": charge_data.payment_method,
-                            "balance": charge_data.balance,
+                            "payment_method": "online",
+                            "balance": "charge",
                             "wallet_id": charge_data.wallet_id,
-                            "process_type": charge_data.process_type,
-                            "type": charge_data.type
+                            "type": "chargeWallet",
+                            "action_type": "auto"
                         }
                     }
                 },
@@ -298,76 +303,16 @@ def charge_wallet(
 
         if wallet_response.get("success"):
             transaction = wallet_response.get("message")
-            rpc.response_len_setter(response_len=1)
-            payment_result = rpc.publish(
-                message={
-                    "payment": {
-                        "action": "get_data",
-                        "body": {
-                            "data": {
-                                "amount": charge_data.amount,
-                                "bank_name": charge_data.bank_name,
-                                "customer_id": charge_data.customer_id,
-                                "service": {
-                                    "service_name": "wallet",
-                                    "service_function": "charge_wallet"
-                                },
-                                "order_id": transaction.get("transactionId")
-                            }
-                        }
-                    }
-                },
-                headers={'payment': True}
-            )
-            payment_result = payment_result.get("payment", {})
-            if not payment_result.get("success"):
-                raise HTTPException(status_code=payment_result.get("status_code", 500),
-                                    detail={"error": payment_result.get("error", "Something went wrong")})
-
-            response.status_code = payment_result.get("status_code", 200)
-            token_result = payment_modules.request_bank_handler(
-                payment_result.get("message", {}).get("url"),
-                payment_result.get("message", {}).get("bank_data"),
-                payment_result.get("message", {}).get("bank_name")
-            )
-            if not token_result.get("success"):
-                raise HTTPException(status_code=token_result.get("status_code", 500),
-                                    detail={"error": token_result.get("error", "Something went wrong")})
-            rpc.response_len_setter(response_len=1)
-            check_token_result = rpc.publish(
-                message={
-                    "payment": {
-                        "action": "check_token",
-                        "body": {
-                            "response": token_result.get("message"),
-                            "bank_name": payment_result.get("message", {}).get("bank_name")
-                        }
-                    }
-                },
-                headers={'payment': True}
-            )
-            check_token_result = check_token_result.get("payment", {})
-            if not check_token_result.get("success"):
-                raise HTTPException(status_code=check_token_result.get("status_code", 500),
-                                    detail={"error": check_token_result.get("error", "Something went wrong")})
-            response.status_code = check_token_result.get("status_code", 200)
-            rpc.response_len_setter(response_len=1)
-            url_result = rpc.publish(
-                message={
-                    "payment": {
-                        "action": "redirect_url",
-                        "body": {
-                            "data": check_token_result.get("message", {}),
-                            "payment_id": payment_result.get("message", {}).get("payment_id"),
-                            "bank_name": payment_result.get("message", {}).get("bank_name")
-                        }
-                    }
-                },
-                headers={'payment': True}
-            )
-            url_result = url_result.get("payment", {})
-            if not url_result.get("success"):
-                raise HTTPException(status_code=url_result.get("status_code", 500),
-                                    detail={"error": url_result.get("error", "Something went wrong")})
-            response.status_code = url_result.get("status_code", 200)
-            return url_result.get("message")
+        send_data = SendData(
+            amount=charge_data.amount,
+            customerId=charge_data.customer_id,
+            serviceName="wallet",
+            serviceId=transaction.get("transactionId"),
+            bankName=charge_data.bank_name
+        )
+        send_data = convert_case(send_data, "snake")
+        payment_result = get_url(
+            data=send_data,
+            response=Response
+        )
+        return payment_result
