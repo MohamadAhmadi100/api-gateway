@@ -91,6 +91,8 @@ def get_payment_official(response: Response, auth_header=Depends(auth_handler.ch
 
         if cart['totalPrice'] > 50000000:
             payment_method = [{"methodName": "deposit", "methodLabe": "واریز به حساب"}]
+        elif cart['totalPrice'] == 0:
+            payment_method = []
         else:
             payment_method = [{"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"},
                               {"methodName": "aiBanking", "methodLabe": "درگاه هوشمند"}]
@@ -215,7 +217,8 @@ def wallet_detail(
                     cart = get_cart(response=response, auth_header=auth_header)
                     get_payment_detail = get_payment_official(response, auth_header)
                     response.status_code = cart.get("status_code", 200)
-                    return {"success": True, "cart": cart, "payment_detail": get_payment_detail}
+                    return {"success": True, "message": "مبلغ از کیف پول شما کسر شد",
+                            "payment_detail": get_payment_detail}
                 raise HTTPException(status_code=order_response.get("status_code", 500),
                                     detail={"error": order_response.get("error", "Order service Internal error")})
             else:
@@ -296,20 +299,8 @@ def final_order(
                         response=Response
                     )
                     response.status_code = place_order_result.get("status_code")
-                    return payment_result
+                    return {"success": True, "Type": "pending_payment", "paymentResult": payment_result}
                 else:
-                    # rpc.response_len_setter(response_len=1)
-                    # reserve_response = rpc.publish(
-                    #     message={
-                    #         "quantity": {
-                    #             "action": "add_to_reserve",
-                    #             "body": {
-                    #                 "order_id": place_order_result.get('orderNumber')
-                    #             }
-                    #         }
-                    #     },
-                    #     headers={"quantity": True}
-                    # ).get("order", {})
                     rpc.response_len_setter(response_len=1)
                     result = rpc.publish(
                         message={
@@ -328,7 +319,8 @@ def final_order(
                 response.status_code = place_order_result.get("status_code")
                 return place_order_result
         else:
-            return check_out.get("message")
+            response.status_code = 202
+            return {"success": False, "message": check_out.get("message")}
 
 
 @app.get("/orders_list/", tags=["Get all orders of customer"])

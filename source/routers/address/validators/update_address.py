@@ -5,7 +5,6 @@ from typing import Optional
 
 
 class UpdateAddress(BaseModel):
-    customer_id: str = Field(alias="customerId")
     address_id: int = Field(alias="addressId")
     state_name: Optional[str]  = Field(alias="stateName")
     state_id: Optional[str]  = Field(alias="stateId")

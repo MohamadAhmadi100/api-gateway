@@ -62,11 +62,9 @@ def check_price_qty(auth_header, cart, response):
                 edited_result.append({
                     "name": checkout_data['name'],
                     "status": "removed",
-                    "qty": checkout_data['count'],
-                    "message": f"{checkout_data['name']} از سبد خرید حذف شد"
+                    "message": f"{checkout_data['name']} از سبد خرید به دلیل اتمام موجودی حذف شد"
                 })
             else:
-
                 parent_system_code_result = rpc.publish(
                     message={
                         "product": {
@@ -95,15 +93,34 @@ def check_price_qty(auth_header, cart, response):
                                                   checkout_data['storage_id'],
                                                   checkout_data['new_quantity'] - checkout_data['count'])
 
-                    add_and_edit_product(item=object_to_edit, response=response, auth_header=auth_header)
+                    edit = add_and_edit_product(item=object_to_edit, response=response, auth_header=auth_header)
+                    if edit.get("error") is not None:
+                        rpc.response_len_setter(response_len=1)
+                        rpc.publish(
+                            message={
+                                "cart": {
+                                    "action": "remove_product_from_cart",
+                                    "body": {
+                                        "user_id": auth_header[0].get("user_id"),
+                                        "system_code": checkout_data['systemCode'],
+                                        "storage_id": checkout_data['storage_id']
+                                    }
+                                }
+                            },
+                            headers={'cart': True}
+                        )
+                        edited_result.append({
+                            "name": checkout_data['name'],
+                            "status": "removed",
+                            "message": f"{checkout_data['name']} از سبد خرید به دلیل اتمام موجودی حذف شد",
 
-                    edited_result.append({
-                        "name": checkout_data['name'],
-                        "status": "edited",
-                        "qty": checkout_data['count'],
-                        "message": f"{checkout_data['name']} موجودی کافی نیست, موجودی قابل فروش : {checkout_data['new_quantity']}"
-                    })
-                    pass
+                        })
+                    else:
+                        edited_result.append({
+                            "name": checkout_data['name'],
+                            "status": "edited",
+                            "message": f"{checkout_data['name']} از سبد خرید به دلیل اتمام موجودی حذف شد",
+                        })
         rpc.response_len_setter(response_len=1)
         rpc.publish(
             message={

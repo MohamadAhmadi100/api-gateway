@@ -495,3 +495,7 @@ class Delivery(BaseModel):
 
 class Person(BaseModel):
     data: dict
+
+
+class GetInformal(BaseModel):
+    ...

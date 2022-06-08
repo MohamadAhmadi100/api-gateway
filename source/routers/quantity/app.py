@@ -213,7 +213,8 @@ def get_product_stock(response: Response,
             response.status_code = quantity_result.get("status_code", 200)
             return convert_case(quantity_result.get("message"), action='camel')
         raise HTTPException(status_code=quantity_result.get("status_code", 500),
-                            detail={"error": quantity_result.get("error", "Something went wrong")})
+                            detail=convert_case({"error": quantity_result.get("error", "Something went wrong")},
+                                                action="camel"))
 
 
 @app.delete("/product/{systemCode}/{customerType}/{storageId}/", tags=["Quantity"])
