@@ -33,7 +33,7 @@ class Address(BaseModel):
         pattern = r"[ ]{0,1}[\u0600-\u06FF]{2,32}$"
         match = re.findall(pattern, state_name)
         if not match:
-            raise HTTPException(status_code=422, detail={"error": "استان وارد شده معتبر نیست."})
+            raise HTTPException(status_code=422, detail={"error": "نام استان معتبر نیست."})
         return state_name
 
     @validator("state_id")
@@ -57,7 +57,7 @@ class Address(BaseModel):
         pattern = r"[ ]{0,1}[\u0600-\u06FF]{2,32}$"
         match = re.findall(pattern, city_name)
         if not match:
-            raise HTTPException(status_code=422, detail={"error": "شهر وارد شده معتبر نیست."})
+            raise HTTPException(status_code=422, detail={"error": "نام شهر معتبر نیست."})
         return city_name
 
     @validator("street")
@@ -65,7 +65,7 @@ class Address(BaseModel):
         pattern = r"[ ]{0,5}[\u0600-\u06FF]{2,32}$"
         match = re.findall(pattern, street)
         if not match:
-            raise HTTPException(status_code=422, detail={"error": "نام خیابان وارد شده معتبر نیست."})
+            raise HTTPException(status_code=422, detail={"error": "نام خیابان معتبر نیست."})
         return street
 
     @validator("alley")
@@ -73,7 +73,7 @@ class Address(BaseModel):
         pattern = r"[ ]{0,1}[\u0600-\u06FF]{2,32}$"
         match = re.findall(pattern, alley)
         if not match:
-            raise HTTPException(status_code=422, detail={"error": "نام کوچه وارد شده معتبر نیست."})
+            raise HTTPException(status_code=422, detail={"error": "نام کوچه معتبر نیست."})
         return alley
 
     @validator("plaque")
@@ -81,7 +81,7 @@ class Address(BaseModel):
         pattern = r"^[0-9]{1,6}$"
         match = re.fullmatch(pattern, plaque)
         if not match:
-            raise HTTPException(status_code=422, detail={"error": "پلاک وارد شده معتبر نیست."})
+            raise HTTPException(status_code=422, detail={"error": "پلاک معتبر نیست."})
         return plaque
 
     @validator("unit")
@@ -89,7 +89,7 @@ class Address(BaseModel):
         pattern = r"^[0-9]{1,6}$"
         match = re.fullmatch(pattern, unit)
         if not match:
-            raise HTTPException(status_code=422, detail={"error": "واحد وارد شده معتبر نیست."})
+            raise HTTPException(status_code=422, detail={"error": "واحد معتبر نیست."})
         return unit
 
     @validator("tel")
