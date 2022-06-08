@@ -42,7 +42,7 @@ def allowed_storages(customer_id):
                     if msm_warehouses.get("success"):
                         storages = list()
                         for wms in msm_warehouses.get('message'):
-                            storages.append(wms.get('warehouse_id'))
+                            storages.append(str(wms.get('warehouse_id')))
 
                         return storages
                     else:
