@@ -33,8 +33,8 @@ def ship_address_object(user, cart):
         ).get("address")
         if address_result.get("success"):
             address = address_result['result']
-            if not address.get('isDefault'):
-                return {"success": False, "message": "مشتری ادرس پیش فرض ندارد"}
+            if address_result.get('result') is None:
+                return {"success": False, "message": "لطفا ادرس پیشفرض را انتخاب کنید"}
             stocks = []
             for items in result[0]:
                 stocks.append({
