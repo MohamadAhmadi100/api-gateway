@@ -24,7 +24,7 @@ def ship_address_object(user, cart):
         address_result = rpc.publish(
             message={
                 "address": {
-                    "action": "get_customer_addresses",
+                    "action": "get_default_address",
                     "body": {
                         "customerId": str(user[0].get("user_id"))
                     }
@@ -33,20 +33,15 @@ def ship_address_object(user, cart):
         ).get("address")
         if address_result.get("success"):
             address = address_result['result']
-            for items in address:
-                if items.get('isDefault'):
-                    address = items
-                    result.append(items)
-                    break
-                else:
-                    return {"success": False, "message": "مشتری ادرس پیش فرض ندارد"}
+            if not address.get('isDefault'):
+                return {"success": False, "message": "مشتری ادرس پیش فرض ندارد"}
             stocks = []
             for items in result[0]:
                 stocks.append({
                     "stockName": items['warehouse_label'],
                     "stockId": str(items['warehouse_id']),
                     "origin": items['warehouse_city_id'],
-                    "destination": result[1]['cityId'],
+                    "destination": address.get('cityId'),
                     "weight": 0,
                     "totalPrice": cart['totalPrice'],
                     "totalItem": 0
@@ -66,7 +61,7 @@ def ship_address_object(user, cart):
                     }
                 },
                 headers={'shipment': True}
-            ).get("shipment", {})['message']
+            ).get("shipment", {})
             return {"success": True, "shipment_response": shipment_response, "address_response": address}
         else:
             return {"success": False, "message": "مشتری ادرس فعالی ندارد"}
