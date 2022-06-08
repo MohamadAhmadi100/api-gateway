@@ -38,6 +38,8 @@ def ship_address_object(user, cart):
                     address = items
                     result.append(items)
                     break
+                else:
+                    return {"success": False, "message": "مشتری ادرس پیش فرض ندارد"}
             stocks = []
             for items in result[0]:
                 stocks.append({
