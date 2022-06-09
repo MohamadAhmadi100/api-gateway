@@ -10,6 +10,7 @@ from source.routers.cart.app import get_cart
 from source.routers.customer.helpers.profile_view import get_profile_info
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.order.helpers.check_out import check_price_qty
+from source.routers.order.helpers.final_helper import reserve_order_items, delete_order_reserving_fail
 from source.routers.order.helpers.payment_helper import get_remaining_wallet
 from source.routers.order.helpers.payment_helper import wallet_final_consume
 from source.routers.order.helpers.place_order import place_order
@@ -274,47 +275,55 @@ def final_order(
             return {"success": False, "message": "!روش پرداخت را انتخاب کنید"}
 
         # check quantity
-
         check_out = check_price_qty(auth_header, cart, response)
         if check_out.get("success"):
-
             # create order if all data completed
             customer = get_profile_info(auth_header[0])
             place_order_result = place_order(auth_header, cart, customer)
             if place_order_result.get("success"):
+                # reserve order items in quantity collection
+                reserve_order = reserve_order_items(place_order_result.get("order_object"))
+                if reserve_order.get("success"):
+                    # consume wallet
+                    if cart['payment'].get("walletAmount") is not None:
+                        wallet_final_consume(place_order_result, cart, auth_header, response)
 
-                if cart['payment'].get("walletAmount") is not None:
-                    wallet_final_consume(place_order_result, cart, auth_header, response)
-
-                if place_order_result.get("Type") == "pending_payment":
-                    send_data = SendData(
-                        amount=place_order_result.get("bank_request").get("amount"),
-                        customerId=place_order_result.get("bank_request").get("customerId"),
-                        serviceName=place_order_result.get("bank_request").get("serviceName"),
-                        serviceId=place_order_result.get("bank_request").get("orderId"),
-                    )
-                    send_data = convert_case(send_data, "snake")
-                    payment_result = get_url(
-                        data=send_data,
-                        response=Response
-                    )
-                    response.status_code = place_order_result.get("status_code")
-                    return {"success": True, "Type": "pending_payment", "paymentResult": payment_result}
-                else:
-                    rpc.response_len_setter(response_len=1)
-                    result = rpc.publish(
-                        message={
-                            "cart": {
-                                "action": "delete_cart",
-                                "body": {
-                                    "user_id": auth_header[0].get("user_id")
+                    if place_order_result.get("Type") == "pending_payment":
+                        send_data = SendData(
+                            amount=str(place_order_result.get("bank_request").get("amount")),
+                            customerId=str(place_order_result.get("bank_request").get("customerId")),
+                            serviceName=place_order_result.get("bank_request").get("serviceName"),
+                            serviceId=str(place_order_result.get("bank_request").get('serviceId')),
+                            bankName="melli",
+                        )
+                        send_data = convert_case(send_data, "snake")
+                        payment_result = get_url(
+                            data=send_data,
+                            response=Response
+                        )
+                        response.status_code = place_order_result.get("status_code")
+                        return {"success": True, "Type": "pending_payment", "paymentResult": payment_result}
+                    else:
+                        rpc.response_len_setter(response_len=1)
+                        rpc.publish(
+                            message={
+                                "cart": {
+                                    "action": "delete_cart",
+                                    "body": {
+                                        "user_id": auth_header[0].get("user_id")
+                                    }
                                 }
-                            }
-                        },
-                        headers={'cart': True}
-                    )
-                    response.status_code = place_order_result.get("status_code")
-                    return place_order_result
+                            },
+                            headers={'cart': True}
+                        )
+                        response.status_code = place_order_result.get("status_code")
+                        return place_order_result
+                else:
+                    # delete_order_reserving_fail(place_order_result.get("order_object"))
+                    return {"success": False, "message": {
+                        "message": f"موجودی برخی کالا ها تمام شده است",
+                    }}
+
             else:
                 response.status_code = place_order_result.get("status_code")
                 return place_order_result
