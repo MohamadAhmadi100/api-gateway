@@ -8,6 +8,7 @@ class Insurance(BaseModel):
     typeLabel: str
     amount: int
     coverage: str
+    selectedType: str
 
 
 class PerStock(BaseModel):
