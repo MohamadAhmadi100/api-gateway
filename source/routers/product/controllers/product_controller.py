@@ -552,11 +552,26 @@ def get_category_list(
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
 
+        quantity_available_result = rpc.publish(
+            message={
+                "quantity": {
+                    "action": "get_available_quantities",
+                    "body": {
+                        "system_code": "1",
+                        "customer_type": customer_type if customer_type else "B2B"
+                    }
+                }
+            },
+            headers={'quantity': True}
+        ).get("quantity", {})
+
         product_result = rpc.publish(
             message={
                 "product": {
                     "action": "get_category_list",
-                    "body": {}
+                    "body": {
+                        "available_quantities": quantity_available_result.get("message", {})
+                    }
                 }
             },
             headers={'product': True}
