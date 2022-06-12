@@ -113,7 +113,7 @@ def wallet_detail(
                 ).get("cart", {})
                 if order_response.get("success"):
                     cart = get_cart(response=response, auth_header=auth_header)
-                    get_payment_detail = get_payment_official(response, auth_header)
+                    get_payment_detail = get_formal_payment(response, auth_header)
                     response.status_code = cart.get("status_code", 200)
                     return {"success": True, "message": "مبلغ از کیف پول شما کسر شد",
                             "payment_detail": get_payment_detail}
@@ -174,7 +174,7 @@ def cancele_wallet(response: Response,
             headers={'cart': True}
         ).get("cart", {})
         if cart.get("success"):
-            get_payment_detail = get_payment_official(response, auth_header)
+            get_payment_detail = get_formal_payment(response, auth_header)
             response.status_code = 200
             return {"success": True, "message": "استفاده از کیف پول لغو شد", "payment_detail": get_payment_detail}
         else:
