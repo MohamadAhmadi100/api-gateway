@@ -78,8 +78,8 @@ class UpdatePrice(BaseModel):
     regular: int
     informal: Optional[int] = None
     special: Optional[int] = None
-    special_from_date: Optional[str] = Field(..., alias='specialFromDate')
-    special_to_date: Optional[str] = Field(..., alias='specialToDate')
+    special_from_date: Optional[str] = Field(None, alias='specialFromDate')
+    special_to_date: Optional[str] = Field(None, alias='specialToDate')
 
     @validator("system_code")
     def system_code_validator(cls, value):

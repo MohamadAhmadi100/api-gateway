@@ -454,7 +454,8 @@ def get_product_list_by_system_code(
                     "action": "get_available_quantities",
                     "body": {
                         "system_code": system_code,
-                        "customer_type": customer_type if customer_type else "B2B"
+                        "customer_type": customer_type if customer_type else "B2B",
+                        "storages": allowed_storages if allowed_storages else ["1"]
                     }
                 }
             },
@@ -543,7 +544,7 @@ def get_category_list(
     Get category list
     """
     customer_type = None
-    allowed_storages = list()
+    allowed_storages = None
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", ["B2B"])[0]
@@ -552,11 +553,27 @@ def get_category_list(
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
 
+        quantity_available_result = rpc.publish(
+            message={
+                "quantity": {
+                    "action": "get_available_quantities",
+                    "body": {
+                        "system_code": "1",
+                        "customer_type": customer_type if customer_type else "B2B",
+                        "storages": allowed_storages if allowed_storages else ["1"]
+                    }
+                }
+            },
+            headers={'quantity': True}
+        ).get("quantity", {})
+
         product_result = rpc.publish(
             message={
                 "product": {
                     "action": "get_category_list",
-                    "body": {}
+                    "body": {
+                        "available_quantities": quantity_available_result.get("message", {})
+                    }
                 }
             },
             headers={'product': True}
