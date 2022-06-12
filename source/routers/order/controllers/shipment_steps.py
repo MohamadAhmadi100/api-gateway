@@ -8,9 +8,7 @@ from source.routers.customer.module.auth import AuthHandler
 from source.routers.order.helpers.shipment_helper import shipment_detail
 from source.routers.shipment.validators.shipment_per_stock import PerStock
 
-shipment_step = APIRouter(
-    prefix="/order",
-)
+shipment_step = APIRouter()
 
 auth_handler = AuthHandler()
 

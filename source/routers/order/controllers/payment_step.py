@@ -10,9 +10,7 @@ from source.routers.order.helpers.payment_helper import get_remaining_wallet
 from source.routers.order.helpers.shipment_helper import check_shipment_per_stock
 from source.routers.order.validators.order import wallet, payment
 
-payment_step_order = APIRouter(
-    prefix="/order",
-)
+payment_step_order = APIRouter()
 
 auth_handler = AuthHandler()
 

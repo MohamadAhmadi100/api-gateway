@@ -9,9 +9,7 @@ from starlette.exceptions import HTTPException
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
 
-get_order = APIRouter(
-    prefix="/order",
-)
+get_order = APIRouter()
 
 auth_handler = AuthHandler()
 

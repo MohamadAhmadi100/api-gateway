@@ -13,9 +13,7 @@ from source.routers.order.helpers.shipment_helper import check_shipment_per_stoc
 from source.routers.payment.app import get_url
 from source.routers.payment.validators.payment import SendData
 
-final_step_order = APIRouter(
-    prefix="/order",
-)
+final_step_order = APIRouter()
 
 auth_handler = AuthHandler()
 

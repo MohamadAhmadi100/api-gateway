@@ -7,9 +7,7 @@ from source.routers.customer.module.auth import AuthHandler
 from source.routers.order.helpers.check_out import check_price_qty
 
 
-first_step_order = APIRouter(
-    prefix="/order",
-)
+first_step_order = APIRouter()
 
 auth_handler = AuthHandler()
 
