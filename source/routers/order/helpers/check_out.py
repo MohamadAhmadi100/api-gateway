@@ -1,6 +1,5 @@
-from fastapi import HTTPException
-from source.routers.cart.app import add_and_edit_product
 from source.message_broker.rabbit_server import RabbitRPC
+from source.routers.cart.app import add_and_edit_product
 
 
 class EditQuantity:
