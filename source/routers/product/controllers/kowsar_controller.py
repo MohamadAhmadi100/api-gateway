@@ -67,7 +67,7 @@ def get_kowsar_items(
                             detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@router.get("/update_collection", tags=["Kowsar"])
+@router.get("/update_collection/", tags=["Kowsar"])
 def update_kowsar_collection(
         response: Response
 ):

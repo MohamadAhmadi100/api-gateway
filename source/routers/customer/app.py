@@ -22,7 +22,6 @@ app = FastAPI(
 app.include_router(router_auth)
 app.include_router(router_register)
 app.include_router(router_profile)
-
 app.include_router(router_portal)
 
 

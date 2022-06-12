@@ -40,10 +40,11 @@ def allowed_storages(customer_id):
                         headers={'address': True}
                     ).get("address", {})
                     if msm_warehouses.get("success"):
-                        storage_id = msm_warehouses.get('message').get('warehouse_id')
-                        if str(storage_id) == '1':
-                            return ['1']
-                        return [str(storage_id), '1']
+                        storages = list()
+                        for wms in msm_warehouses.get('message'):
+                            storages.append(str(wms.get('warehouse_id')))
+
+                        return storages
                     else:
                         return []
                 else:

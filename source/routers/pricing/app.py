@@ -143,7 +143,7 @@ def update_product_price(item: UpdatePrice, response: Response) -> dict:
             response.status_code = pricing_result.get("status_code", 200)
             return {"message": pricing_result.get("message")}
         raise HTTPException(status_code=pricing_result.get("status_code", 500),
-                            detail={"error": pricing_result.get("error", {"Something went wrong": pricing_result})})
+                            detail={"error": pricing_result.get("error", "Something went wrong")})
 
 
 @app.get("/product/price/{systemCode}/", tags=["Pricing"])

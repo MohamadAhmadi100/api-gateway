@@ -35,7 +35,7 @@ class Status(str, Enum):
 
 class Reserve(BaseModel):
     amount: int = Field(..., alias="amount")
-    # wallet_id = int = Field(..., alias="walletId")
+    wallet_id : int = Field(..., alias="walletId")
     order_number: int = Field(..., alias="orderNumber")
     type: Optional[Type] = Field(..., alias="type")
     action_type: Optional[ActionType] = Field(..., alias="ActionType")
@@ -44,7 +44,7 @@ class Reserve(BaseModel):
 
 class ResultOrder(BaseModel):
     order_number: int = Field(..., alias="orderNumber")
-    # wallet_id = int = Field(..., alias="walletId")
+    wallet_id : int = Field(..., alias="walletId")
     amount: int = Field(..., alias="amount", isRequired=True)
     type: Optional[Type] = Field(..., alias="type")
     status: Optional[Status] = Field(..., description="success/failed", isRequired=True)
@@ -54,7 +54,7 @@ class ResultOrder(BaseModel):
 
 class CompleteOrderWallet(BaseModel):
     order_number: int = Field(..., alias="orderNumber")
-    # wallet_id = int = Field(..., alias="walletId")
+    wallet_id: int = Field(..., alias="walletId")
     amount: int = Field(..., alias="amount", isRequired=True)
     type: Optional[Type] = Field(..., alias="type")
     status: Optional[Status] = Field(..., description="success/failed", isRequired=True)
