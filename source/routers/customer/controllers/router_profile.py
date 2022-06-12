@@ -1,5 +1,5 @@
 import json
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi import Response, status
 from pydantic.error_wrappers import ValidationError
 from source.message_broker.rabbit_server import RabbitRPC
@@ -325,7 +325,7 @@ def create_informal(person: Person, response: Response, auth_header=Depends(auth
 @router_profile.get("/informal")
 def get_informal(
         response: Response,
-        informalNationalId: int = Path(..., alias="informalNationalId"),
+        informalNationalId: int = Query(..., alias="informalNationalId"),
         auth_header=Depends(auth_handler.check_current_user_tokens)
 ):
     user_data, header = auth_header
@@ -334,7 +334,7 @@ def get_informal(
         result = rpc.publish(
             message={
                 "customer": {
-                    "action": "create_informal",
+                    "action": "get_informal",
                     "body": {
                         "data": {
                             "customer_mobile_number": user_data.get("phone_number"),
