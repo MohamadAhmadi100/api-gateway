@@ -9,3 +9,4 @@ persiantools
 pytz
 python-multipart
 jdatetime==4.1.0
+fastapi==0.73.0
