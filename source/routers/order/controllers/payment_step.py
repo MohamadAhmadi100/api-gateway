@@ -6,9 +6,9 @@ from starlette.exceptions import HTTPException
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.cart.app import get_cart
 from source.routers.customer.module.auth import AuthHandler
-from source.routers.order.helpers.payment_helper import get_remaining_wallet
+from source.routers.order.helpers.payment_helper import get_remaining_wallet, informal_to_cart
 from source.routers.order.helpers.shipment_helper import check_shipment_per_stock
-from source.routers.order.validators.order import wallet, payment
+from source.routers.order.validators.order import wallet, payment, informal
 
 payment_step_order = APIRouter()
 
@@ -177,3 +177,19 @@ def cancele_wallet(response: Response,
             return {"success": True, "message": "استفاده از کیف پول لغو شد", "payment_detail": get_payment_detail}
         else:
             return {"success": False, "message": "cart internal server error"}
+
+
+@payment_step_order.get("/payment_informal/", tags=["payment for order"])
+def post_informal_payment(data: informal, response: Response,
+                          auth_header=Depends(auth_handler.check_current_user_tokens)) -> dict:
+    """
+        payment and wallet detail for creating payment step
+    """
+    user, token = auth_header
+    try:
+        informal_to_cart(user.get("user_id"), informal.national_id)
+        response.status_code = 200
+        return {"success": True, "message": response_result, "cart": cart}
+    except:
+        response.status_code = 404
+        return {"success": False, "message": "something went wrong!", "cart": None}

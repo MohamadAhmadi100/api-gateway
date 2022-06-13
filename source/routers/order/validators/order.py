@@ -22,3 +22,7 @@ class payment(BaseModel):
             raise HTTPException(status_code=400, detail=f"payment must be one of {allowed_values}")
 
         return value
+
+
+class informal(BaseModel):
+    national_id: str

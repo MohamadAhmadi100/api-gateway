@@ -19,6 +19,8 @@ def get_all_orders(response: Response,
                    order_number: Union[int, None] = Query(default=None),
                    date_from: Union[str, None] = Query(default=None),
                    date_to: Union[str, None] = Query(default=None),
+                   page: Union[str, None] = Query(default=1),
+                   perPage: Union[str, None] = Query(default=15),
                    auth_header=Depends(auth_handler.check_current_user_tokens)):
     user, token_dict = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
@@ -31,7 +33,10 @@ def get_all_orders(response: Response,
                         "customerId": user.get("user_id"),
                         "orderNumber": order_number,
                         "dateFrom": date_from,
-                        "dateTo": date_to
+                        "dateTo": date_to,
+                        "page": page,
+                        "perPage": perPage,
+
                     }
                 }
             },

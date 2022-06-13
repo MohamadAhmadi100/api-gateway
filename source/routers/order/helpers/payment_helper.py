@@ -25,15 +25,32 @@ def get_remaining_wallet(user):
         return wallet_amount
 
 
-def informal_to_cart(user):
+def informal_to_cart(user, national_id):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
+            message={
+                "customer": {
+                    "action": "get_informal",
+                    "body": {
+                        "data": {
+                            "customer_mobile_number": user.get("phone_number"),
+                            "informal_national_id": national_id
+                        }
+                    }
+                }
+            },
+            headers={'customer': True}
+        )
+        customer_detail = "asdasdasd"
         rpc.response_len_setter(response_len=1)
         cart_response = rpc.publish(
             message={
                 "cart": {
                     "action": "add_official_unofficial",
                     "body": {
-                        "user_id": user.get("user_id")
+                        "user_id": user.get("user_id"),
+                        "customer_detail": customer_detail
                     }
                 }
             },
