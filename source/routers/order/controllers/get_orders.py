@@ -19,8 +19,9 @@ def get_all_orders(response: Response,
                    order_number: Union[int, None] = Query(default=None),
                    date_from: Union[str, None] = Query(default=None),
                    date_to: Union[str, None] = Query(default=None),
-                   page: Union[str, None] = Query(default=1),
-                   perPage: Union[str, None] = Query(default=15),
+                   page: Union[int, None] = Query(default=1),
+                   perPage: Union[int, None] = Query(default=15),
+                   invStore: Union[str, None] = Query(default=None),
                    auth_header=Depends(auth_handler.check_current_user_tokens)):
     user, token_dict = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
@@ -36,6 +37,7 @@ def get_all_orders(response: Response,
                         "dateTo": date_to,
                         "page": page,
                         "perPage": perPage,
+                        "invStore": invStore,
 
                     }
                 }
