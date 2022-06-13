@@ -1,5 +1,7 @@
+from typing import Optional
+
 from fastapi import HTTPException
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, Field, validator
 
 
 class BaseCart(BaseModel):
@@ -26,3 +28,5 @@ class payment(BaseModel):
 
 class informal(BaseModel):
     national_id: str
+
+

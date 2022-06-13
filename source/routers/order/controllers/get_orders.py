@@ -16,11 +16,11 @@ auth_handler = AuthHandler()
 
 @get_order.get("/orders_list/", tags=["Get orders"])
 def get_all_orders(response: Response,
-                   order_number: Union[int, None] = Query(default=None),
-                   date_from: Union[str, None] = Query(default=None),
-                   date_to: Union[str, None] = Query(default=None),
                    page: Union[int, None] = Query(default=1),
                    perPage: Union[int, None] = Query(default=15),
+                   orderNumber: Union[int, None] = Query(default=None),
+                   dateFrom: Union[str, None] = Query(default=None),
+                   dateTo: Union[str, None] = Query(default=None),
                    invStore: Union[str, None] = Query(default=None),
                    auth_header=Depends(auth_handler.check_current_user_tokens)):
     user, token_dict = auth_header
@@ -32,9 +32,9 @@ def get_all_orders(response: Response,
                     "action": "get_customer_orders",
                     "body": {
                         "customerId": user.get("user_id"),
-                        "orderNumber": order_number,
-                        "dateFrom": date_from,
-                        "dateTo": date_to,
+                        "orderNumber": orderNumber,
+                        "dateFrom": dateFrom,
+                        "dateTo": dateTo,
                         "page": page,
                         "perPage": perPage,
                         "invStore": invStore,
