@@ -325,7 +325,7 @@ def create_informal(person: Person, response: Response, auth_header=Depends(auth
 @router_profile.get("/informal")
 def get_informal(
         response: Response,
-        informalNationalId: int = Query(..., alias="informalNationalId"),
+        informalNationalId: str = Query(..., alias="informalNationalId"),
         auth_header=Depends(auth_handler.check_current_user_tokens)
 ):
     user_data, header = auth_header
