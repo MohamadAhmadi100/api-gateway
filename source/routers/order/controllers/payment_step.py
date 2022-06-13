@@ -37,7 +37,7 @@ def get_formal_payment(response: Response, auth_header=Depends(auth_handler.chec
             payment_method = []
         else:
             payment_method = [{"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"},
-                              {"methodName": "aiBanking", "methodLabe": "درگاه هوشمند"}]
+                              {"methodName": "aiBanking", "methodLabe": "پرداخت انلاین"}]
 
         response_result = {
             "walletAmount": wallet_amount,
