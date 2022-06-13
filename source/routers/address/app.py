@@ -4,6 +4,7 @@ from starlette.exceptions import HTTPException as starletteHTTPException
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.address.validators.address import Address, AddressId
 from source.routers.address.validators.update_address import UpdateAddress
+from source.routers.customer.helpers.allowed_storages_token import allowed_storages
 from source.routers.customer.module.auth import AuthHandler
 
 TAGS = [
@@ -79,6 +80,7 @@ def create_address(data: Address,
                    response: Response,
                    auth_header=Depends(auth_handler.check_current_user_tokens)):
     user, token_dict = auth_header
+    print(user, token_dict)
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         address_response = rpc.publish(
@@ -96,6 +98,14 @@ def create_address(data: Address,
 
         if address_response.get("success"):
             response.status_code = address_response.get("status_code", 201)
+            sub_dict = {
+                "user_id": user.get('user_id'),
+                "customer_type": user.get('customer_type'),
+                "phone_number": user.get('phone_number'),
+                "allowed_storages": allowed_storages(user.get('customerID'))
+            }
+            response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
+            response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
             return address_response
         raise HTTPException(status_code=address_response.get("status_code", 500),
                             detail={"error": address_response.get("error", "Address service Internal error")})

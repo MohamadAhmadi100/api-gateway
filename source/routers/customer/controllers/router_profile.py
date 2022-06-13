@@ -325,7 +325,7 @@ def create_informal(person: Person, response: Response, auth_header=Depends(auth
 @router_profile.get("/informal")
 def get_informal(
         response: Response,
-        informalNationalId: int = Query(..., alias="informalNationalId"),
+        informalNationalId: str = Query(..., alias="informalNationalId"),
         auth_header=Depends(auth_handler.check_current_user_tokens)
 ):
     user_data, header = auth_header
@@ -339,6 +339,45 @@ def get_informal(
                         "data": {
                             "customer_mobile_number": user_data.get("phone_number"),
                             "informal_national_id": informalNationalId
+                        }
+                    }
+                }
+            },
+            headers={'customer': True}
+        )
+    customer_result = result.get("customer", {})
+    if not customer_result.get("success"):
+        raise HTTPException(
+            status_code=customer_result.get("status_code", 500),
+            detail={"error": customer_result.get("error", "Something went wrong")}
+        )
+    sub_dict = {
+        "user_id": user_data.get('user_id'),
+        "customer_type": user_data.get('customer_type'),
+        "phone_number": user_data.get('phone_number'),
+        "allowed_storages": allowed_storages(user_data.get('customerID'))
+    }
+    response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
+    response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
+    response.status_code = customer_result.get("status_code", 200)
+    return customer_result.get("message", 200)
+
+
+@router_profile.get("/informal_persons")
+def get_informal_persons(
+        response: Response,
+        auth_header=Depends(auth_handler.check_current_user_tokens)
+):
+    user_data, header = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
+            message={
+                "customer": {
+                    "action": "get_all_informal_persons",
+                    "body": {
+                        "data": {
+                            "customer_mobile_number": user_data.get("phone_number"),
                         }
                     }
                 }
