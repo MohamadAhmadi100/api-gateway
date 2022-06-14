@@ -22,7 +22,6 @@ class payment(BaseModel):
             raise HTTPException(status_code=400, detail="payment method must be a string")
         if value not in allowed_values:
             raise HTTPException(status_code=400, detail=f"payment must be one of {allowed_values}")
-
         return value
 
 

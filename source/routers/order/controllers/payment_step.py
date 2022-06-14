@@ -82,6 +82,7 @@ def wallet_detail(
 ):
     user, token_dict = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        cart = get_cart(response=response, auth_header=auth_header)
         rpc.response_len_setter(response_len=1)
         wallet_response = rpc.publish(
             message={
@@ -96,27 +97,31 @@ def wallet_detail(
         ).get("wallet", {})
         if wallet_response.get("success"):
             if data.wallet_amount <= wallet_response['message'].get('remainingAmount'):
-                rpc.response_len_setter(response_len=1)
-                order_response = rpc.publish(
-                    message={
-                        "cart": {
-                            "action": "add_wallet_to_cart",
-                            "body": {
-                                "user_id": user.get("user_id"),
-                                "wallet_amount": data.wallet_amount,
+                if data.wallet_amount <= cart.get("totalPrice"):
+                    rpc.response_len_setter(response_len=1)
+                    order_response = rpc.publish(
+                        message={
+                            "cart": {
+                                "action": "add_wallet_to_cart",
+                                "body": {
+                                    "user_id": user.get("user_id"),
+                                    "wallet_amount": data.wallet_amount,
+                                }
                             }
-                        }
-                    },
-                    headers={'cart': True}
-                ).get("cart", {})
-                if order_response.get("success"):
-                    cart = get_cart(response=response, auth_header=auth_header)
-                    get_payment_detail = get_formal_payment(response, auth_header)
-                    response.status_code = cart.get("status_code", 200)
-                    return {"success": True, "message": "مبلغ از کیف پول شما کسر شد",
-                            "payment_detail": get_payment_detail}
-                raise HTTPException(status_code=order_response.get("status_code", 500),
-                                    detail={"error": order_response.get("error", "Order service Internal error")})
+                        },
+                        headers={'cart': True}
+                    ).get("cart", {})
+                    if order_response.get("success"):
+                        cart = get_cart(response=response, auth_header=auth_header)
+                        get_payment_detail = get_formal_payment(response, auth_header)
+                        response.status_code = cart.get("status_code", 200)
+                        return {"success": True, "message": "مبلغ از کیف پول شما کسر شد",
+                                "payment_detail": get_payment_detail}
+                    raise HTTPException(status_code=order_response.get("status_code", 500),
+                                        detail={"error": order_response.get("error", "Order service Internal error")})
+                else:
+                    raise HTTPException(status_code=500,
+                                        detail={"error": "مبلغ وارد شده از مبلغ سفارش بیشتر است"})
             else:
                 raise HTTPException(status_code=500,
                                     detail={"error": "مبلغ وارد شده از موجودی کیف پول کمتر است"})
@@ -189,7 +194,7 @@ def post_informal_payment(data: informal, response: Response,
     try:
         informal_to_cart(user.get("user_id"), informal.national_id)
         response.status_code = 200
-        return {"success": True, "message": response_result, "cart": cart}
+        # return {"success": True, "message": response_result, "cart": cart}
     except:
         response.status_code = 404
         return {"success": False, "message": "something went wrong!", "cart": None}
