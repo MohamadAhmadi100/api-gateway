@@ -2,16 +2,16 @@ from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.order.helpers.payment_helper import wallet_payment_consume
 
 
-def handle_order_bank_callback(payment_detail):
+def handle_order_bank_callback(result, response):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        if payment_detail['is_paid']:
+        if result['is_paid']:
             rpc.response_len_setter(response_len=1)
             user_cart = rpc.publish(
                 message={
                     "cart": {
                         "action": "get_cart",
                         "body": {
-                            "user_id": payment_detail.get("customer_id")
+                            "user_id": result.get("customer_id")
                         }
                     }
                 },
@@ -19,7 +19,7 @@ def handle_order_bank_callback(payment_detail):
             ).get('cart', {}).get('message', {})
             # consume wallet
             if user_cart['payment'].get("walletAmount") is not None:
-                wallet_payment_consume(payment_detail, user_cart)
+                wallet_payment_consume(result, user_cart)
 
             rpc.response_len_setter(response_len=2)
             order_response = rpc.publish(
@@ -27,19 +27,19 @@ def handle_order_bank_callback(payment_detail):
                     "order": {
                         "action": "order_bank_callback_processing",
                         "body": {
-                            "payment_data": payment_detail
+                            "payment_data": result
                         }
                     },
                     "cart": {
                         "action": "delete_cart",
                         "body": {
-                            "user_id": payment_detail.get("customerId")
+                            "user_id": result.get("customerId")
                         }
                     }
 
                 },
-                headers={'order': True}
-            ).get("order", {})
+                headers={'order': True, 'cart': True}
+            )
             return order_response
         else:
             rpc.response_len_setter(response_len=2)
@@ -48,19 +48,18 @@ def handle_order_bank_callback(payment_detail):
                     "order": {
                         "action": "order_bank_callback_cancel",
                         "body": {
-                            "payment_data": payment_detail
+                            "payment_data": result
                         }
                     },
                     "quantity": {
                         "action": "remove_from_reserve",
                         "body": {
-                            "order_id": payment_detail.get("customerId")
+                            "order_id": result.get("customerId")
                         }
                     }
                 },
                 headers={'order': True, "quantity": True}
             )
-
             return order_response
 
 

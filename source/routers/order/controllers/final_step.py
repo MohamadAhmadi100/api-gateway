@@ -7,7 +7,7 @@ from source.routers.cart.app import get_cart
 from source.routers.customer.helpers.profile_view import get_profile_info
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.order.helpers.check_out import check_price_qty
-from source.routers.order.helpers.final_helper import place_order
+from source.routers.order.helpers.final_helper import place_order, reserve_order_items
 from source.routers.order.helpers.payment_helper import wallet_final_consume
 from source.routers.order.helpers.shipment_helper import check_shipment_per_stock
 from source.routers.payment.app import get_url
@@ -42,7 +42,7 @@ def final_order(
             customer = get_profile_info(auth_header[0])
             place_order_result = place_order(auth_header, cart, customer)
             if place_order_result.get("success"):
-
+                reserve_order_items(place_order_result.get("order_object"))
                 if place_order_result.get("Type") == "pending_payment":
                     send_data = SendData(
                         amount=str(place_order_result.get("bank_request").get("amount")),
