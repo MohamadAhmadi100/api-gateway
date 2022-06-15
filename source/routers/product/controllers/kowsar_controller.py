@@ -1,5 +1,4 @@
-from fastapi import HTTPException, Response, Path, APIRouter, Body
-from starlette.responses import RedirectResponse
+from fastapi import HTTPException, Response, Path, APIRouter
 
 from source.helpers.case_converter import convert_case
 from source.message_broker.rabbit_server import RabbitRPC
