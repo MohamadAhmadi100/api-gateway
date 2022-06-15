@@ -31,9 +31,11 @@ def final_order(
     # check if customer select all the shipment methods per stock
     check_shipment_result = check_shipment_per_stock(cart)
     if len(cart['shipment']) != len(check_shipment_result):
-        return {"success": False, "message": "!روش ارسال برای همه انبار ها را انتخاب کنید"}
+        response.status_code = 202
+        return {"success": False, "message": {"message": "!روش ارسال برای همه انبار ها را انتخاب کنید"}}
     elif len(cart['payment']) < 1:
-        return {"success": False, "message": "!روش پرداخت را انتخاب کنید"}
+        response.status_code = 202
+        return {"success": False, "message": {"message": "!روش پرداخت را انتخاب کنید"}}
 
     # check quantity
     check_out = check_price_qty(auth_header, cart, response)
@@ -81,12 +83,10 @@ def final_order(
                     response.status_code = place_order_result.get("status_code")
                     return place_order_result
             else:
-                response.status_code = 400
                 delete_order_reserving_fail(place_order_result.get("order_object"))
-                return {"success": False,
-                        "message": {"name": None,
-                                    "status": "removed",
-                                    "message": f"برخی کالا ها از سبد خرید به دلیل اتمام موجودی حذف شد"}}
+                check_out = check_price_qty(auth_header, cart, response)
+                response.status_code = 202
+                return {"success": False, "message": check_out.get("message")}
         else:
 
             response.status_code = place_order_result.get("status_code")
