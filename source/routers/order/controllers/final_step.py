@@ -32,10 +32,10 @@ def final_order(
     check_shipment_result = check_shipment_per_stock(cart)
     if len(cart['shipment']) != len(check_shipment_result):
         response.status_code = 202
-        return {"success": False, "message": {"message": "!روش ارسال برای همه انبار ها را انتخاب کنید"}}
+        return {"success": False, "message": [{"message": "!روش ارسال برای همه انبار ها را انتخاب کنید"}]}
     elif len(cart['payment']) < 1:
         response.status_code = 202
-        return {"success": False, "message": {"message": "!روش پرداخت را انتخاب کنید"}}
+        return {"success": False, "message": [{"message": "!روش پرداخت را انتخاب کنید"}]}
 
     # check quantity
     check_out = check_price_qty(auth_header, cart, response)
