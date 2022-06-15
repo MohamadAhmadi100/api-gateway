@@ -2,7 +2,7 @@ from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.order.helpers.payment_helper import wallet_payment_consume
 
 
-def handle_order_bank_callback(result, response):
+def handle_order_bank_callback(result):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         if result['is_paid']:
             rpc.response_len_setter(response_len=1)
@@ -22,7 +22,7 @@ def handle_order_bank_callback(result, response):
                 wallet_payment_consume(result, user_cart)
 
             rpc.response_len_setter(response_len=2)
-            order_response = rpc.publish(
+            rpc.publish(
                 message={
                     "order": {
                         "action": "order_bank_callback_processing",
@@ -38,29 +38,47 @@ def handle_order_bank_callback(result, response):
                     }
 
                 },
-                headers={'order': True, 'cart': True}
-            )
-            return order_response
+                headers={'order': True, "cart":True}
+            ).get("order", {})
+            return {"result": True, "service_id": result.get("service_id")}
         else:
-            rpc.response_len_setter(response_len=2)
-            order_response = rpc.publish(
+            rpc.response_len_setter(response_len=1)
+            rpc.publish(
                 message={
                     "order": {
                         "action": "order_bank_callback_cancel",
                         "body": {
                             "payment_data": result
                         }
-                    },
-                    "quantity": {
-                        "action": "remove_from_reserve",
+                    }
+                },
+                headers={'order': True}
+            ).get("order")
+            rpc.response_len_setter(response_len=1)
+            order_get_response = rpc.publish(
+                message={
+                    "order": {
+                        "action": "get_order",
                         "body": {
-                            "order_id": result.get("customerId")
+                            "order_id": result.get("service_id")
                         }
                     }
                 },
-                headers={'order': True, "quantity": True}
-            )
-            return order_response
+                headers={'order': True}
+            ).get("order")
+            rpc.response_len_setter(response_len=1)
+            rpc.publish(
+                message={
+                    "quantity": {
+                        "action": "remove_from_reserve",
+                        "body": {
+                            "order": order_get_response.get("order_object")
+                        }
+                    }
+                },
+                headers={"quantity": True}
+            ).get("quantity")
+            return {"result": False, "service_id": result.get("service_id")}
 
 
 def reserve_order_items(order_object):
