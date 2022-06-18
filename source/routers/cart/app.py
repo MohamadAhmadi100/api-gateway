@@ -207,13 +207,14 @@ def get_cart(response: Response,
                 now_formated_date_time = jdatetime.datetime.strptime(
                     jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
 
-                special_formated_date_time = jdatetime.datetime.strptime(
-                    price.get("special_to_date", jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-                    "%Y-%m-%d %H:%M:%S")
+
 
                 if not price.get("special"):
                     product["price"] = price.get("regular")
                 else:
+                    special_formated_date_time = jdatetime.datetime.strptime(
+                        price.get("special_to_date", jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+                        "%Y-%m-%d %H:%M:%S")
                     if now_formated_date_time < special_formated_date_time and price.get(
                             "special"):
                         product["price"] = price.get("special")
