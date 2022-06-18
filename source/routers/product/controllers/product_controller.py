@@ -521,7 +521,7 @@ def get_product_list_by_system_code(
                         product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
                             list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
                             "B2B", {}).get("storages", {}).get("1", {}).get("special", None)
-                        if not product["special_price"] or not product["price"]:
+                        if not product["price"]:
                             continue
                 else:
                     continue
