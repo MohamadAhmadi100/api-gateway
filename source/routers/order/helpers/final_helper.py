@@ -139,3 +139,24 @@ def place_order(auth_header, cart, customer):
             return result_to_order
         else:
             return {"success": False, "message": "something went wrong!"}
+
+def add_final_flag_to_cart(auth_header):
+    user, token_dict = auth_header
+    # check if all will have response(timeout)
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result_to_order = rpc.publish(
+            message={
+                "cart": {
+                    "action": "final_flag",
+                    "body": {
+                        "user_id": user.get("user_id"),
+                    }
+                }
+            },
+            headers={'cart': True}
+        ).get("cart")
+        if result_to_order.get("success"):
+            return result_to_order
+        else:
+            return {"success": False, "message": "something went wrong!"}
