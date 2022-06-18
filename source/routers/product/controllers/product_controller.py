@@ -508,10 +508,8 @@ def get_product_list_by_system_code(
                         if not price_tuples:
                             continue
 
-                        price_tuples.sort(key=lambda x: x[1])
-                        price, special_price = (None, None)
-                        if price_tuples:
-                            price, special_price = price_tuples[0]
+                        price_tuples.sort(key=lambda x: x[0])
+                        price, special_price = price_tuples[0]
                         product["price"] = price
                         product["special_price"] = special_price
                     else:
@@ -609,10 +607,8 @@ def get_category_list(
 
                         if not price_tuples:
                             continue
-                        price_tuples.sort(key=lambda x: x[1])
-                        price, special_price = (None, None)
-                        if price_tuples:
-                            price, special_price = price_tuples[0]
+                        price_tuples.sort(key=lambda x: x[0])
+                        price, special_price = price_tuples[0]
                         product["price"] = price
                         product["special_price"] = special_price
                     else:
