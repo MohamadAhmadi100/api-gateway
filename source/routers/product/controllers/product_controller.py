@@ -366,10 +366,11 @@ def get_product_by_system_code(
                                 now_formated_date_time = jdatetime.datetime.strptime(
                                     jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
 
-                                special_formated_date_time = jdatetime.datetime.strptime(
-                                    price.get("special_to_date",
-                                              jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-                                    "%Y-%m-%d %H:%M:%S")
+                                special_price_stored_date = price.get("special_to_date") if price.get(
+                                    "special_to_date") else jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                                special_formated_date_time = jdatetime.datetime.strptime(special_price_stored_date,
+                                                                                         "%Y-%m-%d %H:%M:%S")
 
                                 if price.get("special") and not (
                                         now_formated_date_time < special_formated_date_time):
@@ -410,9 +411,11 @@ def get_product_by_system_code(
                     now_formated_date_time = jdatetime.datetime.strptime(
                         jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
 
-                    special_formated_date_time = jdatetime.datetime.strptime(
-                        special_price.get("special_to_date", jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-                        "%Y-%m-%d %H:%M:%S")
+                    special_price_stored_date = special_price.get("special_to_date") if special_price.get(
+                        "special_to_date") else jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                    special_formated_date_time = jdatetime.datetime.strptime(special_price_stored_date,
+                                                                             "%Y-%m-%d %H:%M:%S")
 
                     if special_price.get("special") and now_formated_date_time < special_formated_date_time:
                         product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
@@ -518,7 +521,7 @@ def get_product_list_by_system_code(
                         product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
                             list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
                             "B2B", {}).get("storages", {}).get("1", {}).get("special", None)
-                        if not product["special_price"] or not product["price"]:
+                        if not product["price"]:
                             continue
                 else:
                     continue
@@ -619,7 +622,7 @@ def get_category_list(
                         product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
                             list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
                             "B2B", {}).get("storages", {}).get("1", {}).get("special", None)
-                        if not product["special_price"] or not product["price"]:
+                        if not product["price"]:
                             continue
                     product_list.append(product)
             if not product_list:
