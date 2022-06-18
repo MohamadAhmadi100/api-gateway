@@ -18,10 +18,7 @@ auth_handler = AuthHandler()
 def get_all_orders(response: Response,
                    page: Union[int, None] = Query(default=1),
                    perPage: Union[int, None] = Query(default=15),
-                   orderNumber: Union[int, None] = Query(default=None),
-                   dateFrom: Union[str, None] = Query(default=None),
-                   dateTo: Union[str, None] = Query(default=None),
-                   invStore: Union[str, None] = Query(default=None),
+                   status: Union[str, None] = Query(default=None),
                    auth_header=Depends(auth_handler.check_current_user_tokens)):
     user, token_dict = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
@@ -29,16 +26,12 @@ def get_all_orders(response: Response,
         order_response = rpc.publish(
             message={
                 "order": {
-                    "action": "get_customer_orders",
+                    "action": "get_customer_ecommerce",
                     "body": {
                         "customerId": user.get("user_id"),
-                        "orderNumber": orderNumber,
-                        "dateFrom": dateFrom,
-                        "dateTo": dateTo,
                         "page": page,
                         "perPage": perPage,
-                        "invStore": invStore,
-
+                        "status": status,
                     }
                 }
             },
