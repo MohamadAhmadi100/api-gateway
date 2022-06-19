@@ -40,6 +40,7 @@ def handle_order_bank_callback(result):
                 },
                 headers={'order': True, "cart":True}
             ).get("order", {})
+            response.status_code = 200
             return {"result": True, "service_id": result.get("service_id")}
         else:
             rpc.response_len_setter(response_len=1)
@@ -78,6 +79,7 @@ def handle_order_bank_callback(result):
                 },
                 headers={"quantity": True}
             ).get("quantity")
+            response.status_code = 200
             return {"result": False, "service_id": result.get("service_id")}
 
 

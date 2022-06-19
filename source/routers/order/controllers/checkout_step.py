@@ -16,7 +16,7 @@ auth_handler = AuthHandler()
 def get_cart_detail(response: Response, auth_header=Depends(auth_handler.check_current_user_tokens)) -> dict:
     cart = get_cart(response=response, auth_header=auth_header)
     if cart.get("finalFlag"):
-        return {"success": False, "message": [{"message": "شما یک سفارش در حال پردازی دارید."}]}
+        return {"success": False, "message": [{"message": "شما یک سفارش در حال پردازش دارید."}]}
     elif not cart['products']:
         return {"success": True, "message": "سبد خرید خالی است"}
     check_out = check_price_qty(auth_header, cart, response)
