@@ -16,6 +16,7 @@ class ProductConfig(BaseModel):
     power: Optional[str] = Field(None)
     part_number: Optional[str] = Field(None)
     processor: Optional[str] = Field(None)
+    seller: Optional[str] = Field(None)
 
     @validator('storage')
     def storage_validator(cls, v):
@@ -85,6 +86,12 @@ class ProductConfig(BaseModel):
 
     @validator('processor')
     def processor_validator(cls, v):
+        if not isinstance(v, str):
+            return None
+        return v
+
+    @validator('seller')
+    def seller_validator(cls, v):
         if not isinstance(v, str):
             return None
         return v
