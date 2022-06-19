@@ -2,25 +2,27 @@ from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.order.helpers.payment_helper import wallet_payment_consume
 
 
-def handle_order_bank_callback(result):
+def handle_order_bank_callback(result, response):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        if result['is_paid']:
-            rpc.response_len_setter(response_len=1)
-            user_cart = rpc.publish(
-                message={
-                    "cart": {
-                        "action": "get_cart",
-                        "body": {
-                            "user_id": result.get("customer_id")
-                        }
-                    }
-                },
-                headers={'cart': True}
-            ).get('cart', {}).get('message', {})
-            # consume wallet
-            if user_cart['payment'].get("walletAmount") is not None:
-                wallet_payment_consume(result, user_cart)
 
+        rpc.response_len_setter(response_len=1)
+        user_cart = rpc.publish(
+            message={
+                "cart": {
+                    "action": "get_cart",
+                    "body": {
+                        "user_id": result.get("customer_id")
+                    }
+                }
+            },
+            headers={'cart': True}
+        ).get('cart', {}).get('message', {})
+
+        # consume wallet
+        if user_cart['payment'].get("walletAmount") is not None:
+            wallet_result = wallet_payment_consume(result, user_cart)
+
+        if result['is_paid']:
             rpc.response_len_setter(response_len=2)
             rpc.publish(
                 message={
@@ -38,7 +40,7 @@ def handle_order_bank_callback(result):
                     }
 
                 },
-                headers={'order': True, "cart":True}
+                headers={'order': True, "cart": True}
             ).get("order", {})
             response.status_code = 200
             return {"result": True, "service_id": result.get("service_id")}
@@ -142,6 +144,7 @@ def place_order(auth_header, cart, customer):
         else:
             return {"success": False, "message": "something went wrong!"}
 
+
 def add_final_flag_to_cart(auth_header):
     user, token_dict = auth_header
     # check if all will have response(timeout)
@@ -162,3 +165,43 @@ def add_final_flag_to_cart(auth_header):
             return result_to_order
         else:
             return {"success": False, "message": "something went wrong!"}
+
+
+payment = {
+    "payment_id": 1310,
+    "service_id": 200000316,
+    "customer_id": 5,
+    "amount": 46242,
+    "bank_name": "melli",
+    "bank_code": 1011127,
+    "is_paid": True,
+    "start_payment": 1655197598.26299,
+    "start_payment_jalali": "1401-03-24 13:36:38",
+    "service": "order",
+    "send_status": "successful",
+    "status": "پرداخت موفقیت آمیز بود و اعتبارسنجی با موفقیت انجام شد",
+    "token": "0001E2074E740454944F32CA912F738E233A2A61A637C7A37A44",
+    "end_payment": 1655197635.17141,
+    "end_payment_jalali": "1401-03-24 13:37:15",
+    "payment_log": {
+        "token": "0001E2074E740454944F32CA912F738E233A2A61A637C7A37A44",
+        "ResCode": "0",
+        "OrderId": "1310",
+        "SwitchResCode": "00",
+        "__RequestVerificationToken": "1XWOMnXrQemIaUT-WmAnstJF7JYqKXBiTZXVtXxkufL1DZ9fF_zPjjDv0zmMrEzd572a4kuFf2e32mxSbA2ELYwsNPM66xPZBzQCj0Yb8xk1",
+        "HashedCardNo": "BAF5D2DDC1BBEC51BBE91BFE2E2245E137446A68D588F77765F233086C92537E",
+        "IsWalletPayment": "false"
+    },
+    "verify_log": {
+        "ResCode": {
+            "ResCode": "0",
+            "Description": "عملیات با موفقیت انجام شد",
+            "Amount": "46242",
+            "RetrivalRefNo": "323329566712",
+            "SystemTraceNo": "000431",
+            "OrderId": "1310",
+            "SwitchResCode": "00",
+            "TransactionDate": "6/14/2022 1:37:07 PM",
+        }
+    }
+}

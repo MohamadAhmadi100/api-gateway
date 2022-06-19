@@ -92,19 +92,24 @@ def wallet_final_consume(palceorder_result, cart, auth_header, response):
 
 def wallet_payment_consume(payment_detail, cart):
     wallet_amount = cart['payment'].get("walletAmount")
-    if wallet_amount > cart['grandPrice']:
-        wallet_amount = cart['grandPrice']
-    data_reserve_wallet = {"amount": wallet_amount, "orderNumber": payment_detail['service_id'], "ActionType": "auto",
-                           "balance": "consume", "type": "order", 'status': "success",
-                           "customer_id": payment_detail.get("customer_id")}
+    if payment_detail.get("is_paid"):
+        data_reserve_wallet = {"amount": wallet_amount, "orderNumber": payment_detail['service_id'], "ActionType": "auto",
+                               "balance": "consume", "type": "order", 'status': "success",
+                               "customer_id": payment_detail.get("customer_id")}
+
+    else:
+        data_reserve_wallet = {"amount": wallet_amount, "orderNumber": payment_detail['service_id'],
+                               "ActionType": "auto",
+                               "balance": "charge", "type": "order", 'status': "failed",
+                               "customer_id": payment_detail.get("customer_id")}
 
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         # send refresh and access token to front in header
         rpc.response_len_setter(response_len=1)
-        rpc.publish(
+        wallet_response = rpc.publish(
             message={
                 "wallet": {
-                    "action": "complete_order_wallet",
+                    "action": "result_checkout",
                     "body": {
                         "data": data_reserve_wallet
                     }
@@ -112,3 +117,4 @@ def wallet_payment_consume(payment_detail, cart):
             },
             headers={'wallet': True}
         ).get("wallet", {})
+        return wallet_response
