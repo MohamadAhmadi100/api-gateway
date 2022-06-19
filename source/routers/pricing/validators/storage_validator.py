@@ -9,8 +9,8 @@ class StoragesModel(BaseModel):
     regular: int
     informal: Optional[int] = None
     special: Optional[int] = None
-    special_from_date: Optional[str] = Field(..., alias='specialFromDate')
-    special_to_date: Optional[str] = Field(..., alias='specialToDate')
+    special_from_date: Optional[str] = Field(None, alias='specialFromDate')
+    special_to_date: Optional[str] = Field(None, alias='specialToDate')
 
     @validator("storage_id")
     def storage_id_validator(cls, value):

@@ -26,16 +26,18 @@ class AuthHandler:
             'exp': datetime.utcnow() + self.access_exp,
             'iat': datetime.utcnow(),
             'sub': sud_dict,
-            'scope': 'access'
+            'scope': 'access',
+            "expired": False
         }
         return jwt.encode(pay_load, self.SECRET_KEY, algorithm='HS256')
 
-    def encode_refresh_token(self, sud_dict: dict) -> str:
+    def encode_refresh_token(self, sub_dict: dict) -> str:
         pay_load = {
             'exp': datetime.utcnow() + self.refresh_exp,
             'iat': datetime.utcnow(),
-            'sub': sud_dict,
-            'scope': 'refresh'
+            'sub': sub_dict,
+            'scope': 'refresh',
+            "expired": False
         }
         return jwt.encode(pay_load, self.SECRET_KEY, algorithm='HS256')
 
@@ -55,7 +57,7 @@ class AuthHandler:
             return False
 
         else:
-            return payload if payload.get("scope") == "access" else False
+            return payload if payload.get("scope") == "access" and not payload.get("expired") else False
 
     def decode_refresh_token(self, token: str):
         try:
@@ -110,3 +112,10 @@ class AuthHandler:
 
         else:
             raise HTTPException(status_code=401, detail={"error": "مجددا وارد شوید", "redirect": "login"})
+
+    def expire_token(self, access_token: str, refresh_token: str):
+        try:
+            access_payload = jwt.decode(access_token, self.SECRET_KEY, algorithms=["HS256"])
+            refresh_payload = jwt.decode(refresh_token, self.SECRET_KEY, algorithms=["HS256"])
+        except Exception:
+            pass

@@ -19,37 +19,21 @@ def allowed_storages(customer_id):
             headers={'address': True}
         ).get("address", {})
 
-        if address.get("success"):
-            default_address = None
-
-            for addr in address.get("result", {}):
-                if addr.get('isDefault'):
-                    default_address = addr
-                    break
-            if default_address:
-                if not default_address.get('cityId') == "1874":
-                    msm_warehouses = rpc.publish(
-                        message={
-                            "address": {
-                                "action": "get_stock",
-                                "body": {
-                                    "cityId": default_address.get('cityId')
-                                }
-                            }
-                        },
-                        headers={'address': True}
-                    ).get("address", {})
-                    if msm_warehouses.get("success"):
-                        storages = list()
-                        for wms in msm_warehouses.get('message'):
-                            storages.append(str(wms.get('warehouse_id')))
-
-                        return storages
-                    else:
-                        return []
-                else:
-                    return ['7']
-            else:
-                return []
-        else:
+        if not address.get("success"):
             return []
+        if not (default_address := next((addr for addr in address.get("result", {}) if addr.get('isDefault')), None)):
+            return []
+        if default_address.get('cityId') == "1874":
+            return ['7']
+        msm_warehouses = rpc.publish(
+            message={
+                "address": {
+                    "action": "get_stock",
+                    "body": {
+                        "cityId": default_address.get('cityId')
+                    }
+                }
+            },
+            headers={'address': True}
+        ).get("address", {})
+        return [str(wms.get('warehouse_id')) for wms in msm_warehouses.get('message')] if msm_warehouses.get("success") else []

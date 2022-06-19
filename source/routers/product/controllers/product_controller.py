@@ -232,6 +232,66 @@ def add_attributes(response: Response,
                             detail={"error": product_result.get("error", "Something went wrong")})
 
 
+@router.post("/edit_product/{systemCode}", tags=["Product"])
+def edit_product(
+        response: Response,
+        system_code: str = Path(..., min_length=11, max_length=12, alias='systemCode'),
+        item: EditProduct = Body(...)
+) -> dict:
+    """
+    Edit a product by name in main collection in database.
+    """
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "edit_product",
+                    "body": {
+                        "system_code": system_code,
+                        "item": dict(item)
+                    }
+                }
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(product_result.get("message"), 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
+
+
+@router.delete("/{systemCode}", tags=["Product"])
+def delete_product(
+        response: Response,
+        system_code: str = Path(..., min_length=11, max_length=12, alias='systemCode')
+) -> dict:
+    """
+    Delete a product by name in main collection in database.
+    """
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "delete_product",
+                    "body": {
+                        "system_code": system_code
+                    }
+                }
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(product_result.get("message"), 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
+
+
 @router.get("/{systemCode}/{lang}", tags=["Product"])
 def get_product_by_system_code(
         response: Response,
@@ -306,30 +366,36 @@ def get_product_by_system_code(
                                 now_formated_date_time = jdatetime.datetime.strptime(
                                     jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
 
-                                special_formated_date_time = jdatetime.datetime.strptime(
-                                    price.get("special_to_date",
-                                              jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-                                    "%Y-%m-%d %H:%M:%S")
+                                special_price_stored_date = price.get("special_to_date") if price.get(
+                                    "special_to_date") else jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                                special_formated_date_time = jdatetime.datetime.strptime(special_price_stored_date,
+                                                                                         "%Y-%m-%d %H:%M:%S")
 
                                 if price.get("special") and not (
                                         now_formated_date_time < special_formated_date_time):
                                     price["special"] = None
 
                                 if quantity.get("storage_id") == price.get("storage_id"):
-                                    item = dict()
-                                    item["warehouse_id"] = quantity.get("storage_id")
-                                    item["price"] = price.get("regular")
-                                    item["special_price"] = price.get("special")
-                                    item["quantity"] = quantity.get("stock_for_sale") - quantity.get('reserved')
-                                    item['max_qty'] = quantity.get("max_qty")
-                                    item['min_qty'] = quantity.get("min_qty")
-                                    item["warehouse_state"] = quantity.get("warehouse_state")
-                                    item["warehouse_city"] = quantity.get("warehouse_city")
-                                    item["warehouse_state_id"] = quantity.get("warehouse_state_id")
-                                    item["warehouse_city_id"] = quantity.get("warehouse_city_id")
-                                    item["warehouse_label"] = quantity.get("warehouse_label")
-                                    item["attribute_label"] = quantity.get("attribute_label")
-                                    product['config']["warehouse"].append(item)
+
+                                    now_quantity = quantity.get("stock_for_sale") - quantity.get('reserved')
+                                    if quantity.get("min_qty") <= now_quantity and now_quantity > 0:
+                                        item = dict()
+                                        item["warehouse_id"] = quantity.get("storage_id")
+                                        item["price"] = price.get("regular")
+                                        item["special_price"] = price.get("special")
+                                        item['max_qty'] = quantity.get("max_qty") if now_quantity > quantity.get(
+                                            "max_qty") else now_quantity
+                                        item['min_qty'] = quantity.get("min_qty")
+                                        item["warehouse_state"] = quantity.get("warehouse_state")
+                                        item["warehouse_city"] = quantity.get("warehouse_city")
+                                        item["warehouse_state_id"] = quantity.get("warehouse_state_id")
+                                        item["warehouse_city_id"] = quantity.get("warehouse_city_id")
+                                        item["warehouse_label"] = quantity.get("warehouse_label")
+                                        item["attribute_label"] = quantity.get("attribute_label")
+                                        if now_quantity - quantity.get("min_qty") <= 3:
+                                            item['alert'] = True
+                                        product['config']["warehouse"].append(item)
                     if not product['config']["warehouse"]:
                         continue
                     product_list.append(product)
@@ -345,9 +411,11 @@ def get_product_by_system_code(
                     now_formated_date_time = jdatetime.datetime.strptime(
                         jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
 
-                    special_formated_date_time = jdatetime.datetime.strptime(
-                        special_price.get("special_to_date", jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-                        "%Y-%m-%d %H:%M:%S")
+                    special_price_stored_date = special_price.get("special_to_date") if special_price.get(
+                        "special_to_date") else jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                    special_formated_date_time = jdatetime.datetime.strptime(special_price_stored_date,
+                                                                             "%Y-%m-%d %H:%M:%S")
 
                     if special_price.get("special") and now_formated_date_time < special_formated_date_time:
                         product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
@@ -360,66 +428,6 @@ def get_product_by_system_code(
             if not product_list:
                 raise HTTPException(status_code=404, detail={"error": "No products found"})
             return convert_case(final_result, 'camel')
-
-
-@router.delete("/{systemCode}", tags=["Product"])
-def delete_product(
-        response: Response,
-        system_code: str = Path(..., min_length=11, max_length=12, alias='systemCode')
-) -> dict:
-    """
-    Delete a product by name in main collection in database.
-    """
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        product_result = rpc.publish(
-            message={
-                "product": {
-                    "action": "delete_product",
-                    "body": {
-                        "system_code": system_code
-                    }
-                }
-            },
-            headers={'product': True}
-        )
-        product_result = product_result.get("product", {})
-        if product_result.get("success"):
-            response.status_code = product_result.get("status_code", 200)
-            return convert_case(product_result.get("message"), 'camel')
-        raise HTTPException(status_code=product_result.get("status_code", 500),
-                            detail={"error": product_result.get("error", "Something went wrong")})
-
-
-@router.post("/edit_product/{systemCode}", tags=["Product"])
-def edit_product(
-        response: Response,
-        system_code: str = Path(..., min_length=11, max_length=12, alias='systemCode'),
-        item: EditProduct = Body(...)
-) -> dict:
-    """
-    Edit a product by name in main collection in database.
-    """
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        product_result = rpc.publish(
-            message={
-                "product": {
-                    "action": "edit_product",
-                    "body": {
-                        "system_code": system_code,
-                        "item": dict(item)
-                    }
-                }
-            },
-            headers={'product': True}
-        )
-        product_result = product_result.get("product", {})
-        if product_result.get("success"):
-            response.status_code = product_result.get("status_code", 200)
-            return convert_case(product_result.get("message"), 'camel')
-        raise HTTPException(status_code=product_result.get("status_code", 500),
-                            detail={"error": product_result.get("error", "Something went wrong")})
 
 
 @router.get("/get_product_list_by_system_code/{systemCode}/", tags=["Product"])
@@ -443,6 +451,19 @@ def get_product_list_by_system_code(
 
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
+        quantity_available_result = rpc.publish(
+            message={
+                "quantity": {
+                    "action": "get_available_quantities",
+                    "body": {
+                        "system_code": system_code,
+                        "customer_type": customer_type if customer_type else "B2B",
+                        "storages": allowed_storages if allowed_storages else ["1"]
+                    }
+                }
+            },
+            headers={'quantity': True}
+        ).get("quantity", {})
         product_result = rpc.publish(
             message={
                 "product": {
@@ -450,7 +471,8 @@ def get_product_list_by_system_code(
                     "body": {
                         "system_code": system_code,
                         "page": page,
-                        "per_page": per_page
+                        "per_page": per_page,
+                        "available_quantities": quantity_available_result.get("message", {})
                     }
                 }
             },
@@ -486,10 +508,8 @@ def get_product_list_by_system_code(
                         if not price_tuples:
                             continue
 
-                        price_tuples.sort(key=lambda x: x[1])
-                        price, special_price = (None, None)
-                        if price_tuples:
-                            price, special_price = price_tuples[0]
+                        price_tuples.sort(key=lambda x: x[0])
+                        price, special_price = price_tuples[0]
                         product["price"] = price
                         product["special_price"] = special_price
                     else:
@@ -499,7 +519,7 @@ def get_product_list_by_system_code(
                         product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
                             list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
                             "B2B", {}).get("storages", {}).get("1", {}).get("special", None)
-                        if not product["special_price"] or not product["price"]:
+                        if not product["price"]:
                             continue
                 else:
                     continue
@@ -525,7 +545,7 @@ def get_category_list(
     Get category list
     """
     customer_type = None
-    allowed_storages = list()
+    allowed_storages = None
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", ["B2B"])[0]
@@ -534,11 +554,27 @@ def get_category_list(
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
 
+        quantity_available_result = rpc.publish(
+            message={
+                "quantity": {
+                    "action": "get_available_quantities",
+                    "body": {
+                        "system_code": "1",
+                        "customer_type": customer_type if customer_type else "B2B",
+                        "storages": allowed_storages if allowed_storages else ["1"]
+                    }
+                }
+            },
+            headers={'quantity': True}
+        ).get("quantity", {})
+
         product_result = rpc.publish(
             message={
                 "product": {
                     "action": "get_category_list",
-                    "body": {}
+                    "body": {
+                        "available_quantities": quantity_available_result.get("message", {})
+                    }
                 }
             },
             headers={'product': True}
@@ -547,23 +583,6 @@ def get_category_list(
         if product_result.get("success"):
             message_product = product_result.get("message", {})
             product_list = list()
-            for key in message_product.keys():
-                if key != "latest_product":
-                    for obj in message_product[key]['items']:
-                        product_kowsar_result = rpc.publish(
-                            message={
-                                "product": {
-                                    "action": "get_kowsar",
-                                    "body": {
-                                        "system_code": obj.get("system_code"),
-                                    }
-                                }
-                            },
-                            headers={'product': True}
-                        )
-                        product_kowsar_result = product_kowsar_result.get("product", {})
-                        if product_kowsar_result.get("success"):
-                            obj['image'] = product_kowsar_result.get("message", {}).get("image", None)
             for product in message_product['product']['items']:
                 pricing_result = rpc.publish(
                     message={
@@ -588,10 +607,8 @@ def get_category_list(
 
                         if not price_tuples:
                             continue
-                        price_tuples.sort(key=lambda x: x[1])
-                        price, special_price = (None, None)
-                        if price_tuples:
-                            price, special_price = price_tuples[0]
+                        price_tuples.sort(key=lambda x: x[0])
+                        price, special_price = price_tuples[0]
                         product["price"] = price
                         product["special_price"] = special_price
                     else:
@@ -601,7 +618,7 @@ def get_category_list(
                         product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
                             list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
                             "B2B", {}).get("storages", {}).get("1", {}).get("special", None)
-                        if not product["special_price"] or not product["price"]:
+                        if not product["price"]:
                             continue
                     product_list.append(product)
             if not product_list:

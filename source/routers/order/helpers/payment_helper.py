@@ -25,15 +25,32 @@ def get_remaining_wallet(user):
         return wallet_amount
 
 
-def unofficial_to_cart(user):
+def informal_to_cart(user, national_id):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
+            message={
+                "customer": {
+                    "action": "get_informal",
+                    "body": {
+                        "data": {
+                            "customer_mobile_number": user.get("phone_number"),
+                            "informal_national_id": national_id
+                        }
+                    }
+                }
+            },
+            headers={'customer': True}
+        )
+        customer_detail = "asdasdasd"
         rpc.response_len_setter(response_len=1)
         cart_response = rpc.publish(
             message={
                 "cart": {
                     "action": "add_official_unofficial",
                     "body": {
-                        "user_id": user.get("user_id")
+                        "user_id": user.get("user_id"),
+                        "customer_detail": customer_detail
                     }
                 }
             },
@@ -71,3 +88,27 @@ def wallet_final_consume(palceorder_result, cart, auth_header, response):
         if not wallet_response.get("success"):
             raise HTTPException(status_code=wallet_response.get("status_code", 500),
                                 detail={"error": "wallet not response"})
+
+
+def wallet_payment_consume(payment_detail, cart):
+    wallet_amount = cart['payment'].get("walletAmount")
+    if wallet_amount > cart['grandPrice']:
+        wallet_amount = cart['grandPrice']
+    data_reserve_wallet = {"amount": wallet_amount, "orderNumber": payment_detail['service_id'], "ActionType": "auto",
+                           "balance": "consume", "type": "order", 'status': "success",
+                           "customer_id": payment_detail.get("customer_id")}
+
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        # send refresh and access token to front in header
+        rpc.response_len_setter(response_len=1)
+        rpc.publish(
+            message={
+                "wallet": {
+                    "action": "complete_order_wallet",
+                    "body": {
+                        "data": data_reserve_wallet
+                    }
+                }
+            },
+            headers={'wallet': True}
+        ).get("wallet", {})

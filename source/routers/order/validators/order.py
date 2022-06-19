@@ -1,5 +1,7 @@
+from typing import Optional
+
 from fastapi import HTTPException
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, Field, validator
 
 
 class BaseCart(BaseModel):
@@ -20,5 +22,10 @@ class payment(BaseModel):
             raise HTTPException(status_code=400, detail="payment method must be a string")
         if value not in allowed_values:
             raise HTTPException(status_code=400, detail=f"payment must be one of {allowed_values}")
-
         return value
+
+
+class informal(BaseModel):
+    national_id: str
+
+
