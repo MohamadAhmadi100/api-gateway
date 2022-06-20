@@ -366,10 +366,11 @@ def get_product_by_system_code(
                                 now_formated_date_time = jdatetime.datetime.strptime(
                                     jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
 
-                                special_formated_date_time = jdatetime.datetime.strptime(
-                                    price.get("special_to_date",
-                                              jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-                                    "%Y-%m-%d %H:%M:%S")
+                                special_price_stored_date = price.get("special_to_date") if price.get(
+                                    "special_to_date") else jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                                special_formated_date_time = jdatetime.datetime.strptime(special_price_stored_date,
+                                                                                         "%Y-%m-%d %H:%M:%S")
 
                                 if price.get("special") and not (
                                         now_formated_date_time < special_formated_date_time):
@@ -410,9 +411,11 @@ def get_product_by_system_code(
                     now_formated_date_time = jdatetime.datetime.strptime(
                         jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
 
-                    special_formated_date_time = jdatetime.datetime.strptime(
-                        special_price.get("special_to_date", jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-                        "%Y-%m-%d %H:%M:%S")
+                    special_price_stored_date = special_price.get("special_to_date") if special_price.get(
+                        "special_to_date") else jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                    special_formated_date_time = jdatetime.datetime.strptime(special_price_stored_date,
+                                                                             "%Y-%m-%d %H:%M:%S")
 
                     if special_price.get("special") and now_formated_date_time < special_formated_date_time:
                         product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
@@ -505,10 +508,8 @@ def get_product_list_by_system_code(
                         if not price_tuples:
                             continue
 
-                        price_tuples.sort(key=lambda x: x[1])
-                        price, special_price = (None, None)
-                        if price_tuples:
-                            price, special_price = price_tuples[0]
+                        price_tuples.sort(key=lambda x: x[0])
+                        price, special_price = price_tuples[0]
                         product["price"] = price
                         product["special_price"] = special_price
                     else:
@@ -518,7 +519,7 @@ def get_product_list_by_system_code(
                         product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
                             list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
                             "B2B", {}).get("storages", {}).get("1", {}).get("special", None)
-                        if not product["special_price"] or not product["price"]:
+                        if not product["price"]:
                             continue
                 else:
                     continue
@@ -582,23 +583,6 @@ def get_category_list(
         if product_result.get("success"):
             message_product = product_result.get("message", {})
             product_list = list()
-            for key in message_product.keys():
-                if key != "latest_product":
-                    for obj in message_product[key]['items']:
-                        product_kowsar_result = rpc.publish(
-                            message={
-                                "product": {
-                                    "action": "get_kowsar",
-                                    "body": {
-                                        "system_code": obj.get("system_code"),
-                                    }
-                                }
-                            },
-                            headers={'product': True}
-                        )
-                        product_kowsar_result = product_kowsar_result.get("product", {})
-                        if product_kowsar_result.get("success"):
-                            obj['image'] = product_kowsar_result.get("message", {}).get("image", None)
             for product in message_product['product']['items']:
                 pricing_result = rpc.publish(
                     message={
@@ -623,10 +607,8 @@ def get_category_list(
 
                         if not price_tuples:
                             continue
-                        price_tuples.sort(key=lambda x: x[1])
-                        price, special_price = (None, None)
-                        if price_tuples:
-                            price, special_price = price_tuples[0]
+                        price_tuples.sort(key=lambda x: x[0])
+                        price, special_price = price_tuples[0]
                         product["price"] = price
                         product["special_price"] = special_price
                     else:
@@ -636,7 +618,7 @@ def get_category_list(
                         product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
                             list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
                             "B2B", {}).get("storages", {}).get("1", {}).get("special", None)
-                        if not product["special_price"] or not product["price"]:
+                        if not product["price"]:
                             continue
                     product_list.append(product)
             if not product_list:
@@ -771,6 +753,38 @@ def get_product_list_back_office(
                 for config in product['products']:
                     if pricing_result.get("success"):
                         system_code = config.get("system_code")
+                        rpc.response_len_setter(response_len=1)
+                        get_stock_result = rpc.publish(
+                            message={
+                                "quantity": {
+                                    "action": "get_stock",
+                                    "body": {
+                                        "system_code": system_code
+                                    }
+                                }
+                            },
+                            headers={'quantity': True}
+                        )
+                        get_stock_result = get_stock_result.get("quantity", {}).get("message", {})
+                        for customer_type, customer_type_obj in pricing_result.get("message", {}).get("products",
+                                                                                                      {}).get(
+                            system_code, {}).get("customer_type", {}).items():
+                            for storage, storage_obj in customer_type_obj.get("storages", {}).items():
+                                pricing_result['message']["products"][system_code]["customer_type"][customer_type][
+                                    'storages'][storage]['warehouse_label'] = quantity_result.get("message", {}).get(
+                                    "products",
+                                    {}).get(
+                                    system_code, {}).get("customer_types", {}).get(customer_type, {}).get("storages",
+                                                                                                          {}).get(
+                                    storage, {}).get("warehouse_label", None)
+
+                                stock_msm = [stock.get("stock") for stock in
+                                             get_stock_result.get("storages", []) if
+                                             stock.get("storage_id") == storage]
+
+                                quantity_result['message']["products"][system_code]["customer_types"][customer_type][
+                                    'storages'][storage]['stock'] = stock_msm[0] if stock_msm else 0
+
                         config['price'] = pricing_result.get("message", {}).get("products", {}).get(system_code,
                                                                                                     {})
                     if quantity_result.get("success"):
