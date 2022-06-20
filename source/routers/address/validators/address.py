@@ -4,7 +4,6 @@ from fastapi import HTTPException
 from pydantic import BaseModel, Field, validator
 
 
-
 class Address(BaseModel):
     customer_name: str = Field(alias="customerName")
     state_name: str = Field(alias="stateName")
@@ -106,9 +105,6 @@ class Address(BaseModel):
         if is_default not in [False, True]:
             raise HTTPException(status_code=422, detail={"error": "Please enter a valid is_default"})
         return is_default
-
-
-
 
 
 class AddressId(BaseModel):
