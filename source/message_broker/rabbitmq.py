@@ -48,7 +48,7 @@ class RabbitRPC:
                 break
             except Exception as e:
                 print("Error connecting to pika...")
-                if try_count > 5:
+                if try_count > 1000:
                     raise e
                 time.sleep(1)
 
