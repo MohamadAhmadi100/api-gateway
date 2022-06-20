@@ -22,7 +22,7 @@ class RabbitRPC:
         self.exchange_name = exchange_name
         self.publish_connection, self.publish_channel = self.connect()
         self.consume_connection, self.consume_channel = self.connect()
-        self.queue_result = self.publish_channel.queue_declare(queue="", exclusive=True)
+        self.queue_result = self.consume_channel.queue_declare(queue="", exclusive=True)
         self.callback_queue = self.queue_result.method.queue
         self.broker_response = {}
         self.corr_id = None
@@ -113,3 +113,33 @@ class RabbitRPC:
     def consume(self):
         self.consume_channel.basic_consume(on_message_callback=self.on_response, queue=self.callback_queue,
                                            auto_ack=True)
+
+
+if __name__ == '__main__':
+    rpc = RabbitRPC(exchange_name='headers_exchange', timeout=5)
+    count = 1
+    while True:
+        result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_product_by_system_code",
+                    "body": {
+                        "system_code": "10010104302",
+                        "lang": "fa_ir"
+                    }
+                }, "pricing": {
+                    "action": "get_price",
+                    "body": {
+                        "system_code": "10010104302"
+                    }
+                }, "quantity": {
+                    "action": "get_quantity",
+                    "body": {
+                        "system_code": "10010104302"
+                    }
+                }
+            },
+            headers={'product': True, "pricing": True, "quantity": True}
+        )
+        print(count)
+        count += 1

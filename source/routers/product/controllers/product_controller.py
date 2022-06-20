@@ -14,7 +14,7 @@ router = APIRouter()
 
 auth_handler = AuthHandler()
 
-# test_rpc = RabbitRPC_temp(exchange_name="headers_exchange", timeout=15)
+test_rpc = RabbitRPC_temp(exchange_name="headers_exchange", timeout=15)
 
 
 @router.get("/parent/{systemCode}/configs/", tags=["Product"])
@@ -451,90 +451,88 @@ def get_product_list_by_system_code(
         customer_type = user_data.get("customer_type", ["B2B"])[0]
         allowed_storages = user_data.get("allowed_storages", [])
 
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        quantity_available_result = rpc.publish(
-            message={
-                "quantity": {
-                    "action": "get_available_quantities",
-                    "body": {
-                        "system_code": system_code,
-                        "customer_type": customer_type if customer_type else "B2B",
-                        "storages": allowed_storages if allowed_storages else ["1"]
-                    }
+    quantity_available_result = test_rpc.publish(
+        message={
+            "quantity": {
+                "action": "get_available_quantities",
+                "body": {
+                    "system_code": system_code,
+                    "customer_type": customer_type if customer_type else "B2B",
+                    "storages": allowed_storages if allowed_storages else ["1"]
                 }
-            },
-            headers={'quantity': True}
-        ).get("quantity", {})
-        product_result = rpc.publish(
-            message={
-                "product": {
-                    "action": "get_product_list_by_system_code",
-                    "body": {
-                        "system_code": system_code,
-                        "page": page,
-                        "per_page": per_page,
-                        "available_quantities": quantity_available_result.get("message", {})
-                    }
+            }
+        },
+        headers={'quantity': True}
+    ).get("quantity", {})
+    product_result = test_rpc.publish(
+        message={
+            "product": {
+                "action": "get_product_list_by_system_code",
+                "body": {
+                    "system_code": system_code,
+                    "page": page,
+                    "per_page": per_page,
+                    "available_quantities": quantity_available_result.get("message", {})
                 }
-            },
-            headers={'product': True}
-        )
-        product_result = product_result.get("product", {})
-        if product_result.get("success"):
-            message_product = product_result.get("message", {})
-            products_list = list()
-            for product in message_product['products']:
-                pricing_result = rpc.publish(
-                    message={
-                        "pricing": {
-                            "action": "get_price",
-                            "body": {
-                                "system_code": product.get("system_code")
-                            }
+            }
+        },
+        headers={'product': True}
+    )
+    product_result = product_result.get("product", {})
+    if product_result.get("success"):
+        message_product = product_result.get("message", {})
+        products_list = list()
+        for product in message_product['products']:
+            pricing_result = test_rpc.publish(
+                message={
+                    "pricing": {
+                        "action": "get_price",
+                        "body": {
+                            "system_code": product.get("system_code")
                         }
-                    },
-                    headers={'pricing': True}
-                )
-                pricing_result = pricing_result.get("pricing", {})
+                    }
+                },
+                headers={'pricing': True}
+            )
+            pricing_result = pricing_result.get("pricing", {})
 
-                if pricing_result.get("success"):
-                    if customer_type and allowed_storages:
-                        price_tuples = list()
-                        for system_code, prices in pricing_result.get("message", {}).get("products", {}).items():
-                            customer_type_price = prices.get("customer_type", {}).get(customer_type, {})
-                            for storage, storage_prices in customer_type_price.get("storages", {}).items():
-                                if str(storage) in allowed_storages:
-                                    price_tuples.append((storage_prices.get("regular"), storage_prices.get("special")))
+            if pricing_result.get("success"):
+                if customer_type and allowed_storages:
+                    price_tuples = list()
+                    for system_code, prices in pricing_result.get("message", {}).get("products", {}).items():
+                        customer_type_price = prices.get("customer_type", {}).get(customer_type, {})
+                        for storage, storage_prices in customer_type_price.get("storages", {}).items():
+                            if str(storage) in allowed_storages:
+                                price_tuples.append((storage_prices.get("regular"), storage_prices.get("special")))
 
-                        if not price_tuples:
-                            continue
+                    if not price_tuples:
+                        continue
 
-                        price_tuples.sort(key=lambda x: x[0])
-                        price, special_price = price_tuples[0]
-                        product["price"] = price
-                        product["special_price"] = special_price
-                    else:
-                        product["price"] = pricing_result.get("message", {}).get("products", {}).get(
-                            list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
-                            "B2B", {}).get("storages", {}).get("1", {}).get("regular", None)
-                        product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
-                            list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
-                            "B2B", {}).get("storages", {}).get("1", {}).get("special", None)
-                        if not product["price"]:
-                            continue
+                    price_tuples.sort(key=lambda x: x[0])
+                    price, special_price = price_tuples[0]
+                    product["price"] = price
+                    product["special_price"] = special_price
                 else:
-                    continue
+                    product["price"] = pricing_result.get("message", {}).get("products", {}).get(
+                        list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
+                        "B2B", {}).get("storages", {}).get("1", {}).get("regular", None)
+                    product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
+                        list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
+                        "B2B", {}).get("storages", {}).get("1", {}).get("special", None)
+                    if not product["price"]:
+                        continue
+            else:
+                continue
 
-                products_list.append(product)
+            products_list.append(product)
 
-            if not products_list:
-                raise HTTPException(status_code=404, detail={"error": "products not found"})
-            message_product['products'] = products_list
-            response.status_code = product_result.get("status_code", 200)
-            return convert_case(message_product, 'camel')
-        raise HTTPException(status_code=product_result.get("status_code", 500),
-                            detail={"error": product_result.get("error", "Something went wrong")})
+        if not products_list:
+            raise HTTPException(status_code=404, detail={"error": "products not found"})
+        message_product['products'] = products_list
+        response.status_code = product_result.get("status_code", 200)
+        return convert_case(message_product, 'camel')
+    raise HTTPException(status_code=product_result.get("status_code", 500),
+                        detail={"error": product_result.get("error", "Something went wrong")})
 
 
 @router.get("/get_category_list", tags=["Product"])
