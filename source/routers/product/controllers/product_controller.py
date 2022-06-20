@@ -25,7 +25,7 @@ def get_parent_configs(response: Response,
     """
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
-        product_result = test_rpc.publish(
+        product_result = rpc.publish(
             message={
                 "product": {
                     "action": "get_parent_configs",
