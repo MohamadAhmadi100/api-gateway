@@ -1,5 +1,6 @@
 import datetime
 import json
+import random
 import uuid
 
 import pika
@@ -19,9 +20,10 @@ class RabbitRPC:
         self.user = settings.RABBITMQ_USER
         self.password = settings.RABBITMQ_PASS
         self.exchange_name = exchange_name
-        self.connection = None
-        self.channel = None
-        self.connect()
+        self.publish_connection, self.publish_channel = self.connect()
+        self.consume_connection, self.consume_channel = self.connect()
+        self.queue_result = self.publish_channel.queue_declare(queue="", exclusive=True)
+        self.callback_queue = self.queue_result.method.queue
         self.broker_response = {}
         self.corr_id = None
         self.response_len = 0
@@ -35,16 +37,14 @@ class RabbitRPC:
         while True:
             try_count += 1
             try:
-                self.connection = pika.BlockingConnection(
+                connection = pika.BlockingConnection(
                     pika.ConnectionParameters(host=self.host,
                                               port=self.port,
                                               credentials=credentials)
                 )
-                self.channel = self.connection.channel()
-                self.channel.exchange_declare(exchange=self.exchange_name, exchange_type='headers')
-                self.queue_result = self.channel.queue_declare(queue="", exclusive=True)
-                self.callback_queue = self.queue_result.method.queue
-                break
+                channel = connection.channel()
+                channel.exchange_declare(exchange=self.exchange_name, exchange_type='headers')
+                return connection, channel
             except Exception as e:
                 print("Error connecting to pika...")
                 if try_count > 1000:
@@ -53,8 +53,8 @@ class RabbitRPC:
 
     def fanout_publish(self, exchange_name: str, message: dict):
         # publish to all services
-        self.channel.exchange_declare(exchange=exchange_name, exchange_type='fanout', passive=True)
-        self.channel.basic_publish(
+        self.publish_channel.exchange_declare(exchange=exchange_name, exchange_type='fanout', passive=True)
+        self.publish_channel.basic_publish(
             exchange=exchange_name,
             routing_key='',
             body=json.dumps(message)
@@ -69,7 +69,7 @@ class RabbitRPC:
             try_count += 1
             try:
                 print("publish initiated...")
-                self.channel.basic_publish(
+                self.publish_channel.basic_publish(
                     exchange=self.exchange_name,
                     routing_key='',
                     properties=pika.BasicProperties(
@@ -92,7 +92,7 @@ class RabbitRPC:
         while (len(self.broker_response) < self.response_len) and (
                 (datetime.datetime.now() - started).total_seconds()) < self.timeout:
             try:
-                self.connection.process_data_events()
+                self.publish_connection.process_data_events()
             except Exception:
                 print("Error listening for response...")
                 self.connect()
@@ -111,25 +111,5 @@ class RabbitRPC:
             self.broker_response[key] = json.loads(body).get(key)
 
     def consume(self):
-        self.channel.basic_consume(on_message_callback=self.on_response, queue=self.callback_queue, auto_ack=True)
-
-
-if __name__ == '__main__':
-    rpc = RabbitRPC(exchange_name='test_exchange', timeout=5)
-    rpc.connect()
-    rpc.consume()
-    test_result = rpc.publish(
-        message={
-            "service": {
-                "action": "get_something",
-                "body": {
-                    "test_data": "some_test_data"
-                }
-            }
-        },
-        headers={"service": True}
-    )
-    test_result = test_result.get("service", {})
-    # -----------------------------------------------------------------
-
-    rpc.fanout_publish('another_test_exchange', {"message": True})
+        self.publish_channel.basic_consume(on_message_callback=self.on_response, queue=self.callback_queue,
+                                           auto_ack=True)
