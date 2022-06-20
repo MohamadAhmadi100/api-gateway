@@ -100,6 +100,14 @@ class Address(BaseModel):
             raise HTTPException(status_code=422, detail={"error": "شماره تماس وارد شده معتبر نیست."})
         return tel
 
+    @validator("postal_code")
+    def validate_postal_code(cls, postal_code):
+        pattern = r"^[0-9]{10}$"
+        match = re.fullmatch(pattern, postal_code)
+        if not match:
+            raise HTTPException(status_code=422, detail={"error": "کد پستی وارد شده معتبر نیست."})
+        return postal_code
+
     @validator("is_default")
     def validate_is_default(cls, is_default):
         print(is_default)
