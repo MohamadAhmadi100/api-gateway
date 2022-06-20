@@ -163,7 +163,7 @@ class CustomerRegister(BaseModel):
         regexPattern="^^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,32}$",
     )
 
-    customer_verify_password: Optional[str] = Field(
+    customer_verify_password: str = Field(
         title="تکرار رمز عبور",
         alias="customerVerifyPassword",
         name="customerVerifyPassword",
