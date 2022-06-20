@@ -87,15 +87,15 @@ class RabbitRPC:
                 print("Error publishing message...")
                 if try_count > 3:
                     raise e
-                self.connect()
+                self.publish_connection, self.publish_channel = self.connect()
         started = datetime.datetime.now()
         while (len(self.broker_response) < self.response_len) and (
                 (datetime.datetime.now() - started).total_seconds()) < self.timeout:
             try:
-                self.publish_connection.process_data_events()
+                self.consume_connection.process_data_events()
             except Exception:
                 print("Error listening for response...")
-                self.connect()
+                self.consume_connection, self.consume_channel = self.connect()
         if len(self.broker_response) < self.response_len:
             print("Couldn't get response from these services:")
             bad_services = list(message.keys() - self.broker_response.keys())
@@ -111,5 +111,5 @@ class RabbitRPC:
             self.broker_response[key] = json.loads(body).get(key)
 
     def consume(self):
-        self.publish_channel.basic_consume(on_message_callback=self.on_response, queue=self.callback_queue,
+        self.consume_channel.basic_consume(on_message_callback=self.on_response, queue=self.callback_queue,
                                            auto_ack=True)
