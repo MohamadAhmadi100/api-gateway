@@ -80,6 +80,7 @@ def create_address(data: Address,
                    response: Response,
                    auth_header=Depends(auth_handler.check_current_user_tokens)):
     user, token_dict = auth_header
+    print(user, token_dict)
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         address_response = rpc.publish(

@@ -1,4 +1,11 @@
-from fastapi import APIRouter, HTTPException, Response
+import json
+from typing import List, Optional
+
+from fastapi import APIRouter, HTTPException, Query, Body
+from fastapi import Response
+
+# from customer.models.model_register import Customer
+# from customer.modules import log
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.customer.validators import validation_register
@@ -22,6 +29,7 @@ def register(
         response: Response,
         value: validation_register.CustomerRegister,
 ):
+    print(value.dict())
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         result = rpc.publish(
@@ -42,25 +50,5 @@ def register(
             status_code=customer_result.get("status_code", 500),
             detail={"error": customer_result.get("error", "Something went wrong")}
         )
-
-
-    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-    #     rpc.response_len_setter(response_len=1)
-    #     address_response = rpc.publish(
-    #         message={
-    #             "address": {
-    #                 "action": "insert_address",
-    #                 "body": {
-    #                     "data": dict(data),
-    #                     "customerId": str(user.get("user_id"))
-    #                 }
-    #             }
-    #         },
-    #         headers={'address': True}
-    #     ).get("address", {})
-    #
-    #     if address_response.get("success"):
-    # response.status_code = customer_result.get("status_code", 200)
-
-
+    response.status_code = customer_result.get("status_code", 200)
     return customer_result.get("message")
