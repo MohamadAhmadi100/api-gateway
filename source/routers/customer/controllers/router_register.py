@@ -29,6 +29,7 @@ def register(
         response: Response,
         value: validation_register.CustomerRegister,
 ):
+    print(value.dict())
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         result = rpc.publish(
