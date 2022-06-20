@@ -38,8 +38,7 @@ class RabbitRPC:
                 self.connection = pika.BlockingConnection(
                     pika.ConnectionParameters(host=self.host,
                                               port=self.port,
-                                              credentials=credentials,
-                                              heartbeat=0)
+                                              credentials=credentials)
                 )
                 self.channel = self.connection.channel()
                 self.channel.exchange_declare(exchange=self.exchange_name, exchange_type='headers')
