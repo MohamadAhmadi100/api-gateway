@@ -68,8 +68,8 @@ def wallet_final_consume(palceorder_result, cart, auth_header, response):
         wallet_amount = cart['grandPrice']
     data_reserve_wallet = {
         "amount": wallet_amount,
-        "orderNumber": palceorder_result['orderNumber'],
-        "ActionType": "auto",
+        "order_number": palceorder_result['orderNumber'],
+        "action_type": "auto",
         "balance": "consume",
         "type": "order"
     }
@@ -93,13 +93,13 @@ def wallet_final_consume(palceorder_result, cart, auth_header, response):
 def wallet_payment_consume(payment_detail, cart):
     wallet_amount = cart['payment'].get("walletAmount")
     if payment_detail.get("is_paid"):
-        data_reserve_wallet = {"amount": wallet_amount, "orderNumber": payment_detail['service_id'], "ActionType": "auto",
+        data_reserve_wallet = {"amount": wallet_amount, "order_number": payment_detail['service_id'], "action_type": "auto",
                                "balance": "consume", "type": "order", 'status': "success",
                                "customer_id": payment_detail.get("customer_id")}
 
     else:
-        data_reserve_wallet = {"amount": wallet_amount, "orderNumber": payment_detail['service_id'],
-                               "ActionType": "auto",
+        data_reserve_wallet = {"amount": wallet_amount, "order_number": payment_detail['service_id'],
+                               "action_type": "auto",
                                "balance": "charge", "type": "order", 'status': "failed",
                                "customer_id": payment_detail.get("customer_id")}
 
