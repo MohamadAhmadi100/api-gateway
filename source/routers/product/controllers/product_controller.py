@@ -753,6 +753,38 @@ def get_product_list_back_office(
                 for config in product['products']:
                     if pricing_result.get("success"):
                         system_code = config.get("system_code")
+                        rpc.response_len_setter(response_len=1)
+                        get_stock_result = rpc.publish(
+                            message={
+                                "quantity": {
+                                    "action": "get_stock",
+                                    "body": {
+                                        "system_code": system_code
+                                    }
+                                }
+                            },
+                            headers={'quantity': True}
+                        )
+                        get_stock_result = get_stock_result.get("quantity", {}).get("message", {})
+                        for customer_type, customer_type_obj in pricing_result.get("message", {}).get("products",
+                                                                                                      {}).get(
+                            system_code, {}).get("customer_type", {}).items():
+                            for storage, storage_obj in customer_type_obj.get("storages", {}).items():
+                                pricing_result['message']["products"][system_code]["customer_type"][customer_type][
+                                    'storages'][storage]['warehouse_label'] = quantity_result.get("message", {}).get(
+                                    "products",
+                                    {}).get(
+                                    system_code, {}).get("customer_types", {}).get(customer_type, {}).get("storages",
+                                                                                                          {}).get(
+                                    storage, {}).get("warehouse_label", None)
+
+                                stock_msm = [stock.get("stock") for stock in
+                                             get_stock_result.get("storages", []) if
+                                             stock.get("storage_id") == storage]
+
+                                quantity_result['message']["products"][system_code]["customer_types"][customer_type][
+                                    'storages'][storage]['stock'] = stock_msm[0] if stock_msm else 0
+
                         config['price'] = pricing_result.get("message", {}).get("products", {}).get(system_code,
                                                                                                     {})
                     if quantity_result.get("success"):
