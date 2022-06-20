@@ -483,7 +483,7 @@ def get_product_list_by_system_code(
         message_product = product_result.get("message", {})
         products_list = list()
         for product in message_product['products']:
-            pricing_result = test_rpc.publish(
+            pricing_result = test_rpc.consume_connection.publish(
                 message={
                     "pricing": {
                         "action": "get_price",
