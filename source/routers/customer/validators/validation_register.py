@@ -59,17 +59,17 @@ class CustomerRegister(BaseModel):
         isRquired=True,
         regexPattern="^[0-9]{10}$",
     )
-    customer_region_code: Optional[str] = Field(
+    customer_region_code: str = Field(
         description="",
         alias="customerRegionCode",
-        title="",
+        title="کد منطقه",
         name="customerRegionCode",
         minLength=1,
         maxLength=8,
         dataType="string",
         type="hidden",
         regexPattern=r"^[a-z,0-9,A-Z]{2,8}$",
-        isRquired=False,
+        isRquired=True,
     )
     customer_city: str = Field(
         alias="customerCity",
@@ -87,7 +87,7 @@ class CustomerRegister(BaseModel):
     customer_city_id: str = Field(
         alias="customerCityID",
         description="",
-        title="ای دی شهر",
+        title="آی دی شهر",
         name="customerCityID",
         minLength=1,
         maxLength=4,
@@ -112,7 +112,7 @@ class CustomerRegister(BaseModel):
     customer_province_id: str = Field(
         alias="customerProvinceID",
         description="",
-        title="ای دی استان",
+        title="آی دی استان",
         name="customerProvinceID",
         minLength=1,
         maxLength=4,
@@ -121,21 +121,21 @@ class CustomerRegister(BaseModel):
         regexPattern="^[0-9]{1,4}$",
         isRquired=True,
     )
-    customer_address: Optional[str] = Field(
-        alias="customerAddress",
-        description="",
-        title="آدرس",
-        name="customerAddress",
-        placeholder="تهران پلاک ۳",
-        minLength=4,
-        maxLength=128,
-        dataType="string",
-        type="text",
-        regexPattern=r"^[\u0600-\u06FF - , - ، ]{4,128}$",
-        isRquired=False,
-    )
+    # customer_address: Optional[str] = Field(
+    #     alias="customerAddress",
+    #     description="",
+    #     title="آدرس",
+    #     name="customerAddress",
+    #     placeholder="تهران پلاک ۳",
+    #     minLength=4,
+    #     maxLength=128,
+    #     dataType="string",
+    #     type="text",
+    #     regexPattern=r"^[\u0600-\u06FF - , - ، ]{4,128}$",
+    #     isRquired=False,
+    # )
 
-    customer_postal_code: Optional[str] = Field(
+    customer_postal_code: str = Field(
         alias="customerPostalCode",
         description="",
         title="کد پستی",
@@ -146,7 +146,7 @@ class CustomerRegister(BaseModel):
         dataType="string",
         type="text",
         regexPattern="^[0-9]{10}$",
-        isRquired=False,
+        isRquired=True,
     )
 
     customer_password: str = Field(
@@ -162,7 +162,6 @@ class CustomerRegister(BaseModel):
         isRquired=True,
         regexPattern="^^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,32}$",
     )
-
     customer_verify_password: str = Field(
         title="تکرار رمز عبور",
         alias="customerVerifyPassword",
@@ -176,6 +175,71 @@ class CustomerRegister(BaseModel):
         isRquired=True,
         regexPattern="^^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,32}$",
     )
+    customer_street: str = Field(
+        alias="customerStreet",
+        title="خیابان",
+        name="customerStreet",
+        placeholder="",
+        description="",
+        minLength=8,
+        maxLength=32,
+        dataType="string",
+        type="str",
+        isRquired=True,
+        regexPattern=r"[ ]{0,1}[\u0600-\u06FF]{2,32}$"
+    )
+    customer_alley: str = Field(
+        alias="customerAlley",
+        title="کوچه",
+        name="customerAlley",
+        placeholder="",
+        description="",
+        minLength=8,
+        maxLength=32,
+        dataType="string",
+        type="str",
+        isRquired=True,
+        regexPattern=r"[ ]{0,1}[\u0600-\u06FF]{2,32}$"
+    )
+    customer_plaque: str = Field(
+        alias="customerPlaque",
+        title="پلاک",
+        name="customerPlaque",
+        placeholder="",
+        description="",
+        minLength=8,
+        maxLength=32,
+        dataType="string",
+        type="str",
+        isRquired=True,
+        regexPattern=r"^[0-9]{1,6}$"
+    )
+    customer_unit: str = Field(
+        alias="customerUnit",
+        title="واحد",
+        name="customerUnit",
+        placeholder="",
+        description="",
+        minLength=8,
+        maxLength=32,
+        dataType="string",
+        type="str",
+        isRquired=True,
+        regexPattern=r"^[0-9]{1,6}$"
+    )
+    customer_telephone: str = Field(
+        alias="customerTelephone",
+        title="تلفن آدرس",
+        name="customerTelephone",
+        placeholder="",
+        description="",
+        minLength=8,
+        maxLength=32,
+        dataType="string",
+        type="str",
+        isRquired=True,
+        regexPattern=r"^[0-9]{11}$"
+    )
 
     @validator("customer_password")
     def validate_password(cls, verify_password):
@@ -186,11 +250,13 @@ class CustomerRegister(BaseModel):
         return verify_password
 
     @validator("customer_verify_password")
-    def validate_verify_password(cls, verify_password):
+    def validate_verify_password(cls, verify_password, values, **kwargs):
         pattern = r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,32}$"
         match = re.fullmatch(pattern, verify_password)
         if not match:
             raise HTTPException(status_code=422, detail={"error": "تکرار رمز عبور وارد شده صحیح نمی باشد"})
+        if verify_password != values["customer_password"]:
+            raise HTTPException(status_code=422, detail={"error": "تکرار رمز غبور با رمز عبور اصلی مطابقت ندارد"})
         return verify_password
 
     @validator("customer_phone_number")
@@ -241,13 +307,13 @@ class CustomerRegister(BaseModel):
             raise HTTPException(status_code=422, detail={"error": "استان وارد شده صحیح نمیابشد"})
         return customer_province
 
-    @validator("customer_address")
-    def validate_customer_address(cls, customer_address):
-        pattern = r"^[\u0600-\u06FF - , - ، ]{4,128}$"
-        match = re.fullmatch(pattern, customer_address)
-        if not match:
-            raise HTTPException(status_code=422, detail={"error": "آدرس وارد شده صحیح نمیباشد"})
-        return customer_address
+    # @validator("customer_address")
+    # def validate_customer_address(cls, customer_address):
+    #     pattern = r"^[\u0600-\u06FF - , - ، ]{4,128}$"
+    #     match = re.fullmatch(pattern, customer_address)
+    #     if not match:
+    #         raise HTTPException(status_code=422, detail={"error": "آدرس وارد شده صحیح نمیباشد"})
+    #     return customer_address
 
     @validator("customer_postal_code")
     def validate_customer_postal_code(cls, customer_postal_code):
@@ -278,5 +344,29 @@ class CustomerRegister(BaseModel):
         pattern = r"^[0-9]{1,8}$"
         match = re.fullmatch(pattern, customer_city_id)
         if not match:
-            raise HTTPException(status_code=422, detail={"error": "شناسه شهر وارد شده صحیح نمیباشد"})
+            raise HTTPException(status_code=422, detail={"error": "نام کوچه معتبر نیست."})
         return customer_city_id
+
+    @validator("customer_plaque")
+    def validate_plaque(cls, plaque):
+        pattern = r"^[0-9]{1,6}$"
+        match = re.fullmatch(pattern, plaque)
+        if not match:
+            raise HTTPException(status_code=422, detail={"error": "پلاک معتبر نیست."})
+        return plaque
+
+    @validator("customer_unit")
+    def validate_unit(cls, unit):
+        pattern = r"^[0-9]{1,6}$"
+        match = re.fullmatch(pattern, unit)
+        if not match:
+            raise HTTPException(status_code=422, detail={"error": "واحد معتبر نیست."})
+        return unit
+
+    @validator("customer_telephone")
+    def validate_telephone(cls, tel):
+        pattern = r"^[0-9]{11}$"
+        match = re.fullmatch(pattern, tel)
+        if not match:
+            raise HTTPException(status_code=422, detail={"error": "شماره تماس وارد شده معتبر نیست."})
+        return tel
