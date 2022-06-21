@@ -453,7 +453,7 @@ def get_product_list_by_system_code(
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=3)
 
-        quantity_available_result = test_rpc.publish(
+        quantity_available_result = rpc.publish(
             message={
                 "quantity": {
                     "action": "get_available_quantities",
@@ -466,7 +466,7 @@ def get_product_list_by_system_code(
             },
             headers={'quantity': True}
         ).get("quantity", {})
-        product_result = test_rpc.publish(
+        product_result = rpc.publish(
             message={
                 "product": {
                     "action": "get_product_list_by_system_code",
@@ -485,7 +485,7 @@ def get_product_list_by_system_code(
             message_product = product_result.get("message", {})
             products_list = list()
             for product in message_product['products']:
-                pricing_result = test_rpc.publish(
+                pricing_result = rpc.publish(
                     message={
                         "pricing": {
                             "action": "get_price",
