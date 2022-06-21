@@ -451,7 +451,7 @@ def get_product_list_by_system_code(
         customer_type = user_data.get("customer_type", ["B2B"])[0]
         allowed_storages = user_data.get("allowed_storages", [])
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=3)
+        rpc.response_len_setter(response_len=1)
 
         quantity_available_result = rpc.publish(
             message={
