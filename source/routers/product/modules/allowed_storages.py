@@ -1,7 +1,7 @@
 from source.message_broker.rabbit_server import RabbitRPC
 
 
-def allowed_storages(customer_id):
+def get_allowed_storages(customer_id):
     """
     Returns a list of allowed storages for the customer.
     """
@@ -36,4 +36,5 @@ def allowed_storages(customer_id):
             },
             headers={'address': True}
         ).get("address", {})
-        return [str(wms.get('warehouse_id')) for wms in msm_warehouses.get('message')] if msm_warehouses.get("success") else []
+        return [str(wms.get('warehouse_id')) for wms in msm_warehouses.get('message')] if msm_warehouses.get(
+            "success") else []
