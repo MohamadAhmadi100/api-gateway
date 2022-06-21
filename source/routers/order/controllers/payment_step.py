@@ -32,7 +32,9 @@ def get_formal_payment(response: Response, auth_header=Depends(auth_handler.chec
         wallet_amount = get_remaining_wallet(user)
 
         if cart['totalPrice'] > 50000000:
-            payment_method = [{"methodName": "deposit", "methodLabe": "واریز به حساب"}]
+            payment_method = [
+                {"methodName": "deposit", "methodLabe": "واریز به حساب"},
+                {"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"}]
         elif cart['totalPrice'] == 0:
             payment_method = []
         else:
@@ -121,7 +123,8 @@ def wallet_detail(
                             return {"success": True, "message": "مبلغ از کیف پول شما کسر شد",
                                     "payment_detail": get_payment_detail}
                         raise HTTPException(status_code=order_response.get("status_code", 500),
-                                            detail={"error": order_response.get("error", "Order service Internal error")})
+                                            detail={
+                                                "error": order_response.get("error", "Order service Internal error")})
                     else:
                         raise HTTPException(status_code=500,
                                             detail={"error": "مبلغ وارد شده از مبلغ سفارش بیشتر است"})
