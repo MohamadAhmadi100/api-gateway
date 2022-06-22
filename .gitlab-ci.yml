@@ -5,7 +5,7 @@ stages:
 
 cache:
   paths:
-    - .cache/pip
+    - .cache/pip-1
 
 build:
   stage: build
