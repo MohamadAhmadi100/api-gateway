@@ -4,7 +4,6 @@ from starlette.exceptions import HTTPException as starletteHTTPException
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.address.validators.address import Address, AddressId
 from source.routers.address.validators.update_address import UpdateAddress
-from source.routers.customer.helpers.allowed_storages_token import allowed_storages
 from source.routers.customer.module.auth import AuthHandler
 
 TAGS = [
@@ -102,7 +101,6 @@ def create_address(data: Address,
                 "user_id": user.get('user_id'),
                 "customer_type": user.get('customer_type'),
                 "phone_number": user.get('phone_number'),
-                "allowed_storages": allowed_storages(user.get('customerID'))
             }
             response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
             response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
