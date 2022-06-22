@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Response
+import codemelli
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.customer.validators import validation_register
@@ -22,6 +23,11 @@ def register(
         response: Response,
         value: validation_register.CustomerRegister,
 ):
+    try:
+        if not codemelli.validator(int(value.customer_national_id)):
+            raise HTTPException(status_code=422, detail={"error": "کد ملی وارد شده صحیح نمی باشد"})
+    except Exception as e:
+        raise HTTPException(status_code=422, detail={"error": "کد ملی وارد شده صحیح نمی باشد"}) from e
     address = {
         "customer_name": f"{value.customer_first_name} {value.customer_last_name}",
         "state_name": value.customer_province,
