@@ -93,7 +93,6 @@ def register(
             },
             headers={'address': True}
         ).get("address", {})
-        print(address_response)
         if not address_response.get("success"):
             raise HTTPException(
                 status_code=317,
