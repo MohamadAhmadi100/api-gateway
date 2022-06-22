@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi import Response, status
 from pydantic.error_wrappers import ValidationError
 from source.message_broker.rabbit_server import RabbitRPC
-from source.routers.customer.helpers.allowed_storages_token import allowed_storages
 from source.routers.customer.module.auth import AuthHandler
 from source.helpers.create_class import CreateClass
 from source.routers.customer.validators import validation_profile
@@ -128,7 +127,6 @@ def edit_profile_data(
         "user_id": user_data.get('user_id'),
         "customer_type": user_data.get('customer_type'),
         "phone_number": user_data.get('phone_number'),
-        "allowed_storages": allowed_storages(user_data.get('customerID'))
     }
     response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
     response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
@@ -170,7 +168,6 @@ def change_customer_password(
         "user_id": user_data.get('user_id'),
         "customer_type": user_data.get('customer_type'),
         "phone_number": user_data.get('phone_number'),
-        "allowed_storages": allowed_storages(user_data.get('customerID'))
     }
     response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
     response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
@@ -208,7 +205,6 @@ def get_delivery_persons(response: Response,
         "user_id": user_data.get('user_id'),
         "customer_type": user_data.get('customer_type'),
         "phone_number": user_data.get('phone_number'),
-        "allowed_storages": allowed_storages(user_data.get('customerID'))
     }
     response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
     response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
@@ -250,7 +246,6 @@ def add_delivery_person(response: Response,
         "user_id": user_data.get('user_id'),
         "customer_type": user_data.get('customer_type'),
         "phone_number": user_data.get('phone_number'),
-        "allowed_storages": allowed_storages(user_data.get('customerID'))
     }
     response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
     response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
@@ -314,7 +309,6 @@ def create_informal(person: Person, response: Response, auth_header=Depends(auth
         "user_id": user_data.get('user_id'),
         "customer_type": user_data.get('customer_type'),
         "phone_number": user_data.get('phone_number'),
-        "allowed_storages": allowed_storages(user_data.get('customerID'))
     }
     response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
     response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
@@ -355,7 +349,6 @@ def get_informal(
         "user_id": user_data.get('user_id'),
         "customer_type": user_data.get('customer_type'),
         "phone_number": user_data.get('phone_number'),
-        "allowed_storages": allowed_storages(user_data.get('customerID'))
     }
     response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
     response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
@@ -394,7 +387,6 @@ def get_informal_persons(
         "user_id": user_data.get('user_id'),
         "customer_type": user_data.get('customer_type'),
         "phone_number": user_data.get('phone_number'),
-        "allowed_storages": allowed_storages(user_data.get('customerID'))
     }
     response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
     response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)

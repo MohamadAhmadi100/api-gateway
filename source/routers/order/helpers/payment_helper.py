@@ -64,8 +64,6 @@ def informal_to_cart(user, national_id):
 
 def wallet_final_consume(palceorder_result, cart, auth_header, response):
     wallet_amount = cart['payment'].get("walletAmount")
-    if wallet_amount > cart['grandPrice']:
-        wallet_amount = cart['grandPrice']
     data_reserve_wallet = {
         "amount": wallet_amount,
         "order_number": palceorder_result['orderNumber'],

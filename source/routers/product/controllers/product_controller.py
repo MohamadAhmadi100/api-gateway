@@ -9,6 +9,7 @@ from source.message_broker.rabbit_server import RabbitRPC
 from source.message_broker.rabbitmq import RabbitRPC as RabbitRPC_temp
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.product.validators.product import CreateChild, AddAtributes, CreateParent, EditProduct
+from source.routers.product.modules.allowed_storages import get_allowed_storages
 
 router = APIRouter()
 
@@ -305,13 +306,28 @@ def get_product_by_system_code(
     """
     Get a product by system_code in main collection in database.
     """
-    customer_type = None
-    allowed_storages = list()
-    if access or refresh:
-        user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
-        customer_type = user_data.get("customer_type", ["B2B"])[0]
-        allowed_storages = user_data.get("allowed_storages", [])
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        customer_type = None
+        allowed_storages = list()
+        customer_status = None
+        if access or refresh:
+            user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
+            customer_type = user_data.get("customer_type", ["B2B"])[0]
+            allowed_storages = get_allowed_storages(user_data.get("user_id"))
+            result = rpc.publish(
+                message={
+                    "customer": {
+                        "action": "check_is_registered",
+                        "body": {
+                            "customer_phone_number": user_data.get("phone_number", "")
+                        }
+                    }
+                },
+                headers={'customer': True}
+            )
+            result = result.get("customer", {}).get("message", {})
+            customer_status = result.get('customerStatus')
         rpc.response_len_setter(response_len=3)
         result = rpc.publish(
             message={
@@ -350,6 +366,7 @@ def get_product_by_system_code(
         else:
             response.status_code = product_result.get("status_code", 200)
             final_result = product_result.get("message").copy()
+            final_result['customer_can_buy'] = True if customer_status == 'confirm' else False
             product_list = list()
             for product in final_result.get("products", []):
                 if customer_type and allowed_storages:
@@ -438,6 +455,7 @@ def get_product_list_by_system_code(
         system_code: str = Path(..., alias='systemCode'),
         page: int = Query(1, alias='page'),
         per_page: int = Query(10, alias='perPage'),
+        storages: List[str] = Query([], alias='storages'),
         access: Optional[str] = Header(None),
         refresh: Optional[str] = Header(None)
 ):
@@ -445,11 +463,14 @@ def get_product_list_by_system_code(
     Get product list by brand
     """
     customer_type = None
-    allowed_storages = list()
+    allowed_storages = storages
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", ["B2B"])[0]
-        allowed_storages = user_data.get("allowed_storages", [])
+        allowed_storages = get_allowed_storages(user_data.get("user_id"))
+        allowed_storages = [storage for storage in storages if
+                            storage in allowed_storages] if storages else allowed_storages
+
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
 
@@ -551,7 +572,7 @@ def get_category_list(
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", ["B2B"])[0]
-        allowed_storages = user_data.get("allowed_storages", [])
+        allowed_storages = get_allowed_storages(user_data.get("user_id"))
 
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
