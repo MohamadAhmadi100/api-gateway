@@ -22,6 +22,34 @@ def register(
         response: Response,
         value: validation_register.CustomerRegister,
 ):
+    address = {
+        "customer_name": f"{value.customer_first_name} {value.customer_last_name}",
+        "state_name": value.customer_province,
+        "state_id": value.customer_province_id,
+        "city_id": value.customer_city_id,
+        "city_name": value.customer_city,
+        "region_code": value.customer_region_code,
+        "street": value.customer_street,
+        "alley": value.customer_alley,
+        "plaque": value.customer_plaque,
+        "unit": value.customer_unit,
+        "tel": value.customer_telephone,
+        "postal_code": value.customer_postal_code,
+        "is_default": True
+    }
+    customer_address = {
+        "customerStateName": value.customer_province,
+        "customerStateId": value.customer_province_id,
+        "customerCityId": value.customer_city_id,
+        "customerCityName": value.customer_city,
+        "customerRegionCode": value.customer_region_code,
+        "customerStreet": value.customer_street,
+        "customerAlley": value.customer_alley,
+        "customerPlaque": value.customer_plaque,
+        "customerUnit": value.customer_unit,
+        "customerTelephone": value.customer_telephone,
+        "customerPostalCode": value.customer_postal_code,
+    }
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         result = rpc.publish(
@@ -29,21 +57,28 @@ def register(
                 "customer": {
                     "action": "register",
                     "body": {
-                        "values": value.dict()
-
+                        "data": {
+                            "customer_phone_number": value.customer_phone_number,
+                            "customer_first_name": value.customer_first_name,
+                            "customer_last_name": value.customer_last_name,
+                            "customer_national_id": value.customer_national_id,
+                            "customer_password": value.customer_password,
+                            "customer_verify_password": value.customer_verify_password,
+                            "customer_street": value.customer_street,
+                            "customer_address": [customer_address]
+                        }
                     }
                 }
             },
             headers={'customer': True}
         )
     customer_result = result.get("customer", {})
-    customer_id = customer_result.get("data").get("customerID")
     if not customer_result.get("success"):
         raise HTTPException(
             status_code=customer_result.get("status_code", 500),
             detail={"error": customer_result.get("error", "Something went wrong")}
         )
-    print(value.dict)
+    customer_id = customer_result.get("message").get("data").get("customerID")
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         address_response = rpc.publish(
@@ -51,13 +86,14 @@ def register(
                 "address": {
                     "action": "insert_address",
                     "body": {
-                        "data": value.dict,
+                        "data": address,
                         "customerId": str(customer_id)
                     }
                 }
             },
             headers={'address': True}
         ).get("address", {})
+        print(address_response)
         if not address_response.get("success"):
             raise HTTPException(
                 status_code=317,
