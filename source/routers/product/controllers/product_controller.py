@@ -805,8 +805,12 @@ def get_product_list_back_office(
                                              get_stock_result.get("storages", []) if
                                              stock.get("storage_id") == storage]
 
-                                quantity_result['message']["products"][system_code]["customer_types"][customer_type][
-                                    'storages'][storage]['stock'] = stock_msm[0] if stock_msm else 0
+                                if quantity_result.get("success"):
+                                    quantity_result.setdefault("message", {}).setdefault('products', {}).setdefault(
+                                        system_code, {}).setdefault("customer_types", {}).setdefault(customer_type,
+                                                                                                     {}).setdefault(
+                                        'storages', {}).setdefault(storage, {})['stock'] = stock_msm[
+                                        0] if stock_msm else 0
 
                         config['price'] = pricing_result.get("message", {}).get("products", {}).get(system_code,
                                                                                                     {})
