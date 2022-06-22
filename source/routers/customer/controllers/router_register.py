@@ -23,11 +23,11 @@ def register(
         response: Response,
         value: validation_register.CustomerRegister,
 ):
-    # try:
-    #     if not codemelli.validator(int(value.customer_national_id)):
-    #         raise HTTPException(status_code=422, detail={"error": "کد ملی وارد شده صحیح نمی باشد"})
-    # except Exception as e:
-    #     raise HTTPException(status_code=422, detail={"error": "کد ملی وارد شده صحیح نمی باشد"}) from e
+    try:
+        if not codemelli.validator(value.customer_national_id):
+            raise HTTPException(status_code=422, detail={"error": "کد ملی وارد شده صحیح نمی باشد"})
+    except Exception as e:
+        raise HTTPException(status_code=422, detail={"error": "کد ملی وارد شده صحیح نمی باشد"}) from e
     address = {
         "customer_name": f"{value.customer_first_name} {value.customer_last_name}",
         "state_name": value.customer_province,
