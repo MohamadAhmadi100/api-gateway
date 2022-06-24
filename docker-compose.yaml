@@ -19,6 +19,8 @@ services:
           - 8000:80
         volumes:
           - /gallery-files:/gallery-files
+          - /logs/api-gateway:/api-gateway/logs
+
 
 networks:
     apinet:
