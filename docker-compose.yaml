@@ -13,15 +13,18 @@ services:
         networks:
           - apinet
 
-
     api:
         build: .
         ports:
           - 8000:80
         volumes:
           - /gallery-files:/gallery-files
+          - log-volume:/
 
 networks:
     apinet:
         driver: bridge
+
+volumes:
+  log-volume:
 
