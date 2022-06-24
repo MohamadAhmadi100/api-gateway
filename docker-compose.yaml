@@ -19,12 +19,10 @@ services:
           - 8000:80
         volumes:
           - /gallery-files:/gallery-files
-          - log-volume:/api-gateway
+          - /log-files:/api-gateway
 
 networks:
     apinet:
         driver: bridge
 
-volumes:
-  log-volume:
 
