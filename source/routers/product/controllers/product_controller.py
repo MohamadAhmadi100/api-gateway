@@ -295,7 +295,7 @@ def delete_product(
                             detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@router.get("/{systemCode}/{lang}/", tags=["Product"])
+@router.get("/{systemCode}/{lang}", tags=["Product"])
 def get_product_by_system_code(
         response: Response,
         system_code: str = Path(..., min_length=11, max_length=11, alias='systemCode'),
