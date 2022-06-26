@@ -92,6 +92,8 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
                 if product.get("system_code") == item.system_code:
                     product['name'] = product_result.get("name")
                     product['parent_system_code'] = product_result.get("system_code")
+                    product['model'] = product_result.get("model")
+                    product['brand'] = product_result.get("brand")
                     final_result["product"] = product
                     break
             if not final_result.get("product"):
