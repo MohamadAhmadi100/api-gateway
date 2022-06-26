@@ -266,7 +266,7 @@ def edit_product(
                             detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@router.delete("/{systemCode}", tags=["Product"])
+@router.delete("/{systemCode}/", tags=["Product"])
 def delete_product(
         response: Response,
         system_code: str = Path(..., min_length=11, max_length=12, alias='systemCode')
@@ -479,7 +479,7 @@ def get_product_list_by_system_code(
                 "quantity": {
                     "action": "get_available_quantities",
                     "body": {
-                        "system_code": system_code,
+                        "system_code": system_code[:2],
                         "customer_type": customer_type if customer_type else "B2B",
                         "storages": allowed_storages if allowed_storages else ["1"]
                     }
@@ -826,6 +826,106 @@ def get_product_list_back_office(
         message_product['filters'][3]['options'] = quantity_result_filter.get("quantity", {}).get("message", {}).get(
             'storages', [])
         if product_result.get("success"):
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(message_product, 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
+
+
+@router.get("/get_product_by_name/{name}", tags=["Product"])
+def get_product_by_name(name: str,
+                        response: Response,
+                        access: Optional[str] = Header(None),
+                        refresh: Optional[str] = Header(None)
+                        ):
+    customer_type = None
+    allowed_storages = None
+    if access or refresh:
+        user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
+        customer_type = user_data.get("customer_type", ["B2B"])[0]
+        allowed_storages = get_allowed_storages(user_data.get("user_id"))
+
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+
+        rpc.response_len_setter(response_len=1)
+
+        quantity_available_result = rpc.publish(
+            message={
+                "quantity": {
+                    "action": "get_available_quantities",
+                    "body": {
+                        "system_code": "1",
+                        "customer_type": customer_type if customer_type else "B2B",
+                        "storages": allowed_storages if allowed_storages else ["1"]
+                    }
+                }
+            },
+            headers={'quantity': True}
+        ).get("quantity", {})
+
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_product_by_name",
+                    "body": {
+                        "name": name,
+                        "available_quantities": quantity_available_result.get("message", {})
+                    }
+                }
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            message_product = product_result.get("message", {})
+            products_list = list()
+            for product in message_product['products']:
+                pricing_result = rpc.publish(
+                    message={
+                        "pricing": {
+                            "action": "get_price",
+                            "body": {
+                                "system_code": product.get("system_code")
+                            }
+                        }
+                    },
+                    headers={'pricing': True}
+                )
+                pricing_result = pricing_result.get("pricing", {})
+
+                if pricing_result.get("success"):
+                    if customer_type and allowed_storages:
+                        price_tuples = list()
+                        for system_code, prices in pricing_result.get("message", {}).get("products", {}).items():
+                            customer_type_price = prices.get("customer_type", {}).get(customer_type, {})
+                            for storage, storage_prices in customer_type_price.get("storages", {}).items():
+                                if str(storage) in allowed_storages:
+                                    price_tuples.append((storage_prices.get("regular"), storage_prices.get("special")))
+
+                        if not price_tuples:
+                            continue
+
+                        price_tuples.sort(key=lambda x: x[0])
+                        price, special_price = price_tuples[0]
+                        product["price"] = price
+                        product["special_price"] = special_price
+                    else:
+                        product["price"] = pricing_result.get("message", {}).get("products", {}).get(
+                            list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
+                            "B2B", {}).get("storages", {}).get("1", {}).get("regular", None)
+                        product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
+                            list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
+                            "B2B", {}).get("storages", {}).get("1", {}).get("special", None)
+                        if not product["price"]:
+                            continue
+                else:
+                    continue
+
+                products_list.append(product)
+
+            if not products_list:
+                raise HTTPException(status_code=404, detail={"error": "products not found"})
+            message_product['products'] = products_list
             response.status_code = product_result.get("status_code", 200)
             return convert_case(message_product, 'camel')
         raise HTTPException(status_code=product_result.get("status_code", 500),
