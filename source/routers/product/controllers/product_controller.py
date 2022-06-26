@@ -479,7 +479,7 @@ def get_product_list_by_system_code(
                 "quantity": {
                     "action": "get_available_quantities",
                     "body": {
-                        "system_code": system_code,
+                        "system_code": system_code[:2],
                         "customer_type": customer_type if customer_type else "B2B",
                         "storages": allowed_storages if allowed_storages else ["1"]
                     }
