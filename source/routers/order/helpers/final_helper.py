@@ -100,6 +100,21 @@ def reserve_order_items(order_object):
         ).get("quantity", {})
         return order_response
 
+def remove_from_reserve_order_items(order_object):
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        order_response = rpc.publish(
+            message={
+                "quantity": {
+                    "action": "remove_from_reserve",
+                    "body": {
+                        "order": order_object,
+                    }
+                }
+            },
+            headers={'quantity': True}
+        ).get("quantity", {})
+        return order_response
 
 def delete_order_reserving_fail(order_object):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:

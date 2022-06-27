@@ -29,3 +29,5 @@ class informal(BaseModel):
     national_id: str
 
 
+class cancel(BaseModel):
+    orderNumber: int
