@@ -1,5 +1,6 @@
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.cart.app import add_and_edit_product
+from source.routers.product.modules.allowed_storages import get_allowed_storages
 
 
 class EditQuantity:
@@ -14,18 +15,42 @@ def check_price_qty(auth_header, cart, response):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         cart_result = cart
         # find product in cart and build product object
+        allowed_storages = get_allowed_storages(auth_header[0].get("user_id"))
         products = []
+        edited_result = []
         for cart_items in cart_result.get('products'):
-            products.append({
-                "systemCode": cart_items['systemCode'],
-                "storage_id": cart_items['storageId'],
-                "price": cart_items['price'],
-                "count": cart_items['count'],
-                "customer_type": auth_header[0].get('customer_type')[0],
-                "name": cart_items.get('name')
+            if cart_items['storageId'] in allowed_storages:
+                products.append({
+                    "systemCode": cart_items['systemCode'],
+                    "storage_id": cart_items['storageId'],
+                    "price": cart_items['price'],
+                    "count": cart_items['count'],
+                    "customer_type": auth_header[0].get('customer_type')[0],
+                    "name": cart_items.get('name')
 
-            })
+                })
+            else:
+                rpc.publish(
+                    message={
+                        "cart": {
+                            "action": "remove_product_from_cart",
+                            "body": {
+                                "user_id": auth_header[0].get("user_id"),
+                                "system_code": cart_items['systemCode'],
+                                "storage_id": cart_items['storageId']
+                            }
+                        }
+                    },
+                    headers={'cart': True}
+                )
+                edited_result.append({
+                    "name": cart_items.get('name'),
+                    "status": "removed",
+                    "message": f"{cart_items.get('name')} از سبد خرید به دلیل عدم تطبیق ادرس با انبار انتخاب شده حذف شد"
+                })
         # check quantity
+        if not products:
+            return {"success": False, "message": edited_result}
         rpc.response_len_setter(response_len=1)
         quantity_result = rpc.publish(
             message={
@@ -38,7 +63,7 @@ def check_price_qty(auth_header, cart, response):
             },
             headers={'quantity': True}
         )
-        edited_result = []
+
         for checkout_data in quantity_result['quantity']['message'][0]:
 
             rpc.response_len_setter(response_len=1)
@@ -120,18 +145,7 @@ def check_price_qty(auth_header, cart, response):
                             "status": "edited",
                             "message": f"{checkout_data['name']} از سبد خرید به دلیل اتمام موجودی حذف شد",
                         })
-        rpc.response_len_setter(response_len=1)
-        rpc.publish(
-            message={
-                "cart": {
-                    "action": "remove_cart",
-                    "body": {
-                        "user_id": auth_header[0].get("user_id"),
-                    }
-                }
-            },
-            headers={'cart': True}
-        )
+
         if not edited_result:
             return {"success": True, "message": "checkout completed"}
         else:

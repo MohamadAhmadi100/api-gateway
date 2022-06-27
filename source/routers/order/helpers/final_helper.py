@@ -4,7 +4,6 @@ from source.routers.order.helpers.payment_helper import wallet_payment_consume
 
 def handle_order_bank_callback(result, response):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-
         rpc.response_len_setter(response_len=1)
         user_cart = rpc.publish(
             message={
