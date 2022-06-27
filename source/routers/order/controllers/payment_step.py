@@ -85,9 +85,6 @@ def wallet_detail(
     user, token_dict = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         cart = get_cart(response=response, auth_header=auth_header)
-        # if cart.get("finalFlag"):
-        #     return {"success": False, "message": [{"message": "شما یک سفارش در حال پردازی دارید."}]}
-        # else:
         rpc.response_len_setter(response_len=1)
         wallet_response = rpc.publish(
             message={

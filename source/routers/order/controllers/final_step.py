@@ -26,11 +26,6 @@ def final_order(
         auth_header=Depends(auth_handler.check_current_user_tokens)
 ) -> dict:
     cart = get_cart(response=response, auth_header=auth_header)
-    # check if customer have a processing order
-    # if cart.get("finalFlag"):
-    #     return {"success": False, "message": [{"message": "شما یک سفارش در حال پردازش دارید."}]}
-    # else:
-        # check if customer select all the shipment methods per stock
     check_shipment_result = check_shipment_per_stock(cart)
     if len(cart['shipment']) != len(check_shipment_result):
         response.status_code = 202
