@@ -310,7 +310,6 @@ def create_informal(person: Person, response: Response, auth_header=Depends(auth
             raise HTTPException(status_code=422, detail={"error": "شماره تلفن وارد شده صحیح نمیباشد"})
     except ValidationError as e:
         raise HTTPException(status_code=422, detail={"error": e.errors()}) from e
-    print(person_object)
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         result = rpc.publish(
