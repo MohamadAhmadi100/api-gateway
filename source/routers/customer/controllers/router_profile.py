@@ -1,3 +1,6 @@
+import re
+
+import codemelli
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi import Response, status
 from pydantic.error_wrappers import ValidationError
@@ -299,8 +302,15 @@ def create_informal(person: Person, response: Response, auth_header=Depends(auth
     person_model = CreateClass(class_name="InformalPersonModel", attributes=attrs).get_pydantic_class()
     try:
         person_object = person_model(**person.data)
+        if not codemelli.validator(person_object.informalNationalID):
+            raise HTTPException(status_code=422, detail={"error": "کد ملی وارد شده صحیح نمی باشد"})
+        pattern = r"^09[0-9]{9}$"
+        match = re.fullmatch(pattern, person_object.informalMobileNumber)
+        if not match:
+            raise HTTPException(status_code=422, detail={"error": "شماره تلفن وارد شده صحیح نمیباشد"})
     except ValidationError as e:
         raise HTTPException(status_code=422, detail={"error": e.errors()}) from e
+    print(person_object)
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         result = rpc.publish(

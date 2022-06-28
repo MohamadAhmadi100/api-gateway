@@ -1,4 +1,5 @@
 import re
+import codemelli
 from typing import Optional
 from source.helpers.create_class import CreateClass
 from fastapi import HTTPException
@@ -490,6 +491,8 @@ class Delivery(BaseModel):
         match = re.fullmatch(pattern, delivery_national_id)
         if not match:
             raise HTTPException(status_code=422, detail={"error": "کد ملی وارد شده صحیح نمیباشد"})
+        if not codemelli.validator(delivery_national_id):
+            raise HTTPException(status_code=422, detail={"error": "کد ملی وارد شده صحیح نمی باشد"})
         return delivery_national_id
 
 
