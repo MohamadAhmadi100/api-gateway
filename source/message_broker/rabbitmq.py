@@ -1,6 +1,6 @@
 import datetime
 import json
-import random
+import logging
 import uuid
 
 import pika
@@ -46,6 +46,7 @@ class RabbitRPC:
                 channel.exchange_declare(exchange=self.exchange_name, exchange_type='headers')
                 return connection, channel
             except Exception as e:
+                logging.info("Error connecting to RabbitMQ... {}".format(e))
                 print("Error connecting to pika...")
                 if try_count > 1000:
                     raise e
@@ -68,6 +69,7 @@ class RabbitRPC:
         while True:
             try_count += 1
             try:
+                logging.info(f"Publishing message: {message}")
                 print("publish initiated...")
                 self.publish_channel.basic_publish(
                     exchange=self.exchange_name,
@@ -82,8 +84,10 @@ class RabbitRPC:
                     body=json.dumps(message) if isinstance(message, dict) else message
                 )
                 print("message sent...")
+                logging.info("Message sent...")
                 break
             except Exception as e:
+                logging.info("Error publishing to RabbitMQ... {}".format(e))
                 print("Error publishing message...")
                 if try_count > 3:
                     raise e
@@ -93,13 +97,15 @@ class RabbitRPC:
                 (datetime.datetime.now() - started).total_seconds()) < self.timeout:
             try:
                 self.consume_connection.process_data_events()
-            except Exception:
+            except Exception as e:
+                logging.info("Error consuming from RabbitMQ... {}".format(e))
                 print("Error listening for response...")
                 self.consume_connection, self.consume_channel = self.connect()
         if len(self.broker_response) < self.response_len:
             print("Couldn't get response from these services:")
             bad_services = list(message.keys() - self.broker_response.keys())
             print(bad_services)
+            logging.info("Timeout waiting for response... services: {}".format(bad_services))
         result = self.broker_response.copy()
         self.broker_response.clear()
         return result
@@ -107,6 +113,7 @@ class RabbitRPC:
     def on_response(self, channel, method, properties, body):
         if self.corr_id == properties.correlation_id:
             print("message received...")
+            logging.info("Message received...")
             key = next(iter(json.loads(body)))
             self.broker_response[key] = json.loads(body).get(key)
 

@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Response, HTTPException, Path, Query
+from fastapi import APIRouter, Response, HTTPException, Query
 
 from source.helpers.case_converter import convert_case
 from source.message_broker.rabbit_server import RabbitRPC

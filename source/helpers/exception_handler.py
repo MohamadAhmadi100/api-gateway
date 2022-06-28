@@ -1,6 +1,9 @@
 import logging
+import os
 import traceback
 from functools import wraps
+from logging.handlers import RotatingFileHandler
+
 from time import strftime, localtime
 
 import requests
@@ -79,3 +82,35 @@ class ExceptionHandler:
                     ExceptionHandler(message).send_sms()
 
         return wrapper
+
+
+class LogHandler(RotatingFileHandler):
+
+    def __init__(self, *args, **kwargs):
+        LogHandler.log_folder_create()
+        super().__init__(*args, **kwargs)
+
+    def doRollover(self):
+        dates = []
+        if os.path.isfile("app.log.8"):
+            for i in range(1, 8):
+                dates.append(os.path.getmtime(f"app.log.{i}"))
+            should_remove = sorted(dates, reverse=True).pop(-1)
+            os.remove(f"app.log.{should_remove}")
+        super().doRollover()
+
+    @staticmethod
+    def log_folder_create():
+        if not os.path.exists("log"):
+            os.mkdir("log")
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        LogHandler("log/app.log", mode='a',
+                   maxBytes=1000,
+                   backupCount=8),
+    ]
+)
