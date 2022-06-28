@@ -8,6 +8,7 @@ from pydantic.error_wrappers import ValidationError
 from source.helpers import case_converter
 from source.helpers.create_class import CreateClass
 from source.message_broker.rabbit_server import RabbitRPC
+from source.message_broker.rabbitmq import RabbitRPC as RabbitRPC_Test
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.customer.validators import validation_profile
 from source.routers.customer.validators.validation_profile import EditProfile, Delivery, Person
@@ -19,6 +20,8 @@ router_profile = APIRouter(
 
 auth_handler = AuthHandler()
 
+test_rpc = RabbitRPC_Test(exchange_name='headers_exchange', timeout=5)
+
 
 @router_profile.get("/")
 def get_profile(
@@ -26,38 +29,34 @@ def get_profile(
         auth_header=Depends(auth_handler.check_current_user_tokens),
 ):
     user_data, header = auth_header
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        result = rpc.publish(
-            message={
-                "customer": {
-                    "action": "get_profile",
-                    "body": {
-                        "customer_phone_number": user_data,
-                    }
+    result = test_rpc.publish(
+        message={
+            "customer": {
+                "action": "get_profile",
+                "body": {
+                    "customer_phone_number": user_data,
                 }
-            },
-            headers={'customer': True}
-        )
+            }
+        },
+        headers={'customer': True}
+    )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
             status_code=customer_result.get("status_code", 500),
             detail={"error": customer_result.get("error", "Something went wrong")}
         )
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        result = rpc.publish(
-            message={
-                "attribute": {
-                    "action": "get_all_attributes_by_assignee",
-                    "body": {
-                        "name": "customer"
-                    }
+    result = test_rpc.publish(
+        message={
+            "attribute": {
+                "action": "get_all_attributes_by_assignee",
+                "body": {
+                    "name": "customer"
                 }
-            },
-            headers={'attribute': True}
-        )
+            }
+        },
+        headers={'attribute': True}
+    )
     attribute_result = result.get("attribute", {})
     if not attribute_result.get("success"):
         raise HTTPException(status_code=attribute_result.get("status_code", 500),
