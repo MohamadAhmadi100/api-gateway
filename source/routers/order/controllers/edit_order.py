@@ -9,7 +9,7 @@ from starlette.exceptions import HTTPException
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.order.helpers.final_helper import remove_from_reserve_order_items
-from source.routers.order.validators.order import cancel
+from source.routers.order.validators.order import cancel, edit_order_validator
 
 edit_order = APIRouter()
 
@@ -42,3 +42,32 @@ def cancel_order(response: Response,
                 return {"success": False, "message": "رزرو تغییر نکرد"}
         else:
             return order_result
+
+
+@edit_order.put("/edit_order/", tags=["Edit order"])
+def edit_order_items(response: Response,
+                     data: edit_order_validator,
+                     auth_header=Depends(auth_handler.check_current_user_tokens)):
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=2)
+        order_result = rpc.publish(
+            message={
+                "order": {
+                    "action": "edit_order",
+                    "body": {
+                        "order_number": data.orderNumber,
+                        "edited_object": data.edit_list
+                    }
+                }, "quantity": {
+                    "action": "remove_reserve_edit",
+                    "body": {
+                        "order_number": data.orderNumber,
+                        "edited_object": data.edit_list,
+                        "customer_id": data.customerId,
+                        "customer_name": data.customerFullName,
+                        "customer_type": data.customerType
+                    }
+                }},
+            headers={'order': True, "quantity": True}
+        )
+

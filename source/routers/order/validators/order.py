@@ -31,3 +31,25 @@ class informal(BaseModel):
 
 class cancel(BaseModel):
     orderNumber: int
+
+
+class edit_order_validator(BaseModel):
+    orderNumber: int
+    customerId: int
+    customerType: str
+    customerFullName: str
+    edit_list: list = [{
+        "systemCode": "",
+        "storageId": "",
+        "oldCount": "",
+        "newCount": "",
+        "sku": ""
+    }]
+
+    @validator("edit_list")
+    def edit_list_validator(cls, value):
+        allowed_keys = ["systemCode", "storageId", "newCount", "oldCount", "sku"]
+        for items in value:
+            for k, v in items.items():
+                if k not in allowed_keys:
+                    raise HTTPException(status_code=400, detail=f"edit list must be one of {allowed_keys}")

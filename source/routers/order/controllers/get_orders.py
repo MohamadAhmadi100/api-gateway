@@ -42,3 +42,27 @@ def get_all_orders(response: Response,
             return order_response
         raise HTTPException(status_code=order_response.get("status_code", 500),
                             detail={"error": order_response.get("error", "Order service Internal error")})
+
+
+@get_order.get("/get_order/", tags=["Get orders"])
+def get_one_orders(response: Response,
+                   orderNumber: Union[int, None] = Query(default=None),
+                   auth_header=Depends(auth_handler.check_current_user_tokens)):
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        order_response = rpc.publish(
+            message={
+                "order": {
+                    "action": "get_order",
+                    "body": {
+                        "order_id": orderNumber,
+                    }
+                }
+            },
+            headers={'order': True}
+        ).get("order", {})
+        if order_response.get("success"):
+            response.status_code = order_response.get("status_code", 200)
+            return order_response
+        raise HTTPException(status_code=order_response.get("status_code", 500),
+                            detail={"error": order_response.get("error", "Order service Internal error")})
