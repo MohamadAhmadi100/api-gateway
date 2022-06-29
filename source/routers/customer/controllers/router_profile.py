@@ -79,7 +79,6 @@ def get_profile(
             if attr.get("value") == "confirm":
                 confirm = True
         if attr.get("name") == "customerIsMobileConfirm":
-            print(confirm)
             if not attr.get("value"):
                 valid_attrs.append({"profileStatus": "در انتظار تایید شماره موبایل"})
             elif attr.get("value"):
