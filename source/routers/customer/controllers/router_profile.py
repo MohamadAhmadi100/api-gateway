@@ -20,7 +20,7 @@ router_profile = APIRouter(
 
 auth_handler = AuthHandler()
 
-test_rpc = RabbitRPC_Test(exchange_name='headers_exchange', timeout=5)
+test_rpc = RabbitRPC_Test(exchange_name='headers_exchange', timeout=20)
 
 
 @router_profile.get("/")
