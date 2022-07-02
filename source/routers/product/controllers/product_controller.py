@@ -832,7 +832,7 @@ def get_product_list_back_office(
                             detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@router.get("/get_product_by_name/{name}", tags=["Product"])
+@router.get("/get_product_by_name/{name}/", tags=["Product"])
 def get_product_by_name(name: str,
                         response: Response,
                         access: Optional[str] = Header(None),
