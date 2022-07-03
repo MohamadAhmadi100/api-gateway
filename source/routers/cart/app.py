@@ -82,7 +82,7 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
         elif not quantity_result.get("success"):
             raise HTTPException(status_code=quantity_result.get("status_code", 500),
                                 detail={"error": quantity_result.get("error", "Something went wrong")})
-        elif not customer_result.get("message", {}).get('customerStatus') == 'confirm':
+        elif not customer_result.get("message", {}).get('customerIsActive'):
             raise HTTPException(status_code=403, detail={"error": "Customer is not confirmed"})
         else:
             product_result = product_result.get("message").copy()
