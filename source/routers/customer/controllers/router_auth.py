@@ -134,18 +134,19 @@ def checking_login_otp_code(
         value: validation_auth.CustomerVerifyOTP,
         response: Response,
 ):
-    result = new_rpc.publish(
-        message={
-            "customer": {
-                "action": "checking_login_otp_code",
-                "body": {
-                    "customer_phone_number": value.customer_phone_number,
-                    "customer_code": value.customer_code
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        result = rpc.publish(
+            message={
+                "customer": {
+                    "action": "checking_login_otp_code",
+                    "body": {
+                        "customer_phone_number": value.customer_phone_number,
+                        "customer_code": value.customer_code
+                    }
                 }
-            }
-        },
-        headers={'customer': True}
-    )
+            },
+            headers={'customer': True}
+        )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
