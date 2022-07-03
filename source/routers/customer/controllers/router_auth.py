@@ -6,6 +6,7 @@ from fastapi import status, APIRouter
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.customer.validators import validation_auth
+from source.message_broker.rabbitmq import RabbitRPC as NewRabbit
 
 # from customer.modules import log
 
@@ -16,6 +17,8 @@ router_auth = APIRouter(
 )
 
 auth_handler = AuthHandler()
+
+new_rpc = NewRabbit(exchange_name='headers_exchange', timeout=5)
 
 
 # generate and send mobile number validations to front side
@@ -131,20 +134,18 @@ def checking_login_otp_code(
         value: validation_auth.CustomerVerifyOTP,
         response: Response,
 ):
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        result = rpc.publish(
-            message={
-                "customer": {
-                    "action": "checking_login_otp_code",
-                    "body": {
-                        "customer_phone_number": value.customer_phone_number,
-                        "customer_code": value.customer_code
-                    }
+    result = new_rpc.publish(
+        message={
+            "customer": {
+                "action": "checking_login_otp_code",
+                "body": {
+                    "customer_phone_number": value.customer_phone_number,
+                    "customer_code": value.customer_code
                 }
-            },
-            headers={'customer': True}
-        )
+            }
+        },
+        headers={'customer': True}
+    )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
@@ -175,20 +176,18 @@ def checking_login_password(
         response: Response,
 ):
     # TODO fixed status code
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        result = rpc.publish(
-            message={
-                "customer": {
-                    "action": "checking_login_password",
-                    "body": {
-                        "customer_phone_number": value.customer_phone_number,
-                        "customer_password": value.customer_password
-                    }
+    result = new_rpc.publish(
+        message={
+            "customer": {
+                "action": "checking_login_password",
+                "body": {
+                    "customer_phone_number": value.customer_phone_number,
+                    "customer_password": value.customer_password
                 }
-            },
-            headers={'customer': True}
-        )
+            }
+        },
+        headers={'customer': True}
+    )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
