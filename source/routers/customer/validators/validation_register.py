@@ -186,7 +186,7 @@ class CustomerRegister(BaseModel):
         dataType="string",
         type="str",
         isRquired=True,
-        regexPattern=r"[ ]{0,1}[\u0600-\u06FF]{2,32}$"
+        regexPattern=r"[ ]{0,1,2,3,4,5,6,7,8,9}[\u0600-\u06FF]{4,32}$"
     )
     customer_alley: str = Field(
         alias="customerAlley",
@@ -199,7 +199,7 @@ class CustomerRegister(BaseModel):
         dataType="string",
         type="str",
         isRquired=True,
-        regexPattern=r"[ ]{0,1}[\u0600-\u06FF]{2,32}$"
+        regexPattern=r"[ ]{0,1,2,3,4,5,6,7,8,9}[\u0600-\u06FF]{2,32}$"
     )
     customer_plaque: str = Field(
         alias="customerPlaque",
