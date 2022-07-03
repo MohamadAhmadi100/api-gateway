@@ -471,6 +471,8 @@ def get_product_list_by_system_code(
         allowed_storages = get_allowed_storages(user_data.get("user_id"))
         allowed_storages = [storage for storage in storages if
                             storage in allowed_storages] if storages else allowed_storages
+        if not allowed_storages:
+            raise HTTPException(status_code=404, detail={"error": "No products found"})
 
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
