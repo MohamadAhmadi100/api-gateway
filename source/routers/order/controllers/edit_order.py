@@ -38,7 +38,7 @@ def cancel_order(response: Response,
         if order_result.get("success"):
             reserve_action = remove_from_reserve_order_items(order_object=order_result.get("order_object"))
             if reserve_action.get("success"):
-
+                wallet_result = charge_wallet_edit_order(data.orderNumber, user, order_result['wallet_charge'])
                 response.status_code = order_result.get("status_code")
                 return {"success": True, "message": order_result.get("message")}
             else:

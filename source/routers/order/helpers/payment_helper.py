@@ -131,6 +131,7 @@ def charge_wallet_edit_order(order_number, user, amount):
         "customer_id": user.get("user_id")
     }
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
         wallet_response = rpc.publish(
             message={
                 "wallet": {
