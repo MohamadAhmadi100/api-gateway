@@ -31,7 +31,6 @@ def check_is_registered(
         response: Response,
         value: validation_auth.CustomerAuth
 ):
-    # TODO fixed status code
     # checking is exist mobile number in db
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
@@ -83,7 +82,6 @@ def send_otp_code(value: validation_auth.CustomerAuth, response: Response):
 
 @router_auth.post("/verify-otp/")
 def verify_otp_code(value: validation_auth.CustomerVerifyOTP, response: Response):
-    # TODO fixed status code
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         result = rpc.publish(
@@ -174,6 +172,7 @@ def checking_login_password(
         response: Response,
 ):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
         result = rpc.publish(
             message={
                 "customer": {
@@ -266,6 +265,7 @@ def forget_password(
             },
             headers={'customer': True}
         )
+    print(result)
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
