@@ -47,9 +47,8 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
     # get user from token
     user, token_dict = auth_header
     customer_type = user.get("customer_type")[0]
-    # check if all will have response(timeout)
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=3)
+        rpc.response_len_setter(response_len=4)
         result = rpc.publish(
             message={
                 "product": {
@@ -67,24 +66,36 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
                 "customer": {
                     "action": "check_is_registered",
                     "body": {
-                        "customer_phone_number": user.get("phone_number", ""),
+                        "customer_phone_number": user.get("phone_number"),
+                    }
+                },
+                "order": {
+                    "action": "customer_products_report",
+                    "body": {
+                        "customer_id": user.get("user_id")
                     }
                 }
             },
-            headers={'product': True, "quantity": True, "customer": True},
+            headers={'product': True, "quantity": True, "customer": True, "order": True},
         )
         product_result = result.get("product", {})
         quantity_result = result.get("quantity", {})
         customer_result = result.get("customer", {})
+        order_result = result.get("order", {})
         if not product_result.get("success"):
             raise HTTPException(status_code=product_result.get("status_code", 500),
                                 detail={"error": product_result.get("error", "Something went wrong")})
         elif not quantity_result.get("success"):
             raise HTTPException(status_code=quantity_result.get("status_code", 500),
                                 detail={"error": quantity_result.get("error", "Something went wrong")})
-        elif not customer_result.get("message", {}).get('customerStatus') == 'confirm':
+        elif not customer_result.get("message", {}).get('customerIsActive'):
             raise HTTPException(status_code=403, detail={"error": "Customer is not confirmed"})
         else:
+
+            ordered_count = [i.get("count") for i in order_result.get('customer_detail') if
+                             i.get('system_code') == item.system_code and i.get("storage_id") == item.storage_id]
+            ordered_count = ordered_count[0] if ordered_count else 0
+
             product_result = product_result.get("message").copy()
             final_result = dict()
             final_result["user_info"] = {"user_id": user.get("user_id")}
@@ -134,9 +145,11 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
                 raise HTTPException(status_code=400,
                                     detail={"error": "موجودی این محصول کافی نیست"})
 
-            if (now_count + item.count) < quantity.get('min_qty') or (now_count + item.count) > quantity.get('max_qty'):
+            if (now_count + item.count) < quantity.get('min_qty') or (
+                    now_count + item.count + ordered_count) > quantity.get('max_qty'):
                 response.status_code = 400
-                return {"error": "Quantity not allowed"}
+                raise HTTPException(status_code=400,
+                                    detail={"error": "مقدار وارد شده بیش از حد مجاز است"})
 
             rpc.response_len_setter(response_len=1)
             cart_result = rpc.publish(

@@ -107,6 +107,7 @@ class RabbitRPC:
             print(bad_services)
             logging.info("Timeout waiting for response... services: {}".format(bad_services))
         result = self.broker_response.copy()
+        logging.info("Final response is ...{}".format(result))
         self.broker_response.clear()
         return result
 

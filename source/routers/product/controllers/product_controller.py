@@ -310,7 +310,7 @@ def get_product_by_system_code(
         rpc.response_len_setter(response_len=1)
         customer_type = None
         allowed_storages = list()
-        customer_status = None
+        customer_is_active = None
         if access or refresh:
             user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
             customer_type = user_data.get("customer_type", ["B2B"])[0]
@@ -327,7 +327,7 @@ def get_product_by_system_code(
                 headers={'customer': True}
             )
             result = result.get("customer", {}).get("message", {})
-            customer_status = result.get('customerStatus')
+            customer_is_active = result.get('customerIsActive')
         rpc.response_len_setter(response_len=3)
         result = rpc.publish(
             message={
@@ -366,8 +366,9 @@ def get_product_by_system_code(
         else:
             response.status_code = product_result.get("status_code", 200)
             final_result = product_result.get("message").copy()
-            final_result['customer_can_buy'] = True if customer_status == 'confirm' else False
+            final_result['customer_can_buy'] = customer_is_active
             product_list = list()
+
             for product in final_result.get("products", []):
                 if customer_type and allowed_storages:
                     product['config']["warehouse"] = list()
@@ -470,6 +471,8 @@ def get_product_list_by_system_code(
         allowed_storages = get_allowed_storages(user_data.get("user_id"))
         allowed_storages = [storage for storage in storages if
                             storage in allowed_storages] if storages else allowed_storages
+        if not allowed_storages:
+            raise HTTPException(status_code=404, detail={"error": "No products found"})
 
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
@@ -832,7 +835,7 @@ def get_product_list_back_office(
                             detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@router.get("/get_product_by_name/{name}", tags=["Product"])
+@router.get("/get_product_by_name/{name}/", tags=["Product"])
 def get_product_by_name(name: str,
                         response: Response,
                         access: Optional[str] = Header(None),

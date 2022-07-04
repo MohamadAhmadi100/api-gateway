@@ -29,34 +29,40 @@ def get_profile(
         auth_header=Depends(auth_handler.check_current_user_tokens),
 ):
     user_data, header = auth_header
-    result = test_rpc.publish(
-        message={
-            "customer": {
-                "action": "get_profile",
-                "body": {
-                    "customer_phone_number": user_data,
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
+            # result = test_rpc.publish(
+            message={
+                "customer": {
+                    "action": "get_profile",
+                    "body": {
+                        "customer_phone_number": user_data,
+                    }
                 }
-            }
-        },
-        headers={'customer': True}
-    )
+            },
+            headers={'customer': True}
+        )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
             status_code=customer_result.get("status_code", 500),
             detail={"error": customer_result.get("error", "Something went wrong")}
         )
-    result = test_rpc.publish(
-        message={
-            "attribute": {
-                "action": "get_all_attributes_by_assignee",
-                "body": {
-                    "name": "customer"
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        # result = test_rpc.publish(
+        result = rpc.publish(
+            message={
+                "attribute": {
+                    "action": "get_all_attributes_by_assignee",
+                    "body": {
+                        "name": "customer"
+                    }
                 }
-            }
-        },
-        headers={'attribute': True}
-    )
+            },
+            headers={'attribute': True}
+        )
     attribute_result = result.get("attribute", {})
     if not attribute_result.get("success"):
         raise HTTPException(status_code=attribute_result.get("status_code", 500),
