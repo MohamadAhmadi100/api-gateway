@@ -64,7 +64,9 @@ class RabbitRPC:
     def publish(self, message: dict, headers: dict, extra_data: str = None):
         # publish message with given message and headers
         self.response_len = len(message)
+        logging.info("expected response num: {}".format(self.response_len))
         self.corr_id = str(uuid.uuid4())
+        logging.info("corr id: {}".format(self.corr_id))
         try_count = 0
         while True:
             try_count += 1
@@ -101,6 +103,7 @@ class RabbitRPC:
                 logging.info("Error consuming from RabbitMQ... {}".format(e))
                 print("Error listening for response...")
                 self.consume_connection, self.consume_channel = self.connect()
+        logging.info("actual response num: {}, expected response num: {}".format(self.broker_response, self.response_len))
         if len(self.broker_response) < self.response_len:
             print("Couldn't get response from these services:")
             bad_services = list(message.keys() - self.broker_response.keys())
@@ -108,6 +111,7 @@ class RabbitRPC:
             logging.info("Timeout waiting for response... services: {}".format(bad_services))
         result = self.broker_response.copy()
         logging.info("Final response is ...{}".format(result))
+        logging.info("corr id: {}".format(self.corr_id))
         self.broker_response.clear()
         return result
 
