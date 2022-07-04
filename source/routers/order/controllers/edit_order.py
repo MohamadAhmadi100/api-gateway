@@ -38,9 +38,15 @@ def cancel_order(response: Response,
         if order_result.get("success"):
             reserve_action = remove_from_reserve_order_items(order_object=order_result.get("order_object"))
             if reserve_action.get("success"):
-                wallet_result = charge_wallet_edit_order(data.orderNumber, user, order_result['wallet_charge'])
-                response.status_code = order_result.get("status_code")
-                return {"success": True, "message": order_result.get("message")}
+                if order_result['wallet_charge'] == 0:
+                    return {"success": True, "message": "سفارش با موفقیت لغو شد"}
+                else:
+                    wallet_result = charge_wallet_edit_order(data.orderNumber, user, order_result['wallet_charge'])
+                    if wallet_result:
+                        response.status_code = order_result.get("status_code")
+                        return {"success": True, "message": order_result.get("message")}
+                    else:
+                        return {"success": True, "message": "سفارش با موفقیت لغو شد ولی کیف پول شما شارژ نشد. با ادمین تماس بگیرید"}
             else:
                 return {"success": False, "message": "رزرو تغییر نکرد"}
         else:
@@ -74,16 +80,19 @@ def edit_order_items(response: Response,
                 }},
             headers={'order': True, "quantity": True}
         )
-        order = order_result.get("order", {}).get("message", {})
-        quantity = order_result.get("quantity", {}).get("message", {})
-
-        if order and quantity:
-            charge_wallet_edit_order(data.orderNumber, user, order_result['wallet_charge'])
-            response.status_code = 200
-            return {"succeess": True, "message": "سفارش با موفقیت ویرایش شد"}
-        elif not order:
+        order = order_result.get("order", {})
+        quantity = order_result.get("quantity", {})
+        if order.get("success") and quantity.get("success"):
+            wallet_result = charge_wallet_edit_order(data.orderNumber, user, order.get('wallet_charge'))
+            if wallet_result.get("success"):
+                response.status_code = 200
+                return {"succeess": True, "message": "سفارش با موفقیت ویرایش شد"}
+            else:
+                response.status_code = 400
+                return {"succeess": True, "message": "سفارش با موفقیت ویرایش شد ولی کیف پول شارژ نشد. با ادمین تماس بگیرید"}
+        elif not order.get("success"):
             response.status_code = 400
             return {"succeess": False, "message": "سفارش با مشکل موجه شد"}
-        elif not quantity:
+        elif not quantity.get("success"):
             response.status_code = 400
             return {"succeess": False, "message": "رزرو با مشکل موحه شد"}
