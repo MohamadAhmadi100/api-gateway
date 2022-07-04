@@ -173,7 +173,6 @@ def checking_login_password(
         value: validation_auth.CustomerVerifyPassword,
         response: Response,
 ):
-    # TODO fixed status code
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         result = rpc.publish(
             message={
