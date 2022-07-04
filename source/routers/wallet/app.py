@@ -333,12 +333,6 @@ def get_report_wallet_log(response: Response,
                           perPage: int = None,
                           sortName: str = None,
                           sortType: Optional[SortType] = None,
-                          fromDate: str = "",
-                          toDate: str = "",
-                          minAmount: int = None,
-                          maxAmount: int = None,
-                          type: Optional[List[str]] = Query(None),
-                          bankName: Optional[List[str]] = Query(None),
                           auth_header=Depends(auth.check_current_user_tokens)
 
                           ):
@@ -351,12 +345,7 @@ def get_report_wallet_log(response: Response,
             "perPage": perPage,
             "sortName": sortName,
             "sortType": sortType,
-            "fromDate": fromDate,
-            "toDate": toDate,
-            "minAmount": minAmount,
-            "maxAmount": maxAmount,
-            "type": type,
-            "bankName": bankName,
+
 
         }
         wallet_response = rpc.publish(
