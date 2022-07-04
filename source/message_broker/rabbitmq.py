@@ -47,7 +47,7 @@ class RabbitRPC:
                 return connection, channel
             except Exception as e:
                 logging.info("Error connecting to RabbitMQ... {}".format(e))
-                print("Error connecting to pika...")
+                print(f"{datetime.datetime.now()} - Error connecting to pika...{e}")
                 if try_count > 1000:
                     raise e
                 time.sleep(1)
@@ -65,14 +65,17 @@ class RabbitRPC:
         # publish message with given message and headers
         self.response_len = len(message)
         logging.info("expected response num: {}".format(self.response_len))
+        print(f"{datetime.datetime.now()} - expected response num {self.response_len}")
         self.corr_id = str(uuid.uuid4())
         logging.info("first corr id: {}".format(self.corr_id))
+        print(f"{datetime.datetime.now()} - first corr id : {self.corr_id}")
         try_count = 0
         while True:
             try_count += 1
             try:
                 logging.info(f"Publishing message: {message}")
-                print("publish initiated...")
+                # print("publish initiated...")
+                print(f"{datetime.datetime.now()} - Publishing message: {message}")
                 self.publish_channel.basic_publish(
                     exchange=self.exchange_name,
                     routing_key='',
@@ -85,12 +88,12 @@ class RabbitRPC:
                     ),
                     body=json.dumps(message) if isinstance(message, dict) else message
                 )
-                print("message sent...")
+                print(f"{datetime.datetime.now()} - message sent...")
                 logging.info("Message sent...")
                 break
             except Exception as e:
                 logging.info("Error publishing to RabbitMQ... {}".format(e))
-                print("Error publishing message...")
+                print(f"{datetime.datetime.now()} - Error publishing message... {e}")
                 if try_count > 3:
                     raise e
                 self.publish_connection, self.publish_channel = self.connect()
@@ -101,24 +104,31 @@ class RabbitRPC:
                 self.consume_connection.process_data_events()
             except Exception as e:
                 logging.info("Error consuming from RabbitMQ... {}".format(e))
-                print("Error listening for response...")
+                print(f"{datetime.datetime.now()} - Error listening for response... {e}")
                 self.consume_connection, self.consume_channel = self.connect()
+        print(f"{datetime.datetime.now()} - "
+              f"actual response num: {len(self.broker_response)}"
+              f", expected response num: {self.response_len}")
         logging.info("actual response num: {}, expected response num: {}".format(len(self.broker_response), self.response_len))
         if len(self.broker_response) < self.response_len:
-            print("Couldn't get response from these services:")
+            print(f"{datetime.datetime.now()} - Couldn't get response from these services:")
             bad_services = list(message.keys() - self.broker_response.keys())
-            print(bad_services)
+            print(f"{datetime.datetime.now()} - bad_services")
             logging.info("Timeout waiting for response... services: {}".format(bad_services))
+            print(f"{datetime.datetime.now()} - Timeout waiting for response... services: {bad_services}")
         result = self.broker_response.copy()
         logging.info("Final response is ...{}".format(result))
+        print(f"{datetime.datetime.now()} - Final response is ...{result}")
         logging.info("second corr id: {}".format(self.corr_id))
+        print(f"{datetime.datetime.now()} - second corr id: {self.corr_id}")
         self.broker_response.clear()
         return result
 
     def on_response(self, channel, method, properties, body):
         if self.corr_id == properties.correlation_id:
-            print("message received...")
+            # print("message received...")
             logging.info("Message received...")
+            print(f"{datetime.datetime.now()} - Message received...")
             key = next(iter(json.loads(body)))
             self.broker_response[key] = json.loads(body).get(key)
 
