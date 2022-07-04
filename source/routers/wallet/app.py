@@ -3,9 +3,11 @@
 * in this rout all of customers data get in token
 * all of api objects first validated in "validators" directory then send to services
 """
-from fastapi import FastAPI, HTTPException, Response, responses, Depends
+from fastapi import FastAPI, HTTPException, Response, responses, Depends, Query
 from starlette.exceptions import HTTPException as starletteHTTPException
 from source.config import settings
+from enum import Enum
+from typing import Optional, List
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.wallet.validators.transaction import Transaction
 from source.routers.wallet.validators.update_wallet import UpdateData
@@ -32,6 +34,11 @@ app = FastAPI(
     debug=settings.DEBUG_MODE
 )
 auth = AuthHandler()
+
+
+class SortType(str, Enum):
+    asc = "asc"
+    desc = "desc"
 
 
 @app.exception_handler(starletteHTTPException)
@@ -316,3 +323,61 @@ def charge_wallet(
             response=Response
         )
         return payment_result
+
+
+@app.get("/get-report-wallet-log", tags=["customer side"])
+def get_report_wallet_log(response: Response,
+
+                          customerId: int = Query(...),
+                          page: int = None,
+                          perPage: int = None,
+                          sortName: str = None,
+                          sortType: Optional[SortType] = None,
+                          fromDate: str = "",
+                          toDate: str = "",
+                          minAmount: int = None,
+                          maxAmount: int = None,
+                          type: Optional[List[str]] = Query(None),
+                          bankName: Optional[List[str]] = Query(None),
+                          auth_header=Depends(auth.check_current_user_tokens)
+
+                          ):
+    sub_data, token_data = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        data = {
+            "customerId": customerId,
+            "page": page,
+            "perPage": perPage,
+            "sortName": sortName,
+            "sortType": sortType,
+            "fromDate": fromDate,
+            "toDate": toDate,
+            "minAmount": minAmount,
+            "maxAmount": maxAmount,
+            "type": type,
+            "bankName": bankName,
+
+        }
+        wallet_response = rpc.publish(
+            message={
+                "wallet": {
+                    "action": "get_report_wallet_log",
+                    "body": {
+                        "data": data
+                    }
+                }
+            },
+            headers={'wallet': True}
+        ).get("wallet", {})
+        response.headers["accessToken"] = token_data.get("access_token")
+        response.headers["refreshToken"] = token_data.get("refresh_token")
+
+        if wallet_response.get("success"):
+            response.status_code = wallet_response.get("status_code", 200)
+            return wallet_response
+        elif not wallet_response.get("success"):
+            response.status_code = wallet_response.get("status_code", 417)
+            return wallet_response
+        raise HTTPException(status_code=wallet_response.get("status_code", 500),
+                            detail={"error": wallet_response.get("error", "Wallet service Internal error")})
