@@ -106,6 +106,7 @@ class RabbitRPC:
                 logging.info("Error consuming from RabbitMQ... {}".format(e))
                 print(f"{datetime.datetime.now()} - Error listening for response... {e}")
                 self.consume_connection, self.consume_channel = self.connect()
+                self.consume()
         print(f"{datetime.datetime.now()} - "
               f"actual response num: {len(self.broker_response)}"
               f", expected response num: {self.response_len}")
