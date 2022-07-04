@@ -160,7 +160,7 @@ class CustomerRegister(BaseModel):
         dataType="string",
         type="password",
         isRquired=True,
-        regexPattern="^[A-Za-z\d,.?;:\'!$%() ]*{5,32}$",
+        regexPattern="^([A-Za-z0-9]{6,32})"
     )
     customer_verify_password: str = Field(
         title="تکرار رمز عبور",
@@ -173,7 +173,7 @@ class CustomerRegister(BaseModel):
         dataType="string",
         type="password",
         isRquired=True,
-        regexPattern="^[A-Za-z\d,.?;:\'!$%() ]*{5,32}$",
+        regexPattern="^([A-Za-z0-9]{6,32})"
     )
     customer_street: str = Field(
         alias="customerStreet",
@@ -199,7 +199,7 @@ class CustomerRegister(BaseModel):
         dataType="string",
         type="str",
         isRquired=True,
-        regexPattern=r"[ ]{0,1}[\u0600-\u06FF0-9]{2,32}$"
+        regexPattern=r"[ ]{0,1}[\u0600-\u06FF0-9]{1,32}$"
     )
     customer_plaque: str = Field(
         alias="customerPlaque",
@@ -243,7 +243,7 @@ class CustomerRegister(BaseModel):
 
     @validator("customer_password")
     def validate_password(cls, verify_password):
-        pattern = r"^{5,32}$"  # r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,32}$"
+        pattern = "^([A-Za-z0-9]{6,32})"  # r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,32}$"
         match = re.fullmatch(pattern, verify_password)
         if not match:
             raise HTTPException(status_code=422, detail={"error": "رمز عبور وارد شده صحیح نمی باشد"})
@@ -251,7 +251,7 @@ class CustomerRegister(BaseModel):
 
     @validator("customer_verify_password")
     def validate_verify_password(cls, verify_password, values, **kwargs):
-        pattern = r"^{5,32}$"  # r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,32}$"
+        pattern = "^([A-Za-z0-9]{6,32})"  # r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,32}$"
         match = re.fullmatch(pattern, verify_password)
         if not match:
             raise HTTPException(status_code=422, detail={"error": "تکرار رمز عبور وارد شده صحیح نمی باشد"})
