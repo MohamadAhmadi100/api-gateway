@@ -9,6 +9,7 @@ from starlette.exceptions import HTTPException
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.order.helpers.final_helper import remove_from_reserve_order_items
+from source.routers.order.helpers.payment_helper import charge_wallet_edit_order
 from source.routers.order.validators.order import cancel, edit_order_validator
 
 edit_order = APIRouter()
@@ -20,6 +21,7 @@ auth_handler = AuthHandler()
 def cancel_order(response: Response,
                  data: cancel,
                  auth_header=Depends(auth_handler.check_current_user_tokens)):
+    user, token_dict = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         order_result = rpc.publish(
@@ -36,6 +38,7 @@ def cancel_order(response: Response,
         if order_result.get("success"):
             reserve_action = remove_from_reserve_order_items(order_object=order_result.get("order_object"))
             if reserve_action.get("success"):
+
                 response.status_code = order_result.get("status_code")
                 return {"success": True, "message": order_result.get("message")}
             else:
@@ -48,6 +51,7 @@ def cancel_order(response: Response,
 def edit_order_items(response: Response,
                      data: edit_order_validator,
                      auth_header=Depends(auth_handler.check_current_user_tokens)):
+    user, auth_head = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=2)
         order_result = rpc.publish(
@@ -74,6 +78,7 @@ def edit_order_items(response: Response,
         quantity = order_result.get("quantity", {}).get("message", {})
 
         if order and quantity:
+            charge_wallet_edit_order(data.orderNumber, user, order_result['wallet_charge'])
             response.status_code = 200
             return {"succeess": True, "message": "سفارش با موفقیت ویرایش شد"}
         elif not order:

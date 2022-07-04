@@ -91,7 +91,8 @@ def wallet_final_consume(palceorder_result, cart, auth_header, response):
 def wallet_payment_consume(payment_detail, cart):
     wallet_amount = cart['payment'].get("walletAmount")
     if payment_detail.get("is_paid"):
-        data_reserve_wallet = {"amount": wallet_amount, "order_number": payment_detail['service_id'], "action_type": "auto",
+        data_reserve_wallet = {"amount": wallet_amount, "order_number": payment_detail['service_id'],
+                               "action_type": "auto",
                                "balance": "consume", "type": "order", 'status': "success",
                                "customer_id": payment_detail.get("customer_id")}
 
@@ -110,6 +111,32 @@ def wallet_payment_consume(payment_detail, cart):
                     "action": "result_checkout",
                     "body": {
                         "data": data_reserve_wallet
+                    }
+                }
+            },
+            headers={'wallet': True}
+        ).get("wallet", {})
+        return wallet_response
+
+
+def charge_wallet_edit_order(order_number, user, amount):
+    last_data = {
+        "staff_name": None,
+        "amount": amount,
+        "staff_id": None,
+        "balance": "charge",
+        "action_type": "auto",
+        "type": "customerCharge",
+        "reason": {"orderNumber": order_number, "reason": "cancel order"},
+        "customer_id": user.get("user_id")
+    }
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        wallet_response = rpc.publish(
+            message={
+                "wallet": {
+                    "action": "update_wallet",
+                    "body": {
+                        "data": last_data
                     }
                 }
             },
