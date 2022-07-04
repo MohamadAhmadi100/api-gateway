@@ -38,13 +38,13 @@ class edit_order_validator(BaseModel):
     customerId: int
     customerType: str
     customerFullName: str
-    edit_list: list = [{
+    edit_list: list = Field(default=[{
         "systemCode": "",
         "storageId": "",
         "oldCount": "",
         "newCount": "",
         "sku": ""
-    }]
+    }])
 
     @validator("edit_list")
     def edit_list_validator(cls, value):
@@ -53,3 +53,4 @@ class edit_order_validator(BaseModel):
             for k, v in items.items():
                 if k not in allowed_keys:
                     raise HTTPException(status_code=400, detail=f"edit list must be one of {allowed_keys}")
+        return value

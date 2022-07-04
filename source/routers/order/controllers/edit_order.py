@@ -70,4 +70,15 @@ def edit_order_items(response: Response,
                 }},
             headers={'order': True, "quantity": True}
         )
+        order = order_result.get("order", {}).get("message", {})
+        quantity = order_result.get("quantity", {}).get("message", {})
 
+        if order and quantity:
+            response.status_code = 200
+            return {"succeess": True, "message": "سفارش با موفقیت ویرایش شد"}
+        elif not order:
+            response.status_code = 400
+            return {"succeess": False, "message": "سفارش با مشکل موجه شد"}
+        elif not quantity:
+            response.status_code = 400
+            return {"succeess": False, "message": "رزرو با مشکل موحه شد"}
