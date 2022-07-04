@@ -139,7 +139,7 @@ class RabbitRPC:
 
 
 if __name__ == '__main__':
-    rpc = RabbitRPC(exchange_name='headers_exchange', timeout=5)
+    rpc = RabbitRPC(exchange_name='headers_exchange', timeout=15)
     count = 1
     while True:
         result = rpc.publish(
