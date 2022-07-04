@@ -130,6 +130,7 @@ def checking_login_otp_code(
         response: Response,
 ):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
         result = rpc.publish(
             message={
                 "customer": {
