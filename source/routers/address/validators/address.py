@@ -77,7 +77,7 @@ class Address(BaseModel):
 
     @validator("plaque")
     def validate_plaque(cls, plaque):
-        pattern = r"^[0-9]{1,6}$"
+        pattern = r"[\u06F0-\u06F90-9]{1,6}$"
         match = re.fullmatch(pattern, plaque)
         if not match:
             raise HTTPException(status_code=422, detail={"error": "پلاک معتبر نیست."})
@@ -85,7 +85,7 @@ class Address(BaseModel):
 
     @validator("unit")
     def validate_unit(cls, unit):
-        pattern = r"^[0-9]{1,6}$"
+        pattern = r"[\u06F0-\u06F90-9]{1,6}$"
         match = re.fullmatch(pattern, unit)
         if not match:
             raise HTTPException(status_code=422, detail={"error": "واحد معتبر نیست."})
@@ -93,7 +93,7 @@ class Address(BaseModel):
 
     @validator("tel")
     def validate_tel(cls, tel):
-        pattern = r"^[0-9]{11}$"
+        pattern = r"^[0-9\u06F0-\u06F9]{11}$"
         match = re.fullmatch(pattern, tel)
         if not match:
             raise HTTPException(status_code=422, detail={"error": "شماره تماس وارد شده معتبر نیست."})
@@ -101,7 +101,7 @@ class Address(BaseModel):
 
     @validator("postal_code")
     def validate_postal_code(cls, postal_code):
-        pattern = r"^[0-9]{10}$"
+        pattern = r"^[\u06F0-\u06F90-9]{10}$"
         match = re.fullmatch(pattern, postal_code)
         if not match:
             raise HTTPException(status_code=422, detail={"error": "کد پستی وارد شده معتبر نیست."})
