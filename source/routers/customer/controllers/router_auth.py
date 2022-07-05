@@ -18,7 +18,7 @@ router_auth = APIRouter(
 
 auth_handler = AuthHandler()
 
-new_rpc = NewRabbit(exchange_name='headers_exchange', timeout=5)
+# new_rpc = NewRabbit(exchange_name='headers_exchange', timeout=5)
 
 
 # generate and send mobile number validations to front side
