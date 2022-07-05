@@ -175,9 +175,9 @@ def checking_login_password(
         value: validation_auth.CustomerVerifyPassword,
         response: Response,
 ):
-    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-    #     rpc.response_len_setter(response_len=1)
-    result = new_rpc.publish(
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+    result = rpc.publish(
         message={
             "customer": {
                 "action": "checking_login_password",
