@@ -6,7 +6,7 @@ from fastapi import status, APIRouter
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.customer.validators import validation_auth
-from source.message_broker.rabbitmq import RabbitRPC as NewRabbit
+# from source.message_broker.rabbitmq import RabbitRPC as NewRabbit
 
 # from customer.modules import log
 
