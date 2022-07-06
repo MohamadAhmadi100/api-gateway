@@ -53,7 +53,7 @@ def get_one_orders(response: Response,
         order_response = rpc.publish(
             message={
                 "order": {
-                    "action": "get_order",
+                    "action": "get_one_order",
                     "body": {
                         "order_id": orderNumber,
                     }
