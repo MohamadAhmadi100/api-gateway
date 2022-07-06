@@ -269,7 +269,6 @@ def forget_password(
             },
             headers={'customer': True}
         )
-    print(result)
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(

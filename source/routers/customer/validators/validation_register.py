@@ -57,7 +57,7 @@ class CustomerRegister(BaseModel):
         dataType="string",
         type="text",
         isRquired=True,
-        regexPattern="^[0-9]{10}$",
+        # regexPattern="^[0-9]{10}$",
     )
     customer_region_code: str = Field(
         description="",
@@ -145,7 +145,7 @@ class CustomerRegister(BaseModel):
         maxLength=10,
         dataType="string",
         type="text",
-        regexPattern="^[0-9]{10}$",
+        # regexPattern="^[0-9]{10}$",
         isRquired=True,
     )
 
@@ -212,7 +212,7 @@ class CustomerRegister(BaseModel):
         dataType="string",
         type="str",
         isRquired=True,
-        regexPattern=r"^[0-9]{1,6}$"
+        # regexPattern=r"^[0-9]{1,6}$"
     )
     customer_unit: str = Field(
         alias="customerUnit",
@@ -225,7 +225,7 @@ class CustomerRegister(BaseModel):
         dataType="string",
         type="str",
         isRquired=True,
-        regexPattern=r"^[0-9]{1,6}$"
+        # regexPattern=r"^[0-9]{1,6}$"
     )
     customer_telephone: str = Field(
         alias="customerTelephone",
@@ -238,7 +238,7 @@ class CustomerRegister(BaseModel):
         dataType="string",
         type="str",
         isRquired=True,
-        regexPattern=r"^[0-9]{11}$"
+        # regexPattern=r"^[0-9]{11}$"
     )
 
     @validator("customer_password")
@@ -315,13 +315,13 @@ class CustomerRegister(BaseModel):
     #         raise HTTPException(status_code=422, detail={"error": "آدرس وارد شده صحیح نمیباشد"})
     #     return customer_address
 
-    @validator("customer_postal_code")
-    def validate_customer_postal_code(cls, customer_postal_code):
-        pattern = r"^[0-9]{10}$"
-        match = re.fullmatch(pattern, customer_postal_code)
-        if not match:
-            raise HTTPException(status_code=422, detail={"error": "کد پستی وارد شده صحیح نمیباشد"})
-        return customer_postal_code
+    # @validator("customer_postal_code")
+    # def validate_customer_postal_code(cls, customer_postal_code):
+    #     pattern = r"^[0-9]{10}$"
+    #     match = re.fullmatch(pattern, customer_postal_code)
+    #     if not match:
+    #         raise HTTPException(status_code=422, detail={"error": "کد پستی وارد شده صحیح نمیباشد"})
+    #     return customer_postal_code
 
     @validator("customer_province_id")
     def validate_customer_province_id(cls, customer_province_id):
@@ -347,26 +347,26 @@ class CustomerRegister(BaseModel):
             raise HTTPException(status_code=422, detail={"error": "نام کوچه معتبر نیست."})
         return customer_city_id
 
-    @validator("customer_plaque")
-    def validate_plaque(cls, plaque):
-        pattern = r"^[0-9]{1,6}$"
-        match = re.fullmatch(pattern, plaque)
-        if not match:
-            raise HTTPException(status_code=422, detail={"error": "پلاک معتبر نیست."})
-        return plaque
+    # @validator("customer_plaque")
+    # def validate_plaque(cls, plaque):
+    #     pattern = r"^[0-9]{1,6}$"
+    #     match = re.fullmatch(pattern, plaque)
+    #     if not match:
+    #         raise HTTPException(status_code=422, detail={"error": "پلاک معتبر نیست."})
+    #     return plaque
 
-    @validator("customer_unit")
-    def validate_unit(cls, unit):
-        pattern = r"^[0-9]{1,6}$"
-        match = re.fullmatch(pattern, unit)
-        if not match:
-            raise HTTPException(status_code=422, detail={"error": "واحد معتبر نیست."})
-        return unit
+    # @validator("customer_unit")
+    # def validate_unit(cls, unit):
+    #     pattern = r"^[0-9]{1,6}$"
+    #     match = re.fullmatch(pattern, unit)
+    #     if not match:
+    #         raise HTTPException(status_code=422, detail={"error": "واحد معتبر نیست."})
+    #     return unit
 
-    @validator("customer_telephone")
-    def validate_telephone(cls, tel):
-        pattern = r"^[0-9]{11}$"
-        match = re.fullmatch(pattern, tel)
-        if not match:
-            raise HTTPException(status_code=422, detail={"error": "شماره تماس وارد شده معتبر نیست."})
-        return tel
+    # @validator("customer_telephone")
+    # def validate_telephone(cls, tel):
+    #     pattern = r"^[0-9]{11}$"
+    #     match = re.fullmatch(pattern, tel)
+    #     if not match:
+    #         raise HTTPException(status_code=422, detail={"error": "شماره تماس وارد شده معتبر نیست."})
+    #     return tel

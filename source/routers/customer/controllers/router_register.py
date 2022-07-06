@@ -3,7 +3,8 @@ import codemelli
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.customer.validators import validation_register
-
+import logging
+from source.helpers.exception_handler import LogHandler
 router_register = APIRouter(
     prefix="/register",
     tags=["register"]
@@ -72,7 +73,8 @@ def register(
                             "customer_verify_password": value.customer_verify_password,
                             "customer_street": value.customer_street,
                             "customer_address": [customer_address]
-                        }
+                        },
+                        "test": value.json()
                     }
                 }
             },
@@ -84,6 +86,15 @@ def register(
             status_code=customer_result.get("status_code", 500),
             detail={"error": customer_result.get("error", "Something went wrong")}
         )
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        handlers=[
+            LogHandler("log/app.log", mode='a',
+                       maxBytes=5_000_000,
+                       backupCount=8),
+        ]
+    )
     customer_id = customer_result.get("message").get("data").get("customerID")
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
