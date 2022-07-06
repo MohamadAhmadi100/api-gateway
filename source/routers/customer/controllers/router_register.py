@@ -73,7 +73,7 @@ def register(
                             "customer_street": value.customer_street,
                             "customer_address": [customer_address]
                         },
-                        "test": value.json()
+                        "test": value
                     }
                 }
             },
