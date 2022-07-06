@@ -840,15 +840,21 @@ def get_product_list_back_office(
 @router.get("/get_product_by_name/{name}/", tags=["Product"])
 def get_product_by_name(name: str,
                         response: Response,
+                        storages: List[str] = Query([], alias='storages'),
                         access: Optional[str] = Header(None),
                         refresh: Optional[str] = Header(None)
                         ):
     customer_type = None
-    allowed_storages = None
+    allowed_storages = storages
+    user_allowed_storages = ['1']
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", ["B2B"])[0]
-        allowed_storages = get_allowed_storages(user_data.get("user_id"))
+        user_allowed_storages = get_allowed_storages(user_data.get("user_id"))
+        allowed_storages = [storage for storage in storages if
+                            storage in user_allowed_storages] if storages else user_allowed_storages
+        if not allowed_storages:
+            raise HTTPException(status_code=404, detail={"error": "No products found"})
 
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
 
@@ -874,7 +880,8 @@ def get_product_by_name(name: str,
                     "action": "get_product_by_name",
                     "body": {
                         "name": name,
-                        "available_quantities": quantity_available_result.get("message", {})
+                        "available_quantities": quantity_available_result.get("message", {}),
+                        "user_allowed_storages": user_allowed_storages
                     }
                 }
             },
