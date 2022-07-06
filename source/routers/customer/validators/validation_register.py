@@ -145,7 +145,7 @@ class CustomerRegister(BaseModel):
         maxLength=10,
         dataType="string",
         type="text",
-        regexPattern="^[0-9]{10}$",
+        # regexPattern="^[0-9]{10}$",
         isRquired=True,
     )
 
@@ -315,13 +315,13 @@ class CustomerRegister(BaseModel):
     #         raise HTTPException(status_code=422, detail={"error": "آدرس وارد شده صحیح نمیباشد"})
     #     return customer_address
 
-    @validator("customer_postal_code")
-    def validate_customer_postal_code(cls, customer_postal_code):
-        pattern = r"^[0-9]{10}$"
-        match = re.fullmatch(pattern, customer_postal_code)
-        if not match:
-            raise HTTPException(status_code=422, detail={"error": "کد پستی وارد شده صحیح نمیباشد"})
-        return customer_postal_code
+    # @validator("customer_postal_code")
+    # def validate_customer_postal_code(cls, customer_postal_code):
+    #     pattern = r"^[0-9]{10}$"
+    #     match = re.fullmatch(pattern, customer_postal_code)
+    #     if not match:
+    #         raise HTTPException(status_code=422, detail={"error": "کد پستی وارد شده صحیح نمیباشد"})
+    #     return customer_postal_code
 
     @validator("customer_province_id")
     def validate_customer_province_id(cls, customer_province_id):
