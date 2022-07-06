@@ -142,6 +142,7 @@ class RabbitRPC:
                 try_count += 1
                 self.consume_channel.basic_consume(on_message_callback=self.on_response, queue=self.callback_queue,
                                                    auto_ack=True)
+                break
             except Exception as e:
                 if try_count > 100:
                     raise e
