@@ -22,8 +22,9 @@ class RabbitRPC:
         self.exchange_name = exchange_name
         self.publish_connection, self.publish_channel = self.connect()
         self.consume_connection, self.consume_channel = self.connect()
-        self.queue_result = self.consume_channel.queue_declare(queue="", exclusive=True)
+        self.queue_result = self.consume_channel.queue_declare(queue="", exclusive=True, durable=True)
         self.callback_queue = self.queue_result.method.queue
+        print(self.callback_queue)
         self.broker_response = {}
         self.corr_id = None
         self.response_len = 0
@@ -46,7 +47,7 @@ class RabbitRPC:
                 channel.exchange_declare(exchange=self.exchange_name, exchange_type='headers')
                 return connection, channel
             except Exception as e:
-                logging.info("Error connecting to RabbitMQ... {}".format(e))
+                logging.info(f"Error connecting to RabbitMQ... {e}")
                 print(f"{datetime.datetime.now()} - Error connecting to pika...{e}")
                 if try_count > 1000:
                     raise e
@@ -64,10 +65,10 @@ class RabbitRPC:
     def publish(self, message: dict, headers: dict, extra_data: str = None):
         # publish message with given message and headers
         self.response_len = len(message)
-        logging.info("expected response num: {}".format(self.response_len))
+        logging.info(f"expected response num: {self.response_len}")
         print(f"{datetime.datetime.now()} - expected response num {self.response_len}")
         self.corr_id = str(uuid.uuid4())
-        logging.info("first corr id: {}".format(self.corr_id))
+        logging.info(f"first corr id: {self.corr_id}")
         print(f"{datetime.datetime.now()} - first corr id : {self.corr_id}")
         try_count = 0
         while True:
@@ -92,7 +93,7 @@ class RabbitRPC:
                 logging.info("Message sent...")
                 break
             except Exception as e:
-                logging.info("Error publishing to RabbitMQ... {}".format(e))
+                logging.info(f"Error publishing to RabbitMQ... {e}")
                 print(f"{datetime.datetime.now()} - Error publishing message... {e}")
                 if try_count > 3:
                     raise e
@@ -103,24 +104,25 @@ class RabbitRPC:
             try:
                 self.consume_connection.process_data_events()
             except Exception as e:
-                logging.info("Error consuming from RabbitMQ... {}".format(e))
+                logging.info(f"Error consuming from RabbitMQ... {e}")
                 print(f"{datetime.datetime.now()} - Error listening for response... {e}")
                 self.consume_connection, self.consume_channel = self.connect()
                 self.consume()
         print(f"{datetime.datetime.now()} - "
               f"actual response num: {len(self.broker_response)}"
               f", expected response num: {self.response_len}")
-        logging.info("actual response num: {}, expected response num: {}".format(len(self.broker_response), self.response_len))
+        logging.info(f"actual response num: {len(self.broker_response)}, expected response num: {self.response_len}")
+
         if len(self.broker_response) < self.response_len:
             print(f"{datetime.datetime.now()} - Couldn't get response from these services:")
             bad_services = list(message.keys() - self.broker_response.keys())
             print(f"{datetime.datetime.now()} - bad_services")
-            logging.info("Timeout waiting for response... services: {}".format(bad_services))
+            logging.info(f"Timeout waiting for response... services: {bad_services}")
             print(f"{datetime.datetime.now()} - Timeout waiting for response... services: {bad_services}")
         result = self.broker_response.copy()
-        logging.info("Final response is ...{}".format(result))
+        logging.info(f"Final response is ...{result}")
         print(f"{datetime.datetime.now()} - Final response is ...{result}")
-        logging.info("second corr id: {}".format(self.corr_id))
+        logging.info(f"second corr id: {self.corr_id}")
         print(f"{datetime.datetime.now()} - second corr id: {self.corr_id}")
         self.broker_response.clear()
         return result
