@@ -136,8 +136,12 @@ class RabbitRPC:
             self.broker_response[key] = json.loads(body).get(key)
 
     def consume(self):
-        self.consume_channel.basic_consume(on_message_callback=self.on_response, queue=self.callback_queue,
+        try:
+            self.consume_channel.basic_consume(on_message_callback=self.on_response, queue=self.callback_queue,
                                            auto_ack=True)
+        except Exception as e:
+            self.consume_connection, self.consume_channel = self.connect()
+            self.consume()
 
 
 if __name__ == '__main__':
