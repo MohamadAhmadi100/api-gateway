@@ -57,7 +57,7 @@ class CustomerRegister(BaseModel):
         dataType="string",
         type="text",
         isRquired=True,
-        # regexPattern="^[0-9]{10}$",
+        regexPattern="^[0-9۰-۹]{10}$",
     )
     customer_region_code: str = Field(
         description="",
@@ -285,7 +285,7 @@ class CustomerRegister(BaseModel):
 
     @validator("customer_national_id")
     def validate_customer_national_id(cls, customer_national_id):
-        pattern = r"^[0-9]{10}$"
+        pattern = r"^[0-9۰-۹]{10}$"
         match = re.fullmatch(pattern, customer_national_id)
         if not match:
             raise HTTPException(status_code=422, detail={"error": "کد ملی وارد شده صحیح نمیباشد"})
