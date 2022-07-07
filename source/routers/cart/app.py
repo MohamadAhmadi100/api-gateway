@@ -266,7 +266,7 @@ def get_cart(response: Response,
                 total_price -= cart_result["message"]["payment"]['walletAmount']
 
             cart_result['message']['grand_price'] = grand_price
-            cart_result["message"]["total_price"] = total_price
+            cart_result["message"]["total_price"] = int(total_price)
             response.status_code = cart_result.get("status_code", 200)
             return convert_case(cart_result.get("message"), 'camel')
 
