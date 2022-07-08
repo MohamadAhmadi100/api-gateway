@@ -309,9 +309,15 @@ def create_informal(person: Person, response: Response, auth_header=Depends(auth
         if not codemelli.validator(person_object.informalNationalID):
             raise HTTPException(status_code=422, detail={"error": "کد ملی وارد شده صحیح نمی باشد"})
         pattern = r"^09[0-9]{9}$"
-        match = re.fullmatch(pattern, person_object.informalMobileNumber)
-        if not match:
+        mobile_number_match = re.fullmatch(pattern, person_object.informalMobileNumber)
+        if not mobile_number_match:
             raise HTTPException(status_code=422, detail={"error": "شماره تلفن وارد شده صحیح نمیباشد"})
+        first_name_match = re.fullmatch("^[\\u0600-\\u06FF ]{2,32}$", person_object.informalFirstName)
+        if not first_name_match:
+            raise HTTPException(status_code=422, detail={"error": "نام وارد شده صحیح نمیباشد"})
+        last_name_match = re.fullmatch("^[\\u0600-\\u06FF ]{2,32}$", person_object.informalLastName)
+        if not last_name_match:
+            raise HTTPException(status_code=422, detail={"error": "نام خانوادگی وارد شده صحیح نمیباشد"})
     except ValidationError as e:
         raise HTTPException(status_code=422, detail={"error": e.errors()}) from e
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:

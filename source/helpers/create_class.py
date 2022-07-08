@@ -55,7 +55,6 @@ class CreateClass:
                 self.make_validator_function)
 
     def make_validator_function(self, value: any) -> any:
-        print(self._key)
         value_type = self._attributes_dict.get(self._key, {}).get("type")
         regex_pattern = self._attributes_dict.get(self._key, {}).get("regex_pattern")
         max_length = self._attributes_dict.get(self._key, {}).get("maxLength")

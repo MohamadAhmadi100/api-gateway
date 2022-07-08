@@ -6,10 +6,10 @@ from typing import Optional
 
 class UpdateAddress(BaseModel):
     address_id: int = Field(alias="addressId")
-    state_name: Optional[str]  = Field(alias="stateName")
-    state_id: Optional[str]  = Field(alias="stateId")
-    city_id: Optional[str]  = Field(alias="cityId")
-    city_name: Optional[str]  = Field(alias="cityName")
+    state_name: Optional[str] = Field(alias="stateName")
+    state_id: Optional[str] = Field(alias="stateId")
+    city_id: Optional[str] = Field(alias="cityId")
+    city_name: Optional[str] = Field(alias="cityName")
     region_code: Optional[str] = Field(alias="regionCode")
     street: Optional[str] = Field(alias="street")
     alley: Optional[str] = Field(alias="alley")
