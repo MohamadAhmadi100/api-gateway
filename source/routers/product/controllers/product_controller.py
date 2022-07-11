@@ -413,6 +413,8 @@ def get_product_by_system_code(
                                         item["warehouse_city_id"] = quantity.get("warehouse_city_id")
                                         item["warehouse_label"] = quantity.get("warehouse_label")
                                         item["attribute_label"] = quantity.get("attribute_label")
+                                        item["fast_delivery"] = False if quantity.get("storage_id") == "1" else True
+
                                         if now_quantity - quantity.get("min_qty") <= 3:
                                             item['alert'] = True
                                         product['config']["warehouse"].append(item)
