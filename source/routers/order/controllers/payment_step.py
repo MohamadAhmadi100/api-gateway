@@ -61,13 +61,14 @@ def get_informal_payment(response: Response, auth_header=Depends(auth_handler.ch
     try:
         cart = get_cart(response=response, informal=True, auth_header=auth_header)
         # check if customer select all the shipment methods per stock
-        # TODO add customer request
+
         wallet_amount = get_remaining_wallet(user)
 
-        payment_method = [{"cashondelivery": "deposit", "methodLabe": "پرداخت در محل"}]
         response_result = {
             "walletAmount": wallet_amount,
-            "allowPaymentMethods": payment_method,
+            "allowPaymentMethods": {
+                "cashondelivery": "deposit", "methodLabe": "پرداخت در محل"
+            },
         }
         response.status_code = 200
         return {"success": True, "message": response_result, "cart": cart}

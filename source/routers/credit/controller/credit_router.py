@@ -25,3 +25,5 @@ def customer_credit(response: Response,
             },
             headers={'credit': True}
         ).get("credit", {})
+        response.status_code = 200
+        return order_response

@@ -2,6 +2,7 @@ from fastapi import FastAPI, responses
 from starlette.exceptions import HTTPException as starletteHTTPException
 
 from source.config import settings
+from source.routers.credit.controller.credit_router import credit
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.order.controllers.checkout_step import first_step_order
 from source.routers.order.controllers.edit_order import edit_order
@@ -29,12 +30,8 @@ app = FastAPI(
 
 auth_handler = AuthHandler()
 
-app.include_router(first_step_order)
-app.include_router(payment_step_order)
-app.include_router(shipment_step)
-app.include_router(final_step_order)
-app.include_router(get_order)
-app.include_router(edit_order)
+app.include_router(credit)
+
 
 
 # customize exception handler of fast api
