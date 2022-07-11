@@ -528,10 +528,13 @@ def get_product_list_by_system_code(
                     if customer_type and allowed_storages:
                         price_tuples = list()
                         for system_code, prices in pricing_result.get("message", {}).get("products", {}).items():
-                            customer_type_price = prices.get("customer_type", {}).get(customer_type, {})
-                            for storage, storage_prices in customer_type_price.get("storages", {}).items():
-                                if str(storage) in allowed_storages:
-                                    price_tuples.append((storage_prices.get("regular"), storage_prices.get("special")))
+                            if system_code in list(quantity_available_result.get("message", {}).get(
+                                    product.get("system_code"), {})):
+                                customer_type_price = prices.get("customer_type", {}).get(customer_type, {})
+                                for storage, storage_prices in customer_type_price.get("storages", {}).items():
+                                    if str(storage) in allowed_storages:
+                                        price_tuples.append(
+                                            (storage_prices.get("regular"), storage_prices.get("special")))
 
                         if not price_tuples:
                             continue
@@ -541,11 +544,17 @@ def get_product_list_by_system_code(
                         product["price"] = price
                         product["special_price"] = special_price
                     else:
+                        first_system_code = [system_code_ for system_code_ in
+                                             list(pricing_result.get("message", {}).get("products", {})) if
+                                             system_code_ in list(quantity_available_result.get("message", {}).get(
+                                                 product.get("system_code"), {}))]
+                        first_system_code = first_system_code[0] if first_system_code else None
+
                         product["price"] = pricing_result.get("message", {}).get("products", {}).get(
-                            list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
+                            first_system_code, {}).get("customer_type", {}).get(
                             "B2B", {}).get("storages", {}).get("1", {}).get("regular", None)
                         product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
-                            list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
+                            first_system_code, {}).get("customer_type", {}).get(
                             "B2B", {}).get("storages", {}).get("1", {}).get("special", None)
                         if not product["price"]:
                             continue
@@ -628,23 +637,33 @@ def get_category_list(
                     if customer_type and allowed_storages:
                         price_tuples = list()
                         for system_code, prices in pricing_result.get("message", {}).get("products", {}).items():
-                            customer_type_price = prices.get("customer_type", {}).get(customer_type, {})
-                            for storage, storage_prices in customer_type_price.get("storages", {}).items():
-                                if str(storage) in allowed_storages:
-                                    price_tuples.append((storage_prices.get("regular"), storage_prices.get("special")))
+                            if system_code in list(quantity_available_result.get("message", {}).get(
+                                    product.get("system_code"), {})):
+                                customer_type_price = prices.get("customer_type", {}).get(customer_type, {})
+                                for storage, storage_prices in customer_type_price.get("storages", {}).items():
+                                    if str(storage) in allowed_storages:
+                                        price_tuples.append(
+                                            (storage_prices.get("regular"), storage_prices.get("special")))
 
                         if not price_tuples:
                             continue
+
                         price_tuples.sort(key=lambda x: x[0])
                         price, special_price = price_tuples[0]
                         product["price"] = price
                         product["special_price"] = special_price
                     else:
+                        first_system_code = [system_code_ for system_code_ in
+                                             list(pricing_result.get("message", {}).get("products", {})) if
+                                             system_code_ in list(quantity_available_result.get("message", {}).get(
+                                                 product.get("system_code"), {}))]
+                        first_system_code = first_system_code[0] if first_system_code else None
+
                         product["price"] = pricing_result.get("message", {}).get("products", {}).get(
-                            list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
+                            first_system_code, {}).get("customer_type", {}).get(
                             "B2B", {}).get("storages", {}).get("1", {}).get("regular", None)
                         product["special_price"] = pricing_result.get("message", {}).get("products", {}).get(
-                            list(pricing_result['message']['products'].keys())[0], {}).get("customer_type", {}).get(
+                            first_system_code, {}).get("customer_type", {}).get(
                             "B2B", {}).get("storages", {}).get("1", {}).get("special", None)
                         if not product["price"]:
                             continue

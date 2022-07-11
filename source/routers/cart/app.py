@@ -246,10 +246,24 @@ def get_cart(response: Response,
                 if informal:
                     product["price"] = price.get("informal") if price.get("informal") else product["price"]
 
-                product["quantity"] = quantity_result.get("message", {}).get("products", {}).get(
+                quantity_obj = quantity_result.get("message", {}).get("products", {}).get(
                     product.get("system_code"), {}).get("customer_types", {}).get(customer_type, {}).get("storages",
                                                                                                          {}).get(
                     product.get("storage_id"), {})
+
+                avaible_count = (quantity_obj.get("stock_for_sale", 0) - quantity_obj.get("reserved", 0))
+
+                product["quantity"] = {
+                    "storageId": quantity_obj.get("storage_id"),
+                    "minQty": quantity_obj.get("min_qty"),
+                    "maxQty": quantity_obj.get("max_qty") if avaible_count > quantity_obj.get("max_qty") else avaible_count,
+                    "warehouseState": quantity_obj.get("warehouse_state"),
+                    "warehouseCity": quantity_obj.get("warehouse_city"),
+                    "warehouseStateId": quantity_obj.get("warehouse_state_id"),
+                    "warehouseCityId": quantity_obj.get("warehouse_city_id"),
+                    "warehouseLabel": quantity_obj.get("warehouse_label"),
+                    "attributeLabel": quantity_obj.get("attribute_label")
+                }
 
                 if product.get("price"):
                     base_price += product.get("price") * product.get("count")
