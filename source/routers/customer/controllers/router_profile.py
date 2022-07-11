@@ -307,11 +307,12 @@ def create_informal(person: Person, response: Response, auth_header=Depends(auth
     try:
         person_object = person_model(**person.data)
         pattern = "^[0-9]{10}$"
-        national_id_match = re.fullmatch(pattern, person_object.informalMobileNumber)
+        national_id_match = re.fullmatch(pattern, person_object.informalNationalID)
+
         if not national_id_match:
             raise HTTPException(status_code=422, detail={"error": "کد ملی وارد شده نادرست است"})
-        if not codemelli.validator(person_object.informalNationalID):
-            raise HTTPException(status_code=422, detail={"error": "کد ملی وارد شده صحیح نمی باشد"})
+        # if not codemelli.validator(person_object.informalNationalID):
+        #     raise HTTPException(status_code=422, detail={"error": "کد ملی وارد شده صحیح نمی باشد"})
         pattern = r"^09[0-9]{9}$"
         mobile_number_match = re.fullmatch(pattern, person_object.informalMobileNumber)
         if not mobile_number_match:
@@ -341,6 +342,51 @@ def create_informal(person: Person, response: Response, auth_header=Depends(auth
             headers={'customer': True}
         )
     customer_result = result.get("customer", {})
+    if not customer_result.get("success"):
+        raise HTTPException(
+            status_code=customer_result.get("status_code", 500),
+            detail={"error": customer_result.get("error", "Something went wrong")}
+        )
+    kosar_data = customer_result.get("kosarData")
+    if not kosar_data:
+        sub_dict = {
+            "user_id": user_data.get('user_id'),
+            "customer_type": user_data.get('customer_type'),
+            "phone_number": user_data.get('phone_number'),
+        }
+        response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
+        response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
+        response.status_code = customer_result.get("status_code", 200)
+        return {"message": "کاربر غیر رسمی با موفقیت ثبت شد"}
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
+            message={
+                "kosar": {
+                    "action": "get_customer_kosar_data",
+                    "body": {
+                        "data": kosar_data
+                    }
+                }
+            },
+            headers={'kosar': True}
+        )
+    kosar_result = result.get("kosar", {})
+    kosar_data = kosar_result.get("message")
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        rpc.publish(
+            message={
+                "customer": {
+                    "action": "set_kosar_data",
+                    "body": {
+                        "mobileNumber": user_data.get("phone_number"),
+                        "kosarData": kosar_data
+                    }
+                }
+            },
+            headers={'customer': True}
+        )
     if not customer_result.get("success"):
         raise HTTPException(
             status_code=customer_result.get("status_code", 500),
