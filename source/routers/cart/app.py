@@ -251,7 +251,7 @@ def get_cart(response: Response,
                                                                                                          {}).get(
                     product.get("storage_id"), {})
 
-                avaible_count = (quantity_obj.get("stockForSale", 0) - quantity_obj.get("reserved", 0))
+                avaible_count = (quantity_obj.get("stock_for_sale", 0) - quantity_obj.get("reserved", 0))
 
                 product["quantity"] = {
                     "storageId": quantity_obj.get("storage_id"),
