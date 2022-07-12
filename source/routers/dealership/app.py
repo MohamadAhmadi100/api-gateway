@@ -32,17 +32,17 @@ def create_request(data: RequestGoods,
     user, token = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
-        check_credit = rpc.publish(
-            message={
-                "credit": {
-                    "action": "check_credit",
-                    "body": {}
-                }
-            },
-            headers={'dealership': True}
-        ).get("dealership", {})
-
-        if referral_response.get("success"):
+        # check_credit = rpc.publish(
+        #     message={
+        #         "credit": {
+        #             "action": "check_credit",
+        #             "body": {}
+        #         }
+        #     },
+        #     headers={'dealership': True}
+        # ).get("dealership", {})
+        #
+        # if referral_response.get("success"):
         rpc.response_len_setter(response_len=1)
         referral_response = rpc.publish(
             message={
