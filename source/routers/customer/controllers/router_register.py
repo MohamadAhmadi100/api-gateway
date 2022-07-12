@@ -76,7 +76,8 @@ def register(
                             "customer_password": value.customer_password,
                             "customer_verify_password": value.customer_verify_password,
                             "customer_street": value.customer_street,
-                            "customer_address": [customer_address]
+                            "customer_address": [customer_address],
+                            "customer_document_status": value.customer_document_status
                         }
                     }
                 }
