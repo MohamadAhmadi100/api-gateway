@@ -200,6 +200,7 @@ def get_cart(response: Response,
                                 detail={"error": cart_result.get("error", "Something went wrong")})
         else:
             base_price = 0
+            profit = 0
             for product in cart_result["message"]["products"]:
                 rpc.response_len_setter(response_len=2)
                 pricing_result = rpc.publish(
@@ -240,6 +241,7 @@ def get_cart(response: Response,
                     if now_formated_date_time < special_formated_date_time and price.get(
                             "special"):
                         product["price"] = price.get("special")
+                        profit += (price.get("regular") - price.get("special")) * product.get("count")
                     else:
                         product["price"] = price.get("regular")
 
@@ -256,7 +258,8 @@ def get_cart(response: Response,
                 product["quantity"] = {
                     "storageId": quantity_obj.get("storage_id"),
                     "minQty": quantity_obj.get("min_qty"),
-                    "maxQty": quantity_obj.get("max_qty") if avaible_count > quantity_obj.get("max_qty") else avaible_count,
+                    "maxQty": quantity_obj.get("max_qty") if avaible_count > quantity_obj.get(
+                        "max_qty") else avaible_count,
                     "warehouseState": quantity_obj.get("warehouse_state"),
                     "warehouseCity": quantity_obj.get("warehouse_city"),
                     "warehouseStateId": quantity_obj.get("warehouse_state_id"),
@@ -281,6 +284,7 @@ def get_cart(response: Response,
 
             cart_result['message']['grand_price'] = grand_price
             cart_result["message"]["total_price"] = int(total_price)
+            cart_result['message']['profit'] = profit
             response.status_code = cart_result.get("status_code", 200)
             return convert_case(cart_result.get("message"), 'camel')
 
