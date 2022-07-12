@@ -3,7 +3,6 @@ from typing import List
 
 
 class Product(BaseModel):
-    parent_system_code: str
     system_code: str
     brand: str
     model: str
@@ -11,6 +10,7 @@ class Product(BaseModel):
     color: str
     guarantee: str
     seller: str
+    price: int
     count: int
 
 

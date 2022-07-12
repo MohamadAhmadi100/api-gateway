@@ -28,26 +28,52 @@ auth_handler = AuthHandler()
 
 @app.post("/create_request_goods", tags=["request for goods from dealership"])
 def create_request(data: RequestGoods,
-                   response: Response,
                    auth_header=Depends(auth_handler.check_current_user_tokens)):
     user, token = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
-        dealership_response = rpc.publish(
+        check_credit = rpc.publish(
             message={
-                "dealership": {
-                    "action": "insert_goods_request",
-                    "body": {
-                        "data": dict(data),
-                        "credit": 10000000,
-                        "customer_id": str(user.get("user_id"))
-                    }
+                "credit": {
+                    "action": "check_credit",
+                    "body": {}
                 }
             },
-            headers={'address': True}
-        ).get("address", {})
+            headers={'dealership': True}
+        ).get("dealership", {})
 
-        if dealership_response.get("success"):
-            return dealership_response
-        raise HTTPException(status_code=dealership_response.get("status_code", 500),
-                            detail={"error": dealership_response.get("error", "Dealership service Internal error")})
+        if referral_response.get("success"):
+        rpc.response_len_setter(response_len=1)
+        referral_response = rpc.publish(
+            message={
+                "dealership": {
+                    "action": "get_referral_number",
+                    "body": {}
+                }
+            },
+            headers={'dealership': True}
+        ).get("dealership", {})
+
+        if referral_response.get("success"):
+            rpc.response_len_setter(response_len=1)
+            quantity_response = rpc.publish(
+                message={
+                    "quantity": {
+                        "action": "add_to_reserve_dealership",
+                        "body": {
+                            "referral_number": referral_response.get("message"),
+                            "customer_id": str(user.get("user_id")),
+                            "customer_type": user.get("customer_type"),
+                            "data": data.json(),
+                        }
+                    }
+                },
+                headers={'quantity': True}
+            ).get("quantity", {})
+            print(quantity_response)
+            if quantity_response.get("success"):
+                return quantity_response
+            return quantity_response
+        return {"success": False, "message": "Dealership: referral number is not generated."}
+        # raise HTTPException(status_code=quantity_response.get("status_code", 500),
+        #                     detail={"error": quantity_response.get("error", "Dealership service Internal error")})
