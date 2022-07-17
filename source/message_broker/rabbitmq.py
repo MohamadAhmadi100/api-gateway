@@ -29,9 +29,13 @@ class RabbitRPC(metaclass=Singleton):
         self.user = settings.RABBITMQ_USER
         self.password = settings.RABBITMQ_PASS
         self.exchange_name = exchange_name
+<<<<<<< Updated upstream
         self.publish_connection, self.publish_channel = self.connect()
         self.queue_result = self.publish_channel.queue_declare(queue="", exclusive=True, durable=True)
         self.callback_queue = self.queue_result.method.queue
+=======
+        self.publish_connection, self.publish_channel, self.callback_queue = self.connect()
+>>>>>>> Stashed changes
         print(self.callback_queue)
         self.broker_response = {}
         self.corr_id = None
@@ -53,7 +57,8 @@ class RabbitRPC(metaclass=Singleton):
                 )
                 channel = connection.channel()
                 channel.exchange_declare(exchange=self.exchange_name, exchange_type='headers')
-                return connection, channel
+                queue_result = channel.queue_declare(queue="", exclusive=True, durable=True)
+                return connection, channel, queue_result.method.queue
             except Exception as e:
                 logging.info(f"Error connecting to RabbitMQ... {e}")
                 print(f"{datetime.datetime.now()} - Error connecting to pika...{e}")
@@ -105,7 +110,7 @@ class RabbitRPC(metaclass=Singleton):
                 print(f"{datetime.datetime.now()} - Error publishing message... {e}")
                 if try_count > 3:
                     raise e
-                self.publish_connection, self.publish_channel = self.connect()
+                self.publish_connection, self.publish_channel, self.callback_queue = self.connect()
         started = datetime.datetime.now()
         while (len(self.broker_response) < self.response_len) and (
                 (datetime.datetime.now() - started).total_seconds()) < self.timeout:
@@ -114,7 +119,11 @@ class RabbitRPC(metaclass=Singleton):
             except Exception as e:
                 logging.info(f"Error consuming from RabbitMQ... {e}")
                 print(f"{datetime.datetime.now()} - Error listening for response... {e}")
+<<<<<<< Updated upstream
                 self.publish_connection, self.publish_channel = self.connect()
+=======
+                self.publish_connection, self.publish_channel, self.callback_queue = self.connect()
+>>>>>>> Stashed changes
                 self.consume()
         print(f"{datetime.datetime.now()} - "
               f"actual response num: {len(self.broker_response)}"
@@ -154,7 +163,11 @@ class RabbitRPC(metaclass=Singleton):
             except Exception as e:
                 if try_count > 100:
                     raise e
+<<<<<<< Updated upstream
                 self.publish_connection, self.publish_channel = self.connect()
+=======
+                self.publish_connection, self.publish_channel, self.callback_queue = self.connect()
+>>>>>>> Stashed changes
 
 
 if __name__ == '__main__':
