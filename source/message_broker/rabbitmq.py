@@ -9,7 +9,16 @@ import time
 from source.config import settings
 
 
-class RabbitRPC:
+class Singleton(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
+class RabbitRPC(metaclass=Singleton):
     def __init__(
             self,
             exchange_name: str,
@@ -21,8 +30,7 @@ class RabbitRPC:
         self.password = settings.RABBITMQ_PASS
         self.exchange_name = exchange_name
         self.publish_connection, self.publish_channel = self.connect()
-        self.consume_connection, self.consume_channel = self.connect()
-        self.queue_result = self.consume_channel.queue_declare(queue="", exclusive=True, durable=True)
+        self.queue_result = self.publish_channel.queue_declare(queue="", exclusive=True, durable=True)
         self.callback_queue = self.queue_result.method.queue
         print(self.callback_queue)
         self.broker_response = {}
@@ -102,11 +110,11 @@ class RabbitRPC:
         while (len(self.broker_response) < self.response_len) and (
                 (datetime.datetime.now() - started).total_seconds()) < self.timeout:
             try:
-                self.consume_connection.process_data_events()
+                self.publish_connection.process_data_events()
             except Exception as e:
                 logging.info(f"Error consuming from RabbitMQ... {e}")
                 print(f"{datetime.datetime.now()} - Error listening for response... {e}")
-                self.consume_connection, self.consume_channel = self.connect()
+                self.publish_connection, self.publish_channel = self.connect()
                 self.consume()
         print(f"{datetime.datetime.now()} - "
               f"actual response num: {len(self.broker_response)}"
@@ -140,13 +148,13 @@ class RabbitRPC:
         while True:
             try:
                 try_count += 1
-                self.consume_channel.basic_consume(on_message_callback=self.on_response, queue=self.callback_queue,
+                self.publish_channel.basic_consume(on_message_callback=self.on_response, queue=self.callback_queue,
                                                    auto_ack=True)
                 break
             except Exception as e:
                 if try_count > 100:
                     raise e
-                self.consume_connection, self.consume_channel = self.connect()
+                self.publish_connection, self.publish_channel = self.connect()
 
 
 if __name__ == '__main__':

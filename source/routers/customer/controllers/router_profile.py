@@ -8,7 +8,7 @@ from pydantic.error_wrappers import ValidationError
 from source.helpers import case_converter
 from source.helpers.create_class import CreateClass
 from source.message_broker.rabbit_server import RabbitRPC
-from source.message_broker.rabbitmq import RabbitRPC as RabbitRPC_Test
+# from source.message_broker.rabbitmq import RabbitRPC as RabbitRPC_Test
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.customer.validators import validation_profile
 from source.routers.customer.validators.validation_profile import EditProfile, Delivery, Person
@@ -20,7 +20,7 @@ router_profile = APIRouter(
 
 auth_handler = AuthHandler()
 
-test_rpc = RabbitRPC_Test(exchange_name='headers_exchange', timeout=20)
+# test_rpc = RabbitRPC_Test(exchange_name='headers_exchange', timeout=20)
 
 
 @router_profile.get("/")

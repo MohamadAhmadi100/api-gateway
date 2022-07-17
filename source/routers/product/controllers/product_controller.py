@@ -6,7 +6,7 @@ from fastapi import HTTPException, Response, Path, Body, Query, Header, APIRoute
 from source.helpers.case_converter import convert_case
 from source.helpers.create_class import CreateClass
 from source.message_broker.rabbit_server import RabbitRPC
-from source.message_broker.rabbitmq import RabbitRPC as RabbitRPC_temp
+# from source.message_broker.rabbitmq import RabbitRPC as RabbitRPC_temp
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.product.validators.product import CreateChild, AddAtributes, CreateParent, EditProduct
 from source.routers.product.modules.allowed_storages import get_allowed_storages
@@ -15,7 +15,7 @@ router = APIRouter()
 
 auth_handler = AuthHandler()
 
-test_rpc = RabbitRPC_temp(exchange_name="headers_exchange", timeout=15)
+# test_rpc = RabbitRPC_temp(exchange_name="headers_exchange", timeout=15)
 
 
 @router.get("/parent/{systemCode}/configs/", tags=["Product"])
