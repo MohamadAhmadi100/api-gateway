@@ -77,7 +77,10 @@ def register(
                             "customer_verify_password": value.customer_verify_password,
                             "customer_street": value.customer_street,
                             "customer_address": [customer_address],
-                            "customer_document_status": value.customer_document_status
+                            "customer_document_status": value.customer_document_status,
+                            "customer_city_name": value.customer_city,
+                            "customer_state_name": value.customer_province,
+                            "customer_region_code": value.customer_region_code
                         }
                     }
                 }

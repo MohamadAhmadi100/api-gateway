@@ -59,19 +59,19 @@ class EditProfile(BaseModel):
     #     regexPattern=r"^[\u0600-\u06FF ]{2,32}$",
     #     isRquired=False,
     # )
-    # customer_national_id: Optional[str] = Field(
-    #     description="",
-    #     title="کد ملی",
-    #     alias="customerNationalID",
-    #     name="customerNationalID",
-    #     placeholder="6150077698",
-    #     minLength=10,
-    #     maxLength=10,
-    #     dataType="string",
-    #     type="text",
-    #     isRquired=False,
-    #     regexPattern="^[0-9]{10}$",
-    # )
+    # # customer_national_id: Optional[str] = Field(
+    # #     description="",
+    # #     title="کد ملی",
+    # #     alias="customerNationalID",
+    # #     name="customerNationalID",
+    # #     placeholder="6150077698",
+    # #     minLength=10,
+    # #     maxLength=10,
+    # #     dataType="string",
+    # #     type="text",
+    # #     isRquired=False,
+    # #     regexPattern="^[0-9]{10}$",
+    # # )
     # customer_region_code: Optional[str] = Field(
     #     description="",
     #     alias="customerRegionCode",
@@ -84,11 +84,11 @@ class EditProfile(BaseModel):
     #     regexPattern=r"^[a-z,0-9,A-Z]{2,8}$",
     #     isRquired=False,
     # )
-    # customer_city: Optional[str] = Field(
-    #     alias="customerCity",
+    # customer_city_name: Optional[str] = Field(
+    #     alias="customerCityName",
     #     description="",
     #     title="نام شهر",
-    #     name="customerCity",
+    #     name="customerCityName",
     #     placeholder="تهران",
     #     minLength=2,
     #     maxLength=32,
@@ -109,11 +109,11 @@ class EditProfile(BaseModel):
     #     regexPattern="^[0-9]{1,4}$",
     #     isRquired=False,
     # )
-    # customer_province: Optional[str] = Field(
-    #     alias="customerProvince",
+    # customer_state_name: Optional[str] = Field(
+    #     alias="customerStateName",
     #     description="",
     #     title="استان",
-    #     name="customerProvince",
+    #     name="customerStateName",
     #     placeholder="تهران",
     #     minLength=2,
     #     maxLength=32,
@@ -122,11 +122,11 @@ class EditProfile(BaseModel):
     #     regexPattern=r"^[\u0600-\u06FF ]{2,32}$",
     #     isRquired=False,
     # )
-    # customer_province_id: Optional[str] = Field(
-    #     alias="customerProvinceID",
+    # customer_state_id: Optional[str] = Field(
+    #     alias="customerStateId",
     #     description="",
     #     title="ای دی استان",
-    #     name="customerProvinceID",
+    #     name="customerStateId",
     #     minLength=1,
     #     maxLength=4,
     #     dataType="string",
