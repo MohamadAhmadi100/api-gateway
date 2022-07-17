@@ -50,7 +50,7 @@ class RabbitRPC(metaclass=Singleton):
                 )
                 channel = connection.channel()
                 channel.exchange_declare(exchange=self.exchange_name, exchange_type='headers')
-                queue_result = channel.queue_declare(queue="", exclusive=True, durable=True)
+                queue_result = channel.queue_declare(queue="", exclusive=True)
                 print(queue_result.method.queue)
                 return connection, channel, queue_result.method.queue
             except Exception as e:
@@ -105,6 +105,7 @@ class RabbitRPC(metaclass=Singleton):
                 if try_count > 3:
                     raise e
                 self.publish_connection, self.publish_channel, self.callback_queue = self.connect()
+                self.consume()
         started = datetime.datetime.now()
         while (len(self.broker_response) < self.response_len) and (
                 (datetime.datetime.now() - started).total_seconds()) < self.timeout:
