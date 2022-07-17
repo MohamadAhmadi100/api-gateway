@@ -30,7 +30,6 @@ class RabbitRPC(metaclass=Singleton):
         self.password = settings.RABBITMQ_PASS
         self.exchange_name = exchange_name
         self.publish_connection, self.publish_channel, self.callback_queue = self.connect()
-        print(self.callback_queue)
         self.broker_response = {}
         self.corr_id = None
         self.response_len = 0
@@ -52,6 +51,7 @@ class RabbitRPC(metaclass=Singleton):
                 channel = connection.channel()
                 channel.exchange_declare(exchange=self.exchange_name, exchange_type='headers')
                 queue_result = channel.queue_declare(queue="", exclusive=True, durable=True)
+                print(queue_result.method.queue)
                 return connection, channel, queue_result.method.queue
             except Exception as e:
                 logging.info(f"Error connecting to RabbitMQ... {e}")
