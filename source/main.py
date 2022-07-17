@@ -20,11 +20,9 @@ from source.routers.address.app import app as address_app
 from source.routers.shipment.app import app as shipment_app
 from source.routers.order.app import app as order_app
 from source.routers.mobile_app.app import app as mobile_app
-<<<<<<< HEAD
 from source.routers.dealership.app import app as dealership
-=======
 from source.routers.credit.app import app as credit_app
->>>>>>> 65608a803c42dac503613c96bfdfd5ae6c6487d9
+
 
 app = FastAPI(title="API Gateway",
               description="Backend for frontend aka. API Gateway!",
@@ -71,11 +69,10 @@ app.mount("/order/api/v1", order_app)
 
 app.mount("/mobile_app/api/v1", mobile_app)
 
-<<<<<<< HEAD
 app.mount("/dealership/api/v1", dealership)
-=======
+
 app.mount("/credit/api/v1", credit_app)
->>>>>>> 65608a803c42dac503613c96bfdfd5ae6c6487d9
+
 
 
 # ----------------------------------------- Start logging features  -------------------------------------------------- #

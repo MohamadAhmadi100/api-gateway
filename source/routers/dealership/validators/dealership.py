@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Union
 
 
 class Product(BaseModel):
@@ -17,6 +17,6 @@ class Product(BaseModel):
 
 
 class RequestGoods(BaseModel):
-    products: List[Product] = Field(alias="products")
+    products: Union[List[Product], list] = Field(alias="products")
     shipment: dict = Field(alias="shipment")
     storage_id: str = Field(alias="storageId")
