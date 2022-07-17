@@ -1,11 +1,10 @@
-from fastapi import FastAPI, HTTPException, Response, responses, Depends
+from fastapi import FastAPI, responses
 from source.config import settings
 from starlette.exceptions import HTTPException as starletteHTTPException
-from source.message_broker.rabbit_server import RabbitRPC
-from source.routers.address.validators.address import Address, AddressId
-from source.routers.address.validators.update_address import UpdateAddress
-from source.routers.customer.module.auth import AuthHandler
-from source.routers.dealership.validators.dealership import RequestGoods
+from source.routers.dealership.controllers.registration_goods_request import router as post_api
+from source.routers.dealership.controllers.get_warehouse import router as get_api
+
+
 
 TAGS = [
     {
@@ -23,103 +22,11 @@ app = FastAPI(
     debug=settings.DEBUG_MODE
 )
 
-auth_handler = AuthHandler()
+
+# @app.exception_handler(starletteHTTPException)
+# def validation_exception_handler(request, exc):
+#     return responses.JSONResponse(exc.detail, status_code=exc.status_code)
 
 
-@app.post("/create_request_goods", tags=["request for goods from dealership"])
-def create_request(data: RequestGoods,
-                   auth_header=Depends(auth_handler.check_current_user_tokens)):
-    user, token = auth_header
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        check_credit = rpc.publish(
-            message={
-                "credit": {
-                    "action": "check_credit",
-                    "body": {
-                        "customer_id": user.get("user_id")
-                    }
-                }
-            },
-            headers={'credit': True}
-        ).get("credit", {})
-        if check_credit.get("success"):
-            rpc.response_len_setter(response_len=1)
-            dict_data = data.dict()
-            compare_digits_response = rpc.publish(
-                message={
-                    "dealership": {
-                        "action": "check_credit_state",
-                        "body": {
-                            "credit": check_credit.get("remaining_amount"),
-                            "products": dict_data.get("products")
-                        }
-                    }
-                },
-                headers={'dealership': True}
-            ).get("dealership", {})
-            if compare_digits_response.get("success"):
-                rpc.response_len_setter(response_len=1)
-                referral_response = rpc.publish(
-                    message={
-                        "dealership": {
-                            "action": "get_referral_number",
-                            "body": {}
-                        }
-                    },
-                    headers={'dealership': True}
-                ).get("dealership", {})
-                if referral_response.get("success"):
-                    rpc.response_len_setter(response_len=1)
-                    quantity_response = rpc.publish(
-                        message={
-                            "quantity": {
-                                "action": "add_to_reserve_dealership",
-                                "body": {
-                                    "referral_number": referral_response.get("message"),
-                                    "customer_id": str(user.get("user_id")),
-                                    "customer_type": user.get("customer_type"),
-                                    "data": data.dict(),
-                                }
-                            }
-                        },
-                        headers={'quantity': True}
-                    ).get("quantity", {})
-                    if quantity_response.get("success"):
-                        rpc.response_len_setter(response_len=1)
-                        reduce_credit = rpc.publish(
-                            message={
-                                "credit": {
-                                    "action": "consume_remaining_credit",
-                                    "body": {
-                                        "referral_number": referral_response.get("message"),
-                                        "amount": compare_digits_response.get("total_price"),
-                                        "customer_id": user.get("user_id")
-                                    }
-                                }
-                            },
-                            headers={'credit': True}
-                        ).get("credit", {})
-                        if reduce_credit.get("success"):
-                            rpc.response_len_setter(response_len=1)
-                            insert_response = rpc.publish(
-                                message={
-                                    "dealership": {
-                                        "action": "insert_goods_request",
-                                        "body": {
-                                            "referral_number": referral_response.get("message"),
-                                            "customer_id": str(user.get("user_id")),
-                                            "data": data.dict()
-                                        }
-                                    }
-                                },
-                                headers={'dealership': True}
-                            ).get("dealership", {})
-                            if insert_response.get("success"):
-                                return insert_response
-                            return insert_response
-                        return reduce_credit
-                    return quantity_response
-                return referral_response
-            return compare_digits_response
-        return check_credit
+app.include_router(post_api)
+app.include_router(get_api)
