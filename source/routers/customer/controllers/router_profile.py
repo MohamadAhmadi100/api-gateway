@@ -310,8 +310,12 @@ def create_informal(person: Person, response: Response, auth_header=Depends(auth
 
         if not national_id_match:
             raise HTTPException(status_code=422, detail={"error": "کد ملی وارد شده نادرست است"})
-        if not codemelli.validator(person_object.informalNationalID):
-            raise HTTPException(status_code=422, detail={"error": "کد ملی وارد شده صحیح نمی باشد"})
+
+        try:
+            if not codemelli.validator(person_object.informalNationalID):
+                raise HTTPException(status_code=422, detail={"error": "کد ملی وارد شده صحیح نمی باشد"})
+        except Exception as e:
+            raise HTTPException(status_code=422, detail={"error": "کد ملی وارد شده صحیح نمی باشد"}) from e
         pattern = r"^09[0-9]{9}$"
         mobile_number_match = re.fullmatch(pattern, person_object.informalMobileNumber)
         if not mobile_number_match:
