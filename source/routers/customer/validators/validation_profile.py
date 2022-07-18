@@ -1,9 +1,11 @@
 import re
-import codemelli
 from typing import Optional
-from source.helpers.create_class import CreateClass
+
+import codemelli
 from fastapi import HTTPException
 from pydantic import BaseModel, validator, Field
+
+from source.helpers.create_class import CreateClass
 from source.message_broker.rabbit_server import RabbitRPC
 
 

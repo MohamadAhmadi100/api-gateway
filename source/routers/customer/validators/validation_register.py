@@ -121,6 +121,57 @@ class CustomerRegister(BaseModel):
         regexPattern="^[0-9]{1,4}$",
         isRquired=True,
     )
+    customer_address_city: Optional[str] = Field(
+        alias="customerAddressCity",
+        description="",
+        title="نام شهر",
+        name="customerAddressCity",
+        placeholder="تهران",
+        minLength=2,
+        maxLength=32,
+        dataType="string",
+        type="text",
+        regexPattern=r"^[\u0600-\u06FF ]{2,32}$",
+        isRquired=True,
+    )
+    customer_address_city_id: Optional[str] = Field(
+        alias="customerAddressCityID",
+        description="",
+        title="آی دی شهر",
+        name="customerAddressCityID",
+        minLength=1,
+        maxLength=4,
+        dataType="string",
+        type="hidden",
+        regexPattern="^[0-9]{1,4}$",
+        isRquired=True,
+    )
+    customer_address_province: Optional[str] = Field(
+        alias="customerAddressProvince",
+        description="",
+        title="استان",
+        name="customerAddressProvince",
+        placeholder="تهران",
+        minLength=2,
+        maxLength=32,
+        dataType="string",
+        type="text",
+        regexPatternr=r"^[\u0600-\u06FF ]{2,32}$",
+        isRquired=True,
+    )
+    customer_address_province_id: Optional[str] = Field(
+        alias="customerAddressProvinceID",
+        description="",
+        title="آی دی استان",
+        name="customerAddressProvinceID",
+        minLength=1,
+        maxLength=4,
+        dataType="string",
+        type="hidden",
+        regexPattern="^[0-9]{1,4}$",
+        isRquired=True,
+    )
+
     # customer_address: Optional[str] = Field(
     #     alias="customerAddress",
     #     description="",
