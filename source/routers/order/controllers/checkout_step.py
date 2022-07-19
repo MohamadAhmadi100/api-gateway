@@ -31,6 +31,7 @@ def get_cart_detail(response: Response, auth_header=Depends(auth_handler.check_c
             headers={'cart': True}
         )
     if check_out.get("success"):
+        cart = get_cart(response=response, auth_header=auth_header)
         return {"success": True, "message": "checkout pass", "response": cart}
     else:
         cart = get_cart(response=response, auth_header=auth_header)
