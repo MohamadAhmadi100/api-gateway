@@ -122,7 +122,6 @@ def edit_profile_data(
     profile_model = CreateClass(class_name="EditProfileModel", attributes=attrs).get_pydantic_class()
     try:
         profile_object = profile_model(**value.data)
-        profile_model.make_validator_function(**value.data)
 
 
 
