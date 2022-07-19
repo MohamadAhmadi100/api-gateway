@@ -17,34 +17,21 @@ def get_cart_detail(response: Response, auth_header=Depends(auth_handler.check_c
     if not cart['products']:
         return {"success": True, "message": "سبد خرید خالی است"}
     check_out = check_price_qty(auth_header, cart, response)
-    if check_out.get("success"):
-        with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-            rpc.response_len_setter(response_len=1)
-            rpc.publish(
-                message={
-                    "cart": {
-                        "action": "remove_cart",
-                        "body": {
-                            "user_id": auth_header[0].get("user_id"),
-                        }
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        rpc.publish(
+            message={
+                "cart": {
+                    "action": "remove_cart",
+                    "body": {
+                        "user_id": auth_header[0].get("user_id"),
                     }
-                },
-                headers={'cart': True}
-            )
+                }
+            },
+            headers={'cart': True}
+        )
+    if check_out.get("success"):
         return {"success": True, "message": "checkout pass", "response": cart}
     else:
-        with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-            rpc.response_len_setter(response_len=1)
-            rpc.publish(
-                message={
-                    "cart": {
-                        "action": "remove_cart",
-                        "body": {
-                            "user_id": auth_header[0].get("user_id"),
-                        }
-                    }
-                },
-                headers={'cart': True}
-            )
-            cart = get_cart(response=response, auth_header=auth_header)
-            return {"success": False, "message": check_out.get("message"), "response": cart}
+        cart = get_cart(response=response, auth_header=auth_header)
+        return {"success": False, "message": check_out.get("message"), "response": cart}
