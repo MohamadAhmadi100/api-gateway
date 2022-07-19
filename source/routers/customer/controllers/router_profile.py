@@ -3,10 +3,10 @@ import codemelli
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi import Response, status
 from pydantic.error_wrappers import ValidationError
-
+from source.helpers.rabbit_config import new_rpc
 from source.helpers import case_converter
 from source.helpers.create_class import CreateClass
-from source.message_broker.rabbit_server import RabbitRPC
+# from source.message_broker.rabbit_server import RabbitRPC
 # from source.message_broker.rabbitmq import RabbitRPC as RabbitRPC_Test
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.customer.validators import validation_profile
@@ -28,40 +28,40 @@ def get_profile(
         auth_header=Depends(auth_handler.check_current_user_tokens),
 ):
     user_data, header = auth_header
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        result = rpc.publish(
-            # result = test_rpc.publish(
-            message={
-                "customer": {
-                    "action": "get_profile",
-                    "body": {
-                        "customer_phone_number": user_data,
-                    }
+    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+    #     rpc.response_len_setter(response_len=1)
+    result = new_rpc.publish(
+        # result = test_rpc.publish(
+        message={
+            "customer": {
+                "action": "get_profile",
+                "body": {
+                    "customer_phone_number": user_data,
                 }
-            },
-            headers={'customer': True}
-        )
+            }
+        },
+        headers={'customer': True}
+    )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
             status_code=customer_result.get("status_code", 500),
             detail={"error": customer_result.get("error", "Something went wrong")}
         )
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
+    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+    #     rpc.response_len_setter(response_len=1)
         # result = test_rpc.publish(
-        result = rpc.publish(
-            message={
-                "attribute": {
-                    "action": "get_all_attributes_by_assignee",
-                    "body": {
-                        "name": "customer"
-                    }
+    result = new_rpc.publish(
+        message={
+            "attribute": {
+                "action": "get_all_attributes_by_assignee",
+                "body": {
+                    "name": "customer"
                 }
-            },
-            headers={'attribute': True}
-        )
+            }
+        },
+        headers={'attribute': True}
+    )
     attribute_result = result.get("attribute", {})
     if not attribute_result.get("success"):
         raise HTTPException(status_code=attribute_result.get("status_code", 500),
@@ -103,18 +103,18 @@ def edit_profile_data(
         auth_header=Depends(auth_handler.check_current_user_tokens),
 ):
     user_data, header = auth_header
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        result = rpc.publish(
-            message={
-                "attribute": {
-                    "action": "get_all_attributes_by_assignee",
-                    "body": {
-                        "name": "customer"
-                    }
+    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+    #     rpc.response_len_setter(response_len=1)
+    result = new_rpc.publish(
+        message={
+            "attribute": {
+                "action": "get_all_attributes_by_assignee",
+                "body": {
+                    "name": "customer"
                 }
-            },
-            headers={'attribute': True}
+            }
+        },
+        headers={'attribute': True}
         )
     attribute_result = result.get("attribute", {})
     if not attribute_result.get("success"):
@@ -127,20 +127,20 @@ def edit_profile_data(
         profile_object = profile_model(**value.data)
     except ValidationError as e:
         raise HTTPException(status_code=422, detail={"error": e.errors()}) from e
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        result = rpc.publish(
-            message={
-                "customer": {
-                    "action": "edit_profile_data",
-                    "body": {
-                        "customer_phone_number": user_data.get("phone_number"),
-                        "data": profile_object.json()
-                    }
+    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+    #     rpc.response_len_setter(response_len=1)
+    result = new_rpc.publish(
+        message={
+            "customer": {
+                "action": "edit_profile_data",
+                "body": {
+                    "customer_phone_number": user_data.get("phone_number"),
+                    "data": profile_object.json()
                 }
-            },
-            headers={'customer': True}
-        )
+            }
+        },
+        headers={'customer': True}
+    )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
@@ -165,23 +165,23 @@ def change_customer_password(
         auth_header=Depends(auth_handler.check_current_user_tokens),
 ):
     user_data, token_dict = auth_header
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        result = rpc.publish(
-            message={
-                "customer": {
-                    "action": "change_customer_password",
-                    "body": {
-                        "data": {
-                            "customer_phone_number": user_data.get("phone_number"),
-                            "customer_old_password": data.oldPassword,
-                            "customer_new_password": data.newPassword
-                        }
+    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+    #     rpc.response_len_setter(response_len=1)
+    result = new_rpc.publish(
+        message={
+            "customer": {
+                "action": "change_customer_password",
+                "body": {
+                    "data": {
+                        "customer_phone_number": user_data.get("phone_number"),
+                        "customer_old_password": data.oldPassword,
+                        "customer_new_password": data.newPassword
                     }
                 }
-            },
-            headers={'customer': True}
-        )
+            }
+        },
+        headers={'customer': True}
+    )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
@@ -204,21 +204,21 @@ def get_delivery_persons(response: Response,
                          auth_header=Depends(auth_handler.check_current_user_tokens)
                          ):
     user_data, header = auth_header
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        result = rpc.publish(
-            message={
-                "customer": {
-                    "action": "get_delivery_persons",
-                    "body": {
-                        "data": {
-                            "customer_phone_number": user_data.get("phone_number"),
-                        }
+    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+    #     rpc.response_len_setter(response_len=1)
+    result = new_rpc.publish(
+        message={
+            "customer": {
+                "action": "get_delivery_persons",
+                "body": {
+                    "data": {
+                        "customer_phone_number": user_data.get("phone_number"),
                     }
                 }
-            },
-            headers={'customer': True}
-        )
+            }
+        },
+        headers={'customer': True}
+    )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
@@ -244,22 +244,22 @@ def add_delivery_person(response: Response,
     if delivery is None:
         delivery = Delivery()
     user_data, header = auth_header
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        result = rpc.publish(
-            message={
-                "customer": {
-                    "action": "add_delivery_person",
-                    "body": {
-                        "data": {
-                            "customer_phone_number": user_data.get("phone_number"),
-                            "delivery": delivery.json(),
-                        }
+    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+    #     rpc.response_len_setter(response_len=1)
+    result = new_rpc.publish(
+        message={
+            "customer": {
+                "action": "add_delivery_person",
+                "body": {
+                    "data": {
+                        "customer_phone_number": user_data.get("phone_number"),
+                        "delivery": delivery.json(),
                     }
                 }
-            },
-            headers={'customer': True}
-        )
+            }
+        },
+        headers={'customer': True}
+    )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
@@ -283,19 +283,19 @@ def add_delivery_person(response: Response,
 @router_profile.post("/informal")
 def create_informal(person: Person, response: Response, auth_header=Depends(auth_handler.check_current_user_tokens)):
     user_data, header = auth_header
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        result = rpc.publish(
-            message={
-                "attribute": {
-                    "action": "get_all_attributes_by_assignee",
-                    "body": {
-                        "name": "informal"
-                    }
+    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+    #     rpc.response_len_setter(response_len=1)
+    result = new_rpc.publish(
+        message={
+            "attribute": {
+                "action": "get_all_attributes_by_assignee",
+                "body": {
+                    "name": "informal"
                 }
-            },
-            headers={'attribute': True}
-        )
+            }
+        },
+        headers={'attribute': True}
+    )
     attribute_result = result.get("attribute", {})
     if not attribute_result.get("success"):
         return HTTPException(status_code=attribute_result.get("status_code", 500),
@@ -328,22 +328,22 @@ def create_informal(person: Person, response: Response, auth_header=Depends(auth
             raise HTTPException(status_code=422, detail={"error": "نام خانوادگی وارد شده صحیح نمیباشد"})
     except ValidationError as e:
         raise HTTPException(status_code=422, detail={"error": e.errors()}) from e
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        result = rpc.publish(
-            message={
-                "customer": {
-                    "action": "create_informal",
-                    "body": {
-                        "data": {
-                            "customer_mobile_number": user_data.get("phone_number"),
-                            "informal": person_object.json()
-                        }
+    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+    #     rpc.response_len_setter(response_len=1)
+    result = new_rpc.publish(
+        message={
+            "customer": {
+                "action": "create_informal",
+                "body": {
+                    "data": {
+                        "customer_mobile_number": user_data.get("phone_number"),
+                        "informal": person_object.json()
                     }
                 }
-            },
-            headers={'customer': True}
-        )
+            }
+        },
+        headers={'customer': True}
+    )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
@@ -361,35 +361,35 @@ def create_informal(person: Person, response: Response, auth_header=Depends(auth
         response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
         response.status_code = customer_result.get("status_code", 200)
         return {"message": "کاربر غیر رسمی با موفقیت ثبت شد"}
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        result = rpc.publish(
-            message={
-                "kosar": {
-                    "action": "get_customer_kosar_data",
-                    "body": {
-                        "data": kosar_data
-                    }
+    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+    #     rpc.response_len_setter(response_len=1)
+    result = new_rpc.publish(
+        message={
+            "kosar": {
+                "action": "get_customer_kosar_data",
+                "body": {
+                    "data": kosar_data
                 }
-            },
-            headers={'kosar': True}
-        )
+            }
+        },
+        headers={'kosar': True}
+    )
     kosar_result = result.get("kosar", {})
     kosar_data = kosar_result.get("message")
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        rpc.publish(
-            message={
-                "customer": {
-                    "action": "set_kosar_data",
-                    "body": {
-                        "mobileNumber": user_data.get("phone_number"),
-                        "kosarData": kosar_data
-                    }
+    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+    #     rpc.response_len_setter(response_len=1)
+    new_rpc.publish(
+        message={
+            "customer": {
+                "action": "set_kosar_data",
+                "body": {
+                    "mobileNumber": user_data.get("phone_number"),
+                    "kosarData": kosar_data
                 }
-            },
-            headers={'customer': True}
-        )
+            }
+        },
+        headers={'customer': True}
+    )
     if not customer_result.get("success"):
         raise HTTPException(
             status_code=customer_result.get("status_code", 500),
@@ -413,22 +413,22 @@ def get_informal(
         auth_header=Depends(auth_handler.check_current_user_tokens)
 ):
     user_data, header = auth_header
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        result = rpc.publish(
-            message={
-                "customer": {
-                    "action": "get_informal",
-                    "body": {
-                        "data": {
-                            "customer_mobile_number": user_data.get("phone_number"),
-                            "informal_national_id": informalNationalId
-                        }
+    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+    #     rpc.response_len_setter(response_len=1)
+    result = new_rpc.publish(
+        message={
+            "customer": {
+                "action": "get_informal",
+                "body": {
+                    "data": {
+                        "customer_mobile_number": user_data.get("phone_number"),
+                        "informal_national_id": informalNationalId
                     }
                 }
-            },
-            headers={'customer': True}
-        )
+            }
+        },
+        headers={'customer': True}
+    )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
@@ -452,21 +452,21 @@ def get_informal_persons(
         auth_header=Depends(auth_handler.check_current_user_tokens)
 ):
     user_data, header = auth_header
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        result = rpc.publish(
-            message={
-                "customer": {
-                    "action": "get_all_informal_persons",
-                    "body": {
-                        "data": {
-                            "customer_mobile_number": user_data.get("phone_number"),
-                        }
+    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+    #     rpc.response_len_setter(response_len=1)
+    result = new_rpc.publish(
+        message={
+            "customer": {
+                "action": "get_all_informal_persons",
+                "body": {
+                    "data": {
+                        "customer_mobile_number": user_data.get("phone_number"),
                     }
                 }
-            },
-            headers={'customer': True}
-        )
+            }
+        },
+        headers={'customer': True}
+    )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(

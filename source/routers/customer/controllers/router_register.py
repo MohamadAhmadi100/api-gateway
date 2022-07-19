@@ -1,11 +1,12 @@
 from fastapi import APIRouter, HTTPException, Response
 import codemelli
 from unidecode import unidecode
-from source.message_broker.rabbit_server import RabbitRPC
+# from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.customer.validators import validation_register
 import logging
 from source.helpers.exception_handler import LogHandler
+from source.helpers.rabbit_config import new_rpc
 
 router_register = APIRouter(
     prefix="/register",
@@ -61,32 +62,29 @@ def register(
         "customerPostalCode": value.customer_postal_code,
         "fullAddress": f"{value.customer_province}, {value.customer_city}, {value.customer_street}, {value.customer_alley}, پلاک: {value.customer_plaque}, ,واحد: {value.customer_unit}"
     }
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        result = rpc.publish(
-            message={
-                "customer": {
-                    "action": "register",
-                    "body": {
-                        "data": {
-                            "customer_phone_number": value.customer_phone_number,
-                            "customer_first_name": value.customer_first_name,
-                            "customer_last_name": value.customer_last_name,
-                            "customer_national_id": value.customer_national_id,
-                            "customer_password": value.customer_password,
-                            "customer_verify_password": value.customer_verify_password,
-                            "customer_street": value.customer_street,
-                            "customer_address": [customer_address],
-                            "customer_document_status": value.customer_document_status,
-                            "customer_city_name": value.customer_city,
-                            "customer_state_name": value.customer_province,
-                            "customer_region_code": value.customer_region_code
-                        }
+    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+    #     rpc.response_len_setter(response_len=1)
+    result = new_rpc.publish(
+        message={
+            "customer": {
+                "action": "register",
+                "body": {
+                    "data": {
+                        "customer_phone_number": value.customer_phone_number,
+                        "customer_first_name": value.customer_first_name,
+                        "customer_last_name": value.customer_last_name,
+                        "customer_national_id": value.customer_national_id,
+                        "customer_password": value.customer_password,
+                        "customer_verify_password": value.customer_verify_password,
+                        "customer_street": value.customer_street,
+                        "customer_address": [customer_address],
+                        "customer_document_status": value.customer_document_status
                     }
                 }
-            },
-            headers={'customer': True}
-        )
+            }
+        },
+        headers={'customer': True}
+    )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
@@ -103,24 +101,24 @@ def register(
         ]
     )
     customer_id = customer_result.get("message").get("data").get("customerID")
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        address_response = rpc.publish(
-            message={
-                "address": {
-                    "action": "insert_address",
-                    "body": {
-                        "data": address,
-                        "customerId": str(customer_id)
-                    }
+    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+    #     rpc.response_len_setter(response_len=1)
+    address_response = new_rpc.publish(
+        message={
+            "address": {
+                "action": "insert_address",
+                "body": {
+                    "data": address,
+                    "customerId": str(customer_id)
                 }
-            },
-            headers={'address': True}
-        ).get("address", {})
-        if not address_response.get("success"):
-            raise HTTPException(
-                status_code=317,
-                detail={"message": "برای ثبت آدرس دوباره تلاش کنید"}
-            )
+            }
+        },
+        headers={'address': True}
+    ).get("address", {})
+    if not address_response.get("success"):
+        raise HTTPException(
+            status_code=317,
+            detail={"message": "برای ثبت آدرس دوباره تلاش کنید"}
+        )
     response.status_code = customer_result.get("status_code", 200)
     return customer_result.get("message")
