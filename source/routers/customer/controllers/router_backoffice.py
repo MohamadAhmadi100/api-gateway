@@ -29,8 +29,7 @@ def get_customers_data(
                 "body": {
                 }
             }
-        },
-        headers={'customer': True}
+        }
     )
     customer_result = result.get("customer", {})
     response.status_code = customer_result.get("status_code", 200)
@@ -55,8 +54,7 @@ def get_customers_data(
                         "data": value.json()
                     }
                 }
-            },
-            headers={'customer': True}
+            }
         )
     else:
         result = new_rpc.publish(
@@ -64,8 +62,7 @@ def get_customers_data(
                 "customer": {
                     "action": "get_customers_grid_data",
                 }
-            },
-            headers={'customer': True}
+            }
         )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
@@ -95,8 +92,7 @@ def get_customers_data(
                         "data": value.json()
                     }
                 }
-            },
-            headers={'customer': True}
+            }
         )
     else:
         result = new_rpc.publish(
@@ -104,8 +100,7 @@ def get_customers_data(
                 "customer": {
                     "action": "get_customers_grid_data",
                 }
-            },
-            headers={'customer': True}
+            }
         )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):

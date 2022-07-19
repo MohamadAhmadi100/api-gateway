@@ -82,8 +82,7 @@ def register(
                     }
                 }
             }
-        },
-        headers={'customer': True}
+        }
     )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
@@ -112,8 +111,7 @@ def register(
                     "customerId": str(customer_id)
                 }
             }
-        },
-        headers={'address': True}
+        }
     ).get("address", {})
     if not address_response.get("success"):
         raise HTTPException(

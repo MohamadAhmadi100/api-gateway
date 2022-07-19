@@ -43,8 +43,7 @@ def check_is_registered(
                     "customer_phone_number": value.customer_phone_number
                 }
             }
-        },
-        headers={'customer': True}
+        }
     )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
@@ -68,8 +67,7 @@ def send_otp_code(value: validation_auth.CustomerAuth, response: Response):
                     "customer_phone_number": value.customer_phone_number
                 }
             }
-        },
-        headers={'customer': True}
+        }
     )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
@@ -94,8 +92,7 @@ def verify_otp_code(value: validation_auth.CustomerVerifyOTP, response: Response
                     "customer_code": value.customer_code
                 }
             }
-        },
-        headers={'customer': True}
+        }
     )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
@@ -141,8 +138,7 @@ def checking_login_otp_code(
                     "customer_code": value.customer_code
                 }
             }
-        },
-        headers={'customer': True}
+        }
     )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
@@ -182,8 +178,7 @@ def checking_login_password(
                         "customer_password": value.customer_password
                     }
                 }
-            },
-            headers={'customer': True}
+            }
         )
     # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
     #     rpc.response_len_setter(response_len=1)
@@ -246,8 +241,7 @@ def save_logout(
                     "username": username,
                 }
             }
-        },
-        headers={'customer': True}
+        }
     )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
@@ -276,8 +270,7 @@ def forget_password(
                     "password": data.customer_password
                 }
             }
-        },
-        headers={'customer': True}
+        }
     )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):

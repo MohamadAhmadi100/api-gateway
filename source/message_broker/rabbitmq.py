@@ -51,7 +51,6 @@ class RabbitRPC(metaclass=Singleton):
                 channel = connection.channel()
                 channel.exchange_declare(exchange=self.exchange_name, exchange_type='headers')
                 queue_result = channel.queue_declare(queue="", exclusive=True)
-                print(queue_result.method.queue)
                 return connection, channel, queue_result.method.queue
             except Exception as e:
                 logging.info(f"Error connecting to RabbitMQ... {e}")
@@ -69,7 +68,7 @@ class RabbitRPC(metaclass=Singleton):
             body=json.dumps(message)
         )
 
-    def publish(self, message: dict, headers: dict, extra_data: str = None):
+    def publish(self, message: dict, extra_data: str = None):
         # publish message with given message and headers
         self.response_len = len(message)
         logging.info(f"expected response num: {self.response_len}")
@@ -92,7 +91,7 @@ class RabbitRPC(metaclass=Singleton):
                         correlation_id=self.corr_id,
                         delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE,
                         content_type=extra_data,
-                        headers=headers
+                        headers={i: True for i in message}
                     ),
                     body=json.dumps(message) if isinstance(message, dict) else message
                 )

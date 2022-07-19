@@ -39,8 +39,7 @@ def get_profile(
                     "customer_phone_number": user_data,
                 }
             }
-        },
-        headers={'customer': True}
+        }
     )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
@@ -59,8 +58,7 @@ def get_profile(
                     "name": "customer"
                 }
             }
-        },
-        headers={'attribute': True}
+        }
     )
     attribute_result = result.get("attribute", {})
     if not attribute_result.get("success"):
@@ -113,8 +111,7 @@ def edit_profile_data(
                     "name": "customer"
                 }
             }
-        },
-        headers={'attribute': True}
+        }
         )
     attribute_result = result.get("attribute", {})
     if not attribute_result.get("success"):
@@ -125,6 +122,10 @@ def edit_profile_data(
     profile_model = CreateClass(class_name="EditProfileModel", attributes=attrs).get_pydantic_class()
     try:
         profile_object = profile_model(**value.data)
+        profile_model.make_validator_function(**value.data)
+
+
+
     except ValidationError as e:
         raise HTTPException(status_code=422, detail={"error": e.errors()}) from e
     # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
@@ -138,8 +139,7 @@ def edit_profile_data(
                     "data": profile_object.json()
                 }
             }
-        },
-        headers={'customer': True}
+        }
     )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
@@ -179,8 +179,7 @@ def change_customer_password(
                     }
                 }
             }
-        },
-        headers={'customer': True}
+        }
     )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
@@ -216,8 +215,7 @@ def get_delivery_persons(response: Response,
                     }
                 }
             }
-        },
-        headers={'customer': True}
+        }
     )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
@@ -257,8 +255,7 @@ def add_delivery_person(response: Response,
                     }
                 }
             }
-        },
-        headers={'customer': True}
+        }
     )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
@@ -293,8 +290,7 @@ def create_informal(person: Person, response: Response, auth_header=Depends(auth
                     "name": "informal"
                 }
             }
-        },
-        headers={'attribute': True}
+        }
     )
     attribute_result = result.get("attribute", {})
     if not attribute_result.get("success"):
@@ -341,8 +337,7 @@ def create_informal(person: Person, response: Response, auth_header=Depends(auth
                     }
                 }
             }
-        },
-        headers={'customer': True}
+        }
     )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
@@ -371,8 +366,7 @@ def create_informal(person: Person, response: Response, auth_header=Depends(auth
                     "data": kosar_data
                 }
             }
-        },
-        headers={'kosar': True}
+        }
     )
     kosar_result = result.get("kosar", {})
     kosar_data = kosar_result.get("message")
@@ -387,8 +381,7 @@ def create_informal(person: Person, response: Response, auth_header=Depends(auth
                     "kosarData": kosar_data
                 }
             }
-        },
-        headers={'customer': True}
+        }
     )
     if not customer_result.get("success"):
         raise HTTPException(
@@ -426,8 +419,7 @@ def get_informal(
                     }
                 }
             }
-        },
-        headers={'customer': True}
+        }
     )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
@@ -464,8 +456,7 @@ def get_informal_persons(
                     }
                 }
             }
-        },
-        headers={'customer': True}
+        }
     )
     customer_result = result.get("customer", {})
     if not customer_result.get("success"):
