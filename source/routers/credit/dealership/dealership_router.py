@@ -59,7 +59,7 @@ def request_dealership_credit(response: Response, data: add_credit,
 
 @credit.post("/accept_credit/", tags=["customer_side"])
 def accept_dealership_credit(response: Response, data: accept_credit,
-                              ):
+                             ):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         order_response = rpc.publish(
@@ -68,6 +68,27 @@ def accept_dealership_credit(response: Response, data: accept_credit,
                     "action": "accept_request_dealership_credit",
                     "body": {
                         "referral_number": data.referral_number,
+                    }
+                }
+            },
+            headers={'credit': True}
+        ).get("credit", {})
+        response.status_code = 200
+        return order_response
+
+
+@credit.post("/accept_credit/", tags=["customer_side"])
+def get_remaining_credit(response: Response,
+                         auth_header=Depends(auth_handler.check_current_user_tokens)):
+    user, auth = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        order_response = rpc.publish(
+            message={
+                "credit": {
+                    "action": "check_credit",
+                    "body": {
+                        "customer_id": user.get("user_id"),
                     }
                 }
             },
