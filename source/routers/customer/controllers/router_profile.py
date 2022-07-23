@@ -1,11 +1,13 @@
 import re
+
 import codemelli
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi import Response, status
 from pydantic.error_wrappers import ValidationError
-from source.helpers.rabbit_config import new_rpc
+
 from source.helpers import case_converter
 from source.helpers.create_class import CreateClass
+from source.helpers.rabbit_config import new_rpc
 # from source.message_broker.rabbit_server import RabbitRPC
 # from source.message_broker.rabbitmq import RabbitRPC as RabbitRPC_Test
 from source.routers.customer.module.auth import AuthHandler
@@ -18,6 +20,7 @@ router_profile = APIRouter(
 )
 
 auth_handler = AuthHandler()
+
 
 # test_rpc = RabbitRPC_Test(exchange_name='headers_exchange', timeout=20)
 
@@ -49,7 +52,7 @@ def get_profile(
         )
     # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
     #     rpc.response_len_setter(response_len=1)
-        # result = test_rpc.publish(
+    # result = test_rpc.publish(
     result = new_rpc.publish(
         message={
             "attribute": {
@@ -103,30 +106,27 @@ def edit_profile_data(
     user_data, header = auth_header
     # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
     #     rpc.response_len_setter(response_len=1)
-    result = new_rpc.publish(
-        message={
-            "attribute": {
-                "action": "get_all_attributes_by_assignee",
-                "body": {
-                    "name": "customer"
-                }
-            }
-        }
-        )
-    attribute_result = result.get("attribute", {})
-    if not attribute_result.get("success"):
-        return HTTPException(status_code=attribute_result.get("status_code", 500),
-                             detail={"error": attribute_result.get("error", "Something went wrong")})
-    attrs = case_converter.convert_case(attribute_result.get("message"), "camel")
-    attrs = {obj.get("name"): obj for obj in attrs}
-    profile_model = CreateClass(class_name="EditProfileModel", attributes=attrs).get_pydantic_class()
-    try:
-        profile_object = profile_model(**value.data)
-
-
-
-    except ValidationError as e:
-        raise HTTPException(status_code=422, detail={"error": e.errors()}) from e
+    # result = new_rpc.publish(
+    #     message={
+    #         "attribute": {
+    #             "action": "get_all_attributes_by_assignee",
+    #             "body": {
+    #                 "name": "customer"
+    #             }
+    #         }
+    #     }
+    # )
+    # attribute_result = result.get("attribute", {})
+    # if not attribute_result.get("success"):
+    #     return HTTPException(status_code=attribute_result.get("status_code", 500),
+    #                          detail={"error": attribute_result.get("error", "Something went wrong")})
+    # attrs = case_converter.convert_case(attribute_result.get("message"), "camel")
+    # attrs = {obj.get("name"): obj for obj in attrs}
+    # try:
+    #     profile_model = CreateClass(class_name="EditProfileModel", attributes=attrs).get_pydantic_class()(**value.data)
+    #     # profile_object = profile_model(**value.data)
+    # except ValidationError as e:
+    #     raise HTTPException(status_code=422, detail={"error": e.errors()}) from e
     # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
     #     rpc.response_len_setter(response_len=1)
     result = new_rpc.publish(
@@ -135,7 +135,7 @@ def edit_profile_data(
                 "action": "edit_profile_data",
                 "body": {
                     "customer_phone_number": user_data.get("phone_number"),
-                    "data": profile_object.json()
+                    "data": value.json()
                 }
             }
         }
