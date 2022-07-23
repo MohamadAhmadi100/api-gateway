@@ -19,6 +19,7 @@ router_profile = APIRouter(
 
 auth_handler = AuthHandler()
 
+
 # test_rpc = RabbitRPC_Test(exchange_name='headers_exchange', timeout=20)
 
 
@@ -49,7 +50,7 @@ def get_profile(
         )
     # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
     #     rpc.response_len_setter(response_len=1)
-        # result = test_rpc.publish(
+    # result = test_rpc.publish(
     result = new_rpc.publish(
         message={
             "attribute": {
@@ -112,7 +113,7 @@ def edit_profile_data(
                 }
             }
         }
-        )
+    )
     attribute_result = result.get("attribute", {})
     if not attribute_result.get("success"):
         return HTTPException(status_code=attribute_result.get("status_code", 500),
@@ -281,17 +282,11 @@ def create_informal(person: Person, response: Response, auth_header=Depends(auth
     user_data, header = auth_header
     # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
     #     rpc.response_len_setter(response_len=1)
-    result = new_rpc.publish(
-        message={
-            "attribute": {
-                "action": "get_all_attributes_by_assignee",
-                "body": {
-                    "name": "informal"
-                }
-            }
-        }
+    import source.services.attribute.assignee_controller as ac
+
+    attribute_result = new_rpc.publish(
+        message=[ac.get_all_attributes_by_assignee(name="informal")]
     )
-    attribute_result = result.get("attribute", {})
     if not attribute_result.get("success"):
         return HTTPException(status_code=attribute_result.get("status_code", 500),
                              detail={"error": attribute_result.get("error", "Something went wrong")})
@@ -325,20 +320,14 @@ def create_informal(person: Person, response: Response, auth_header=Depends(auth
         raise HTTPException(status_code=422, detail={"error": e.errors()}) from e
     # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
     #     rpc.response_len_setter(response_len=1)
-    result = new_rpc.publish(
-        message={
-            "customer": {
-                "action": "create_informal",
-                "body": {
-                    "data": {
-                        "customer_mobile_number": user_data.get("phone_number"),
-                        "informal": person_object.json()
-                    }
-                }
-            }
-        }
+    import source.services.customer.router_profile as rp
+
+    customer_result = new_rpc.publish(
+        message=[rp.create_informal(data={
+            "customer_mobile_number": user_data.get("phone_number"),
+            "informal": person_object.json()
+        })]
     )
-    customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
             status_code=customer_result.get("status_code", 500),
@@ -357,30 +346,18 @@ def create_informal(person: Person, response: Response, auth_header=Depends(auth
         return {"message": "کاربر غیر رسمی با موفقیت ثبت شد"}
     # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
     #     rpc.response_len_setter(response_len=1)
-    result = new_rpc.publish(
-        message={
-            "kosar": {
-                "action": "get_customer_kosar_data",
-                "body": {
-                    "data": kosar_data
-                }
-            }
-        }
+    import source.services.kosar.router_customer as rc
+
+    kosar_result = new_rpc.publish(
+        message=[rc.get_customer_kosar_data(data=kosar_data)]
     )
-    kosar_result = result.get("kosar", {})
     kosar_data = kosar_result.get("message")
     # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
     #     rpc.response_len_setter(response_len=1)
+    import source.services.customer.router_back_office as rbo
+
     new_rpc.publish(
-        message={
-            "customer": {
-                "action": "set_kosar_data",
-                "body": {
-                    "mobileNumber": user_data.get("phone_number"),
-                    "kosarData": kosar_data
-                }
-            }
-        }
+        message=[rbo.set_kosar_data(mobileNumber=user_data.get("phone_number"), kosarData=kosar_data)]
     )
     if not customer_result.get("success"):
         raise HTTPException(

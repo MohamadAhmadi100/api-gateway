@@ -6,6 +6,7 @@ from source.helpers.rabbit_config import new_rpc
 # from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.customer.validators import validation_auth
+import source.services.customer.router_auth as ra
 
 # from customer.modules import log
 
@@ -35,17 +36,9 @@ def check_is_registered(
     # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
     #     rpc.response_len_setter(response_len=1)
 
-    result = new_rpc.publish(
-        message={
-            "customer": {
-                "action": "check_is_registered",
-                "body": {
-                    "customer_phone_number": value.customer_phone_number
-                }
-            }
-        }
+    customer_result = new_rpc.publish(
+        message=[ra.check_is_registered(customer_phone_number=value.customer_phone_number)]
     )
-    customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
             status_code=customer_result.get("status_code", 500),
