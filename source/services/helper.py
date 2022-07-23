@@ -47,7 +47,7 @@ def helper():
 
 
 gettrace = getattr(sys, 'gettrace', None)
-
+print(os.path.abspath(""))
 try:
     helper()
 except Exception as e:
