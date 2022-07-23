@@ -1,5 +1,3 @@
-# important import... don't remove this at home(even you dear friend)
-import source.services.helper
 import logging
 
 import uvicorn

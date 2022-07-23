@@ -68,12 +68,9 @@ class RabbitRPC(metaclass=Singleton):
             body=json.dumps(message)
         )
 
-    def publish(self, message: list, extra_data: str = None):
-        messages = dict()
-        for i in message:
-            messages.update(i)
+    def publish(self, message: dict, extra_data: str = None):
         # publish message with given message and headers
-        self.response_len = len(messages)
+        self.response_len = len(message)
         logging.info(f"expected response num: {self.response_len}")
         print(f"{datetime.datetime.now()} - expected response num {self.response_len}")
         self.corr_id = str(uuid.uuid4())
@@ -83,9 +80,9 @@ class RabbitRPC(metaclass=Singleton):
         while True:
             try_count += 1
             try:
-                logging.info(f"Publishing message: {messages}")
+                logging.info(f"Publishing message: {message}")
                 # print("publish initiated...")
-                print(f"{datetime.datetime.now()} - Publishing message: {messages}")
+                print(f"{datetime.datetime.now()} - Publishing message: {message}")
                 self.publish_channel.basic_publish(
                     exchange=self.exchange_name,
                     routing_key='',
@@ -94,9 +91,9 @@ class RabbitRPC(metaclass=Singleton):
                         correlation_id=self.corr_id,
                         delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE,
                         content_type=extra_data,
-                        headers={i: True for i in messages.keys()}
+                        headers={i: True for i in message}
                     ),
-                    body=json.dumps(messages) if isinstance(messages, dict) else messages
+                    body=json.dumps(message) if isinstance(message, dict) else message
                 )
                 print(f"{datetime.datetime.now()} - message sent...")
                 logging.info("Message sent...")
@@ -125,14 +122,11 @@ class RabbitRPC(metaclass=Singleton):
 
         if len(self.broker_response) < self.response_len:
             print(f"{datetime.datetime.now()} - Couldn't get response from these services:")
-            bad_services = list(messages.keys() - self.broker_response.keys())
+            bad_services = list(message.keys() - self.broker_response.keys())
             print(f"{datetime.datetime.now()} - bad_services")
             logging.info(f"Timeout waiting for response... services: {bad_services}")
             print(f"{datetime.datetime.now()} - Timeout waiting for response... services: {bad_services}")
-        result = list()
-        for i in messages.keys():
-            result.append(self.broker_response.get(i, {}))
-        result = result[0] if len(result) == 1 else result
+        result = self.broker_response.copy()
         logging.info(f"Final response is ...{result}")
         print(f"{datetime.datetime.now()} - Final response is ...{result}")
         logging.info(f"second corr id: {self.corr_id}")
@@ -161,3 +155,32 @@ class RabbitRPC(metaclass=Singleton):
                     raise e
                 self.publish_connection, self.publish_channel, self.callback_queue = self.connect()
 
+
+if __name__ == '__main__':
+    rpc = RabbitRPC(exchange_name='headers_exchange', timeout=15)
+    count = 1
+    while True:
+        result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_product_by_system_code",
+                    "body": {
+                        "system_code": "10010104302",
+                        "lang": "fa_ir"
+                    }
+                }, "pricing": {
+                    "action": "get_price",
+                    "body": {
+                        "system_code": "10010104302"
+                    }
+                }, "quantity": {
+                    "action": "get_quantity",
+                    "body": {
+                        "system_code": "10010104302"
+                    }
+                }
+            },
+            headers={'product': True, "pricing": True, "quantity": True}
+        )
+        print(count)
+        count += 1
