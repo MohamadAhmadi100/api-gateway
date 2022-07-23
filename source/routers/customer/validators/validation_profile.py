@@ -34,299 +34,339 @@ def get_profile_attributes(data):
 
 
 class EditProfile(BaseModel):
-    # data: dict
-
-    customer_first_name: Optional[str] = Field(
-        description="",
-        title="نام",
-        alias="customerFirstName",
-        name="customerFirstName",
-        placeholder="مهدی",
-        minLength=2,
-        maxLength=32,
-        dataType="string",
-        type="text",
-        regexPattern=r"^[\u0600-\u06FF]{2,32}$",
-        isRquired=False,
-    )
-    customer_last_name: Optional[str] = Field(
-        description="",
-        alias="customerLastName",
-        title="نام خانوادگی",
-        name="customerLastName",
-        placeholder="مهدوی",
-        minLength=2,
-        maxLength=32,
-        dataType="string",
-        type="text",
-        regexPattern=r"^[\u0600-\u06FF]{2,32}$",
-        isRquired=False,
-    )
-    customer_postal_code: Optional[str] = Field(
-        alias="customerPostalCode",
-        description="",
-        title="کد پستی",
-        name="customerPostalCode",
-        placeholder="4571915113",
-        minLength=10,
-        maxLength=10,
-        dataType="string",
-        type="text",
-        regexPattern="^[0-9]{10}$",
-        isRquired=False,
-    )
-    customer_email: Optional[str] = Field(
-        alias="customerEmail",
-        description="",
-        title="پست الکترونیک",
-        name="customerEmail",
-        placeholder="example@me.com",
-        minLength=4,
-        maxLength=128,
-        dataType="string",
-        type="text",
-        regexPattern=r"^([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+$",
-        isRquired=False,
-    )
-    customer_shop_name: Optional[str] = Field(
-        alias="customerShopName",
-        description="",
-        title="نام شرکت/مغازه",
-        name="customerShopName",
-        placeholder="",
-        minLength=4,
-        maxLength=128,
-        dataType="string",
-        type="text",
-        regexPattern=r"^[\u0600-\u06FF]{2,32}$",
-        isRquired=False,
-    )
-    customer_account_number: Optional[str] = Field(
-        alias="customerAccountNumber",
-        description="",
-        title="شماره حساب",
-        name="customerAccountNumber",
-        placeholder="",
-        minLength=4,
-        maxLength=128,
-        dataType="string",
-        type="text",
-        regexPattern=r"^[0-9]{7,20}$",
-        isRquired=False,
-    )
-    customer_telephone_number: Optional[str] = Field(
-        alias="customerTelephoneNumber",
-        description="",
-        title="تلفن ثابت",
-        name="customerTelephoneNumber",
-        placeholder="",
-        minLength=4,
-        maxLength=128,
-        dataType="string",
-        type="text",
-        regexPattern=r"^0[0-9]{11}$",
-        isRquired=False,
-    )
-    customer_shop_status: Optional[str] = Field(
-        alias="customerShopStatus",
-        description="",
-        title="وضعیت فروشگاه",
-        name="customerShopStatus",
-        placeholder="",
-        minLength=2,
-        maxLength=32,
-        dataType="string",
-        type="text",
-        isRquired=False,
-    )
-    customer_shop_location: Optional[str] = Field(
-        alias="customerShopLocation",
-        description="",
-        title="موقعیت مکانی فروشگاه",
-        name="customerShopLocation",
-        placeholder="",
-        minLength=2,
-        maxLength=32,
-        dataType="string",
-        type="text",
-        isRquired=False,
-    )
-    customer_education: Optional[str] = Field(
-        alias="customerEducation",
-        description="",
-        title="تحصیلات",
-        name="customerEducation",
-        placeholder="",
-        minLength=2,
-        maxLength=32,
-        dataType="string",
-        type="text",
-        isRquired=False,
-    )
-    customer_image: Optional[str] = Field(
-        alias="customerImage",
-        description="",
-        title="عکس پروفایل",
-        name="customerImage",
-        placeholder="",
-        minLength=2,
-        maxLength=256,
-        dataType="string",
-        type="text",
-        isRquired=False,
-    )
-    customer_ofogh_code: Optional[str] = Field(
-        alias="customerOfoghCode",
-        description="",
-        title="کد افق",
-        name="customerOfoghCode",
-        placeholder="",
-        minLength=2,
-        maxLength=16,
-        dataType="string",
-        type="text",
-        regexPattern=r"^[0-9]{4,5}$",
-        isRquired=False,
-    )
-    customer_document_status: Optional[str] = Field(
-        alias="customerDocumentStatus",
-        description="",
-        title="وضعیت مدارک",
-        name="customerDocumentStatus",
-        placeholder="",
-        minLength=2,
-        maxLength=256,
-        dataType="string",
-        type="text",
-        isRquired=False,
-    )
-    customer_class: Optional[str] = Field(
-        alias="customerClass",
-        description="",
-        title="صنف",
-        name="customerClass",
-        placeholder="",
-        minLength=2,
-        maxLength=32,
-        dataType="string",
-        type="text",
-        regexPattern=r"^[\u0600-\u06FF ]{2,32}$",
-        isRquired=False,
-    )
-    customer_shop_postal_code: Optional[str] = Field(
-        alias="customerShopPostalCode",
-        description="",
-        title="کد پستی محل کسب",
-        name="customerShopPostalCode",
-        placeholder="",
-        minLength=2,
-        maxLength=32,
-        dataType="string",
-        type="text",
-        regexPattern=r"^[0-9]*10",
-        isRquired=False,
-    )
-
-    @validator("customer_first_name")
-    def validate_customer_first_name(cls, customer_first_name):
-        pattern = r"^[\u0600-\u06FF ]{2,32}$"
-        match = re.fullmatch(pattern, customer_first_name)
-        if not match:
-            raise HTTPException(status_code=422, detail={"error": "نام وارد شده صحیح نمیباشد"})
-        return customer_first_name
-
-    @validator("customer_last_name")
-    def validate_customer_last_name(cls, customer_last_name):
-        pattern = r"^[\u0600-\u06FF ]{2,32}$"
-        match = re.fullmatch(pattern, customer_last_name)
-        if not match:
-            raise HTTPException(status_code=422, detail={"error": "نام خانوادگی وارد شده صحیح نمیباشد"})
-        return customer_last_name
-
-    @validator("customer_postal_code")
-    def validate_customer_postal_code(cls, customer_postal_code):
-        pattern = r"^[0-9]{10}$"
-        match = re.fullmatch(pattern, customer_postal_code)
-        if not match:
-            raise HTTPException(status_code=422, detail={"error": "کد پستی وارد شده صحیح نمیباشد"})
-        return customer_postal_code
-
-    @validator("customer_email")
-    def validate_customer_email(cls, customer_email):
-        pattern = r"^([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+$"
-        match = re.fullmatch(pattern, customer_email)
-        if not match:
-            raise HTTPException(status_code=422, detail={"message": "لطفا ایمیل را به درستی وارد کنید"})
-        return customer_email
-
-    @validator("customer_shop_name")
-    def validate_customer_shop_name(cls, customer_shop_name):
-        pattern = r"^[\u0600-\u06FF ]{2,32}$"
-        match = re.fullmatch(pattern, customer_shop_name)
-        if not match:
-            raise HTTPException(status_code=422, detail={"message": "لطفا نام فروشگاه را به درستی وارد کنید"})
-        return customer_shop_name
-
-    @validator("customer_account_number")
-    def validate_customer_account_number(cls, customer_account_number):
-        pattern = r"^[0-9]{7,20}$"
-        match = re.fullmatch(pattern, customer_account_number)
-        if not match:
-            raise HTTPException(status_code=422, detail={"message": "لطفا شماره حساب خود را به درستی وارد کنید"})
-        return customer_account_number
-
-    @validator("customer_telephone_number")
-    def validate_customer_telephone_number(cls, customer_telephone_number):
-        pattern = r"^0[0-9]{10}$"
-        match = re.fullmatch(pattern, customer_telephone_number)
-        if not match:
-            raise HTTPException(status_code=422, detail={"message": "لطفا تلفن ثابت خود را به درستی وارد کنید"})
-        return customer_telephone_number
-
-    @validator("customer_shop_status")
-    def validate_customer_shop_status(cls, customer_shop_status):
-        values = ["owner", "rent", "mortgage"]
-        if customer_shop_status not in values:
-            raise HTTPException(status_code=422, detail={"message": "لطفا وضعیت فروشگاه را به درستی وارد کنید"})
-        return customer_shop_status
-
-    @validator("customer_shop_location")
-    def validate_customer_shop_location(cls, customer_shop_location):
-        values = ["passage", "street"]
-        if customer_shop_location not in values:
-            raise HTTPException(status_code=422, detail={"message": "لطفا موقعیت مکانی فروشگاه را به درستی وارد کنید"})
-        return customer_shop_location
-
-    @validator("customer_education")
-    def validate_customer_education(cls, customer_education):
-        values = ["diploma", "postgraduate", "bachelor", "master", "doctorate"]
-        if customer_education not in values:
-            raise HTTPException(status_code=422, detail={"message": "لطفا تحصیلات را به درستی وارد کنید"})
-        return customer_education
-
-    @validator("customer_ofogh_code")
-    def validate_customer_ofogh_code(cls, customer_ofogh_code):
-        pattern = r"^[0-9]{4,5}$"
-        match = re.fullmatch(pattern, customer_ofogh_code)
-        if not match:
-            raise HTTPException(status_code=422, detail={"message": "لطفا کد افق خود را به درستی وارد کنید"})
-        return customer_ofogh_code
-
-    @validator("customer_class")
-    def validate_customer_class(cls, customer_class):
-        pattern = r"^[\u0600-\u06FF]{2,32}$"
-        match = re.fullmatch(pattern, customer_class)
-        if not match:
-            raise HTTPException(status_code=422, detail={"message": "لطفا صنف خود را به درستی وارد کنید"})
-        return customer_class
-
-    @validator("customer_shop_postal_code")
-    def validate_customer_shop_postal_code(cls, customer_shop_postal_code):
-        pattern = "^[0-9]{10}$"
-        match = re.fullmatch(pattern, customer_shop_postal_code)
-        if not match:
-            raise HTTPException(status_code=422, detail={"message": "لطفا کد پستی محل کسب خود را به درستی وارد کنید"})
-        return customer_shop_postal_code
+    data: dict
+    # customer_first_name: Optional[str] = Field(
+    #     description="",
+    #     title="نام",
+    #     alias="customerFirstName",
+    #     name="customerFirstName",
+    #     placeholder="مهدی",
+    #     minLength=2,
+    #     maxLength=32,
+    #     dataType="string",
+    #     type="text",
+    #     regexPattern=r"^[\u0600-\u06FF ]{2,32}$",
+    #     isRquired=False,
+    # )
+    # customer_last_name: Optional[str] = Field(
+    #     description="",
+    #     alias="customerLastName",
+    #     title="نام خانوادگی",
+    #     name="customerLastName",
+    #     placeholder="مهدوی",
+    #     minLength=2,
+    #     maxLength=32,
+    #     dataType="string",
+    #     type="text",
+    #     regexPattern=r"^[\u0600-\u06FF ]{2,32}$",
+    #     isRquired=False,
+    # )
+    # # customer_national_id: Optional[str] = Field(
+    # #     description="",
+    # #     title="کد ملی",
+    # #     alias="customerNationalID",
+    # #     name="customerNationalID",
+    # #     placeholder="6150077698",
+    # #     minLength=10,
+    # #     maxLength=10,
+    # #     dataType="string",
+    # #     type="text",
+    # #     isRquired=False,
+    # #     regexPattern="^[0-9]{10}$",
+    # # )
+    # customer_region_code: Optional[str] = Field(
+    #     description="",
+    #     alias="customerRegionCode",
+    #     title="",
+    #     name="customerRegionCode",
+    #     minLength=1,
+    #     maxLength=8,
+    #     dataType="string",
+    #     type="hidden",
+    #     regexPattern=r"^[a-z,0-9,A-Z]{2,8}$",
+    #     isRquired=False,
+    # )
+    # customer_city_name: Optional[str] = Field(
+    #     alias="customerCityName",
+    #     description="",
+    #     title="نام شهر",
+    #     name="customerCityName",
+    #     placeholder="تهران",
+    #     minLength=2,
+    #     maxLength=32,
+    #     dataType="string",
+    #     type="text",
+    #     regexPattern=r"^[\u0600-\u06FF ]{2,32}$",
+    #     isRquired=False,
+    # )
+    # customer_city_id: Optional[str] = Field(
+    #     alias="customerCityID",
+    #     description="",
+    #     title="ای دی شهر",
+    #     name="customerCityID",
+    #     minLength=1,
+    #     maxLength=4,
+    #     dataType="string",
+    #     type="hidden",
+    #     regexPattern="^[0-9]{1,4}$",
+    #     isRquired=False,
+    # )
+    # customer_state_name: Optional[str] = Field(
+    #     alias="customerStateName",
+    #     description="",
+    #     title="استان",
+    #     name="customerStateName",
+    #     placeholder="تهران",
+    #     minLength=2,
+    #     maxLength=32,
+    #     dataType="string",
+    #     type="text",
+    #     regexPattern=r"^[\u0600-\u06FF ]{2,32}$",
+    #     isRquired=False,
+    # )
+    # customer_state_id: Optional[str] = Field(
+    #     alias="customerStateId",
+    #     description="",
+    #     title="ای دی استان",
+    #     name="customerStateId",
+    #     minLength=1,
+    #     maxLength=4,
+    #     dataType="string",
+    #     type="hidden",
+    #     regexPattern="^[0-9]{1,4}$",
+    #     isRquired=False,
+    # )
+    # customer_address: Optional[str] = Field(
+    #     alias="customerAddress",
+    #     description="",
+    #     title="آدرس",
+    #     name="customerAddress",
+    #     placeholder="تهران پلاک ۳",
+    #     minLength=4,
+    #     maxLength=128,
+    #     dataType="string",
+    #     type="text",
+    #     regexPattern=r"^[\u0600-\u06FF - , - ، ]{4,128}$",
+    #     isRquired=False,
+    # )
+    #
+    # customer_postal_code: Optional[str] = Field(
+    #     alias="customerPostalCode",
+    #     description="",
+    #     title="کد پستی",
+    #     name="customerPostalCode",
+    #     placeholder="4571915113",
+    #     minLength=10,
+    #     maxLength=10,
+    #     dataType="string",
+    #     type="text",
+    #     regexPattern="^[0-9]{10}$",
+    #     isRquired=False,
+    # )
+    # customer_email: Optional[str] = Field(
+    #     alias="customerEmail",
+    #     description="",
+    #     title="پست الکترونیک",
+    #     name="customerEmail",
+    #     placeholder="example@me.com",
+    #     minLength=4,
+    #     maxLength=128,
+    #     dataType="string",
+    #     type="text",
+    #     regexPattern=r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
+    #     isRquired=False,
+    # )
+    # customer_shop_name: Optional[str] = Field(
+    #     alias="customerShopName",
+    #     description="",
+    #     title="نام شرکت/مغازه",
+    #     name="customerShopName",
+    #     placeholder="",
+    #     minLength=4,
+    #     maxLength=128,
+    #     dataType="string",
+    #     type="text",
+    #     regexPattern=r"^[\u0600-\u06FF ]{2,32}$",
+    #     isRquired=False,
+    # )
+    # customer_account_number: Optional[str] = Field(
+    #     alias="customerAccountNumber",
+    #     description="",
+    #     title="شماره حساب",
+    #     name="customerAccountNumber",
+    #     placeholder="",
+    #     minLength=4,
+    #     maxLength=128,
+    #     dataType="string",
+    #     type="text",
+    #     isRquired=False,
+    # )
+    # customer_telephone_number: Optional[str] = Field(
+    #     alias="customerTelephoneNumber",
+    #     description="",
+    #     title="تلفن ثابت",
+    #     name="customerTelephoneNumber",
+    #     placeholder="",
+    #     minLength=4,
+    #     maxLength=128,
+    #     dataType="string",
+    #     type="text",
+    #     isRquired=False,
+    # )
+    # customer_shop_status: Optional[str] = Field(
+    #     alias="customerShopStatus",
+    #     description="",
+    #     title="وضعیت فروشگاه",
+    #     name="customerShopStatus",
+    #     placeholder="",
+    #     minLength=2,
+    #     maxLength=32,
+    #     dataType="string",
+    #     type="text",
+    #     isRquired=False,
+    # )
+    # customer_shop_location: Optional[str] = Field(
+    #     alias="customerShopLocation",
+    #     description="",
+    #     title="موقعیت مکانی فروشگاه",
+    #     name="customerShopLocation",
+    #     placeholder="",
+    #     minLength=2,
+    #     maxLength=32,
+    #     dataType="string",
+    #     type="text",
+    #     isRquired=False,
+    # )
+    # customer_education: Optional[str] = Field(
+    #     alias="customerEducation",
+    #     description="",
+    #     title="تحصیلات",
+    #     name="customerEducation",
+    #     placeholder="",
+    #     minLength=2,
+    #     maxLength=32,
+    #     dataType="string",
+    #     type="text",
+    #     isRquired=False,
+    # )
+    # attributes: dict
+    #
+    # @validator("customer_first_name")
+    # def validate_customer_first_name(cls, customer_first_name):
+    #     pattern = r"^[\u0600-\u06FF ]{2,32}$"
+    #     match = re.fullmatch(pattern, customer_first_name)
+    #     if not match:
+    #         raise HTTPException(status_code=422, detail={"error": "نام وارد شده صحیح نمیباشد"})
+    #     return customer_first_name
+    #
+    # @validator("customer_last_name")
+    # def validate_customer_last_name(cls, customer_last_name):
+    #     pattern = r"^[\u0600-\u06FF ]{2,32}$"
+    #     match = re.fullmatch(pattern, customer_last_name)
+    #     if not match:
+    #         raise HTTPException(status_code=422, detail={"error": "نام خانوادگی وارد شده صحیح نمیباشد"})
+    #     return customer_last_name
+    #
+    # @validator("customer_national_id")
+    # def validate_customer_national_id(cls, customer_national_id):
+    #     pattern = r"^[0-9]{10}$"
+    #     match = re.fullmatch(pattern, customer_national_id)
+    #     if not match:
+    #         raise HTTPException(status_code=422, detail={"error": "کد ملی وارد شده صحیح نمیباشد"})
+    #     return customer_national_id
+    #
+    # @validator("customer_city")
+    # def validate_customer_city(cls, customer_city):
+    #     pattern = r"^[\u0600-\u06FF ]{2,32}$"
+    #     match = re.fullmatch(pattern, customer_city)
+    #     if not match:
+    #         raise HTTPException(status_code=422, detail={"error": "شهر وارد شده صحیح نمیباشد"})
+    #     return customer_city
+    #
+    # @validator("customer_province")
+    # def validate_customer_province(cls, customer_province):
+    #     pattern = r"^[\u0600-\u06FF ]{2,32}$"
+    #     match = re.fullmatch(pattern, customer_province)
+    #     if not match:
+    #         raise HTTPException(status_code=422, detail={"error": "استان وارد شده صحیح نمیابشد"})
+    #     return customer_province
+    #
+    # @validator("customer_address")
+    # def validate_customer_address(cls, customer_address):
+    #     pattern = r"^[\u0600-\u06FF - , - ، ]{4,128}$"
+    #     match = re.fullmatch(pattern, customer_address)
+    #     if not match:
+    #         raise HTTPException(status_code=422, detail={"error": "آدرس وارد شده صحیح نمیباشد"})
+    #     return customer_address
+    #
+    # @validator("customer_postal_code")
+    # def validate_customer_postal_code(cls, customer_postal_code):
+    #     pattern = r"^[0-9]{10}$"
+    #     match = re.fullmatch(pattern, customer_postal_code)
+    #     if not match:
+    #         raise HTTPException(status_code=422, detail={"error": "کد پستی وارد شده صحیح نمیباشد"})
+    #     return customer_postal_code
+    #
+    # @validator("customer_province_id")
+    # def validate_customer_province_id(cls, customer_province_id):
+    #     pattern = r"^[0-9]{1,8}$"
+    #     match = re.fullmatch(pattern, customer_province_id)
+    #     if not match:
+    #         raise HTTPException(status_code=422, detail={"error": "شناسه استان وارد شده صحیح نمیباشد"})
+    #     return customer_province_id
+    #
+    # @validator("customer_region_code")
+    # def validate_customer_region_code(cls, customer_region_code):
+    #     pattern = r"^[a-z,0-9,A-Z]{2,32}$"
+    #     match = re.fullmatch(pattern, customer_region_code)
+    #     if not match:
+    #         raise HTTPException(status_code=422, detail={"error": "کد ریجن وارد شده صحیح نمیابشد"})
+    #     return customer_region_code
+    #
+    # @validator("customer_city_id")
+    # def validate_customer_city_id(cls, customer_city_id):
+    #     pattern = r"^[0-9]{1,8}$"
+    #     match = re.fullmatch(pattern, customer_city_id)
+    #     if not match:
+    #         raise HTTPException(status_code=422, detail={"error": "شناسه شهر وارد شده صحیح نمیباشد"})
+    #     return customer_city_id
+    #
+    # @validator("customer_email")
+    # def validate_customer_email(cls, customer_email):
+    #     pattern = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
+    #     match = re.fullmatch(pattern, customer_email)
+    #     if not match:
+    #         raise HTTPException(status_code=422, detail={"message": "لطفا پست الکترونیک را به درستی وارد کنید"})
+    #     return customer_email
+    #
+    # @validator("customer_shop_name")
+    # def validate_customer_shop_name(cls, customer_shop_name):
+    #     pattern = r"^[\u0600-\u06FF ]{2,32}$"
+    #     match = re.fullmatch(pattern, customer_shop_name)
+    #     if not match:
+    #         raise HTTPException(status_code=422, detail={"message": "لطفا نام فروشگاه را به درستی وارد کنید"})
+    #     return customer_shop_name
+    #
+    # @validator("customer_shop_status")
+    # def validate_customer_shop_status(cls, customer_shop_status):
+    #     values = ["owner", "rent", "mortgage"]
+    #     if customer_shop_status not in values:
+    #         raise HTTPException(status_code=422, detail={"message": "لطفا وضعیت فروشگاه را به درستی وارد کنید"})
+    #     return customer_shop_status
+    #
+    # @validator("customer_shop_location")
+    # def validate_customer_shop_location(cls, customer_shop_location):
+    #     values = ["passage", "street"]
+    #     if customer_shop_location not in values:
+    #         raise HTTPException(status_code=422, detail={"message": "لطفا موقعیت مکانی فروشگاه را به درستی وارد کنید"})
+    #     return customer_shop_location
+    #
+    # @validator("customer_education")
+    # def validate_customer_education(cls, customer_education):
+    #     values = ["diploma", "postgraduate", "bachelor", "master", "doctorate"]
+    #     if customer_education not in values:
+    #         raise HTTPException(status_code=422, detail={"message": "لطفا تحصیلات را به درستی وارد کنید"})
+    #     return customer_education
 
 
 # ----------------------- change password ----------------------------#
