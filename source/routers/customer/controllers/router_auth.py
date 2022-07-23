@@ -1,12 +1,10 @@
-import json
-
 from fastapi import Response, Depends, HTTPException
 from fastapi import status, APIRouter
+
+import source.services.customer.router_auth as ra
 from source.helpers.rabbit_config import new_rpc
-# from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.customer.validators import validation_auth
-import source.services.customer.router_auth as ra
 
 # from customer.modules import log
 
@@ -32,10 +30,6 @@ def check_is_registered(
         response: Response,
         value: validation_auth.CustomerAuth
 ):
-    # checking is exists mobile number in db
-    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-    #     rpc.response_len_setter(response_len=1)
-
     customer_result = new_rpc.publish(
         message=[ra.check_is_registered(customer_phone_number=value.customer_phone_number)]
     )
@@ -50,19 +44,9 @@ def check_is_registered(
 
 @router_auth.post("/send-otp/")
 def send_otp_code(value: validation_auth.CustomerAuth, response: Response):
-    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-    #     rpc.response_len_setter(response_len=1)
-    result = new_rpc.publish(
-        message={
-            "customer": {
-                "action": "send_otp_code",
-                "body": {
-                    "customer_phone_number": value.customer_phone_number
-                }
-            }
-        }
+    customer_result = new_rpc.publish(
+        message=[ra.send_otp_code(customer_phone_number=value.customer_phone_number)]
     )
-    customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
             status_code=customer_result.get("status_code", 500),
@@ -74,20 +58,10 @@ def send_otp_code(value: validation_auth.CustomerAuth, response: Response):
 
 @router_auth.post("/verify-otp/")
 def verify_otp_code(value: validation_auth.CustomerVerifyOTP, response: Response):
-    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-    #     rpc.response_len_setter(response_len=1)
-    result = new_rpc.publish(
-        message={
-            "customer": {
-                "action": "verify_otp_cod",
-                "body": {
-                    "customer_phone_number": value.customer_phone_number,
-                    "customer_code": value.customer_code
-                }
-            }
-        }
+    customer_result = new_rpc.publish(
+        message=[
+            ra.verify_otp_code(customer_phone_number=value.customer_phone_number, customer_code=value.customer_code)]
     )
-    customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
             status_code=customer_result.get("status_code", 500),
@@ -122,18 +96,11 @@ def checking_login_otp_code(
 ):
     # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
     #     rpc.response_len_setter(response_len=1)
-    result = new_rpc.publish(
-        message={
-            "customer": {
-                "action": "checking_login_otp_code",
-                "body": {
-                    "customer_phone_number": value.customer_phone_number,
-                    "customer_code": value.customer_code
-                }
-            }
-        }
+    customer_result = new_rpc.publish(
+        message=[
+            ra.checking_login_otp_code(customer_phone_number=value.customer_phone_number,
+                                       customer_code=value.customer_code)]
     )
-    customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
             status_code=customer_result.get("status_code", 500),
@@ -162,32 +129,11 @@ def checking_login_password(
         value: validation_auth.CustomerVerifyPassword,
         response: Response,
 ):
-    result = new_rpc.publish(
-            message={
-                "customer": {
-                    "action": "checking_login_password",
-                    "body": {
-                        "customer_phone_number": value.customer_phone_number,
-                        "customer_password": value.customer_password
-                    }
-                }
-            }
-        )
-    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-    #     rpc.response_len_setter(response_len=1)
-    #     result = rpc.publish(
-    #         message={
-    #             "customer": {
-    #                 "action": "checking_login_password",
-    #                 "body": {
-    #                     "customer_phone_number": value.customer_phone_number,
-    #                     "customer_password": value.customer_password
-    #                 }
-    #             }
-    #         },
-    #         headers={'customer': True}
-    #     )
-    customer_result = result.get("customer", {})
+    customer_result = new_rpc.publish(
+        message=[
+            ra.checking_login_password(customer_phone_number=value.customer_phone_number,
+                                       customer_password=value.customer_password)]
+    )
     if not customer_result.get("success"):
         raise HTTPException(
             status_code=customer_result.get("status_code", 500),
@@ -224,19 +170,10 @@ def save_logout(
         auth_header=Depends(auth_handler.check_current_user_tokens)
 ):
     username, token_dict = auth_header
-    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-    #     rpc.response_len_setter(response_len=1)
-    result = new_rpc.publish(
-        message={
-            "customer": {
-                "action": "save_logout",
-                "body": {
-                    "username": username,
-                }
-            }
-        }
+    customer_result = new_rpc.publish(
+        message=[
+            ra.save_logout(username=username)]
     )
-    customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
             status_code=customer_result.get("status_code", 500),
@@ -252,20 +189,11 @@ def forget_password(
         auth_header=Depends(auth_handler.check_current_user_tokens),
 ):
     user_info, token_dict = auth_header
-    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-    #     rpc.response_len_setter(response_len=1)
-    result = new_rpc.publish(
-        message={
-            "customer": {
-                "action": "forget_password",
-                "body": {
-                    "customer_phone_number": user_info.get("phone_number"),
-                    "password": data.customer_password
-                }
-            }
-        }
+    customer_result = new_rpc.publish(
+        message=[
+            ra.forget_password(customer_phone_number=user_info.get("phone_number"),
+                               password=data.customer_password)]
     )
-    customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
             status_code=customer_result.get("status_code", 500),
