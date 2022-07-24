@@ -46,11 +46,11 @@ def helper():
                 f.write(value)
 
 
-gettrace = getattr(sys, 'gettrace', None)
-print(os.path.abspath(""))
-try:
-    helper()
-except Exception as e:
-    print(f"helper doesn't work...{e}")
-# if gettrace is None:
+# gettrace = getattr(sys, 'gettrace', None)
+# print(os.path.abspath(""))
+# try:
+#     helper()
+# except Exception as e:
+#     print(f"helper doesn't work...{e}")
+# # if gettrace is None:
 #     helper()
