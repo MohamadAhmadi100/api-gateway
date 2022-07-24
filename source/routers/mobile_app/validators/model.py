@@ -1,7 +1,9 @@
+from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel
-from enum import Enum
+from fastapi import Body
+from fastapi import HTTPException
+from pydantic import BaseModel, validator
 
 
 class ForceUpdate(BaseModel):
@@ -25,22 +27,22 @@ class ForceUpdate(BaseModel):
 
 class MatchResult(str, Enum):
     Win = "Win"
-    Loss = "loss"
+    Loss = "Loss"
     Draw = "Draw"
 
 
 class PredictClass(BaseModel):
-    game_id: int
-    match_result: MatchResult
-    home_team_score: Optional[int] = None
-    away_team_score: Optional[int] = None
+    match_id: int = Body(..., alias="matchId")
+    match_result: MatchResult = Body(..., alias="matchResult")
+    home_team_score: Optional[int] = Body(None, alias="homeTeamScore")
+    away_team_score: Optional[int] = Body(None, alias="awayTeamScore")
 
-    class Config:
-        schema_extra = {
-            "example": {
-                "game_id": 1,
-                "match_result": "Draw",
-                "home_team_score": 1,
-                "away_team_score": 1
-            }
-        }
+
+class AddFavorite(BaseModel):
+    team_name: str = Body(..., alias="teamName")
+
+    @validator('team_name')
+    def check_team_name(cls, v):
+        if not isinstance(v, str):
+            raise HTTPException(status_code=400, detail="team_name must be a string")
+        return v

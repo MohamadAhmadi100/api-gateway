@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Query, Depends, Body, Header
 from source.helpers.case_converter import convert_case
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
-from source.routers.mobile_app.validators.model import PredictClass
+from source.routers.mobile_app.validators.model import PredictClass, AddFavorite
 
 router = APIRouter()
 
@@ -124,7 +124,7 @@ def get_favorite_teams(auth_header=Depends(auth_handler.check_current_user_token
 @router.post("/add_favorite_team/", tags=["FavoriteTeams"])
 def add_favorite_team(
         auth_header=Depends(auth_handler.check_current_user_tokens),
-        team_name: str = Body(...)
+        team: AddFavorite = Body(...)
 ):
     """
     Add favorite team
@@ -138,7 +138,7 @@ def add_favorite_team(
                     "action": "add_favorite_team",
                     "body": {
                         "customer_id": user.get("user_id"),
-                        "team_name": team_name
+                        "team_name": team.team_name
                     }
                 }
             },
