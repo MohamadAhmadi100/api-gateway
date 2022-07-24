@@ -4,7 +4,11 @@ import sys
 
 
 def helper():
-    path = os.getcwd() + "/source/services"
+    path = os.getcwd()
+    if path.split("/")[-1] == "source":
+        path = path + "/services"
+    else:
+        path = path + "/source/services"
     folders = [f for f in os.listdir(path)]
     folders.remove("helper.py")
     folders.remove("__init__.py")
@@ -46,11 +50,10 @@ def helper():
                 f.write(value)
 
 
-# gettrace = getattr(sys, 'gettrace', None)
-# print(os.path.abspath(""))
-# try:
-#     helper()
-# except Exception as e:
-#     print(f"helper doesn't work...{e}")
-# # if gettrace is None:
-#     helper()
+path = os.getcwd()
+if path.split("/")[-1] == "source":
+    path = path + "/services"
+else:
+    path = path + "/source/services"
+
+print(path)
