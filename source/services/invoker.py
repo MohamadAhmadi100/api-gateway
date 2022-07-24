@@ -1,16 +1,11 @@
 import os
 import ast
-import sys
 
 
-def helper():
-    path = os.getcwd()
-    if path.split("/")[-1] == "source":
-        path = path + "/services"
-    else:
-        path = path + "/source/services"
+def invoker():
+    path = __file__.replace("/invoker.py", "")
     folders = [f for f in os.listdir(path)]
-    folders.remove("helper.py")
+    folders.remove("invoker.py")
     folders.remove("__init__.py")
     folders.remove("__pycache__")
 
@@ -50,10 +45,4 @@ def helper():
                 f.write(value)
 
 
-path = os.getcwd()
-if path.split("/")[-1] == "source":
-    path = path + "/services"
-else:
-    path = path + "/source/services"
-
-print(__file__.replace("/helper.py", ""))
+invoker()
