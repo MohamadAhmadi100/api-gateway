@@ -39,7 +39,7 @@ def check_is_registered(
             detail={"error": customer_result.get("error", "Something went wrong")}
         )
     response.status_code = customer_result.get("status_code", 200)
-    return customer_result
+    return customer_result.get("message")
 
 
 @router_auth.post("/send-otp/")
@@ -76,10 +76,10 @@ def verify_otp_code(value: validation_auth.CustomerVerifyOTP, response: Response
     response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
     response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
     response.status_code = customer_result.get("status_code", 200)
-    try:
-        del customer_result.get("message")["data"]
-    except KeyError:
-        ...
+    # try:
+    #     del customer_result.get("message")["data"]
+    # except KeyError:
+    #     ...
     return customer_result.get("message")
 
 
