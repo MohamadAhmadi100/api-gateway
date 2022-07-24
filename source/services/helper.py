@@ -56,4 +56,4 @@ if path.split("/")[-1] == "source":
 else:
     path = path + "/source/services"
 
-print(path)
+print(__file__)

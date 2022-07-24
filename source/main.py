@@ -25,7 +25,6 @@ from source.routers.mobile_app.app import app as mobile_app
 from source.routers.dealership.app import app as dealership
 from source.routers.credit.app import app as credit_app
 
-
 app = FastAPI(title="API Gateway",
               description="Backend for frontend aka. API Gateway!",
               version="0.0.1")
@@ -74,7 +73,6 @@ app.mount("/mobile_app/api/v1", mobile_app)
 app.mount("/dealership/api/v1", dealership)
 
 app.mount("/credit/api/v1", credit_app)
-
 
 
 # ----------------------------------------- Start logging features  -------------------------------------------------- #
