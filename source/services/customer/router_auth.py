@@ -23,7 +23,7 @@ def send_otp_code(customer_phone_number: str):
 def verify_otp_code(customer_phone_number: str, customer_code: str):
     return {
             "customer": {
-                "action": "verify_otp_cod",
+                "action": "verify_otp_code",
                 "body": {
                     "customer_phone_number": customer_phone_number,
                     "customer_code": customer_code

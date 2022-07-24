@@ -7,6 +7,8 @@ from source.routers.customer.validators import validation_register
 import logging
 from source.helpers.exception_handler import LogHandler
 from source.helpers.rabbit_config import new_rpc
+import source.services.customer.router_register as register_funcs
+import source.services.address.address_router as address_funcs
 
 router_register = APIRouter(
     prefix="/register",
@@ -62,29 +64,21 @@ def register(
         "customerPostalCode": value.customer_postal_code,
         "fullAddress": f"{value.customer_province}, {value.customer_city}, {value.customer_street}, {value.customer_alley}, پلاک: {value.customer_plaque}, ,واحد: {value.customer_unit}"
     }
-    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-    #     rpc.response_len_setter(response_len=1)
-    result = new_rpc.publish(
-        message={
-            "customer": {
-                "action": "register",
-                "body": {
-                    "data": {
-                        "customer_phone_number": value.customer_phone_number,
-                        "customer_first_name": value.customer_first_name,
-                        "customer_last_name": value.customer_last_name,
-                        "customer_national_id": value.customer_national_id,
-                        "customer_password": value.customer_password,
-                        "customer_verify_password": value.customer_verify_password,
-                        "customer_street": value.customer_street,
-                        "customer_address": [customer_address],
-                        "customer_document_status": value.customer_document_status
-                    }
-                }
-            }
-        }
+    data = {
+        "customer_phone_number": value.customer_phone_number,
+        "customer_first_name": value.customer_first_name,
+        "customer_last_name": value.customer_last_name,
+        "customer_national_id": value.customer_national_id,
+        "customer_password": value.customer_password,
+        "customer_verify_password": value.customer_verify_password,
+        "customer_street": value.customer_street,
+        "customer_address": [customer_address],
+        "customer_document_status": value.customer_document_status
+    }
+    customer_result = new_rpc.publish(
+        message=[
+            register_funcs.register(data=data)]
     )
-    customer_result = result.get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
             status_code=customer_result.get("status_code", 500),
@@ -100,20 +94,11 @@ def register(
         ]
     )
     customer_id = customer_result.get("message").get("data").get("customerID")
-    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-    #     rpc.response_len_setter(response_len=1)
-    address_response = new_rpc.publish(
-        message={
-            "address": {
-                "action": "insert_address",
-                "body": {
-                    "data": address,
-                    "customerId": str(customer_id)
-                }
-            }
-        }
-    ).get("address", {})
-    if not address_response.get("success"):
+    address_result = new_rpc.publish(
+        message=[
+            address_funcs.insert_address(data=address,customerId= str(customer_id))]
+    )
+    if not address_result.get("success"):
         raise HTTPException(
             status_code=317,
             detail={"message": "برای ثبت آدرس دوباره تلاش کنید"}
