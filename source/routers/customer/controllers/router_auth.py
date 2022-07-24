@@ -39,7 +39,7 @@ def check_is_registered(
             detail={"error": customer_result.get("error", "Something went wrong")}
         )
     response.status_code = customer_result.get("status_code", 200)
-    return customer_result.get("message")
+    return customer_result
 
 
 @router_auth.post("/send-otp/")
