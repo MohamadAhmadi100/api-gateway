@@ -38,7 +38,7 @@ class PredictClass(BaseModel):
     away_team_score: Optional[int] = Body(None, alias="awayTeamScore")
 
 
-class AddFavorite(BaseModel):
+class FavoriteTeam(BaseModel):
     team_name: str = Body(..., alias="teamName")
 
     @validator('team_name')
