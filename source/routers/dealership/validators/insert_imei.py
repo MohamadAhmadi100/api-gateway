@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from typing import List, Union, Optional
 
 
+
 class Product(BaseModel):
     system_code: str = Field(alias="systemCode")
     brand: str
@@ -12,12 +13,13 @@ class Product(BaseModel):
     seller: str
     price: int
     count: int
+    imeis: Union[List, str]
     imei_flag: Optional[bool] = Field(alias="imeiFlag", default=False)
 
 
 
 
-class RequestGoods(BaseModel):
-    products: Union[List[Product], list] = Field(alias="products")
-    shipment: dict = Field(alias="shipment")
-    storage_id: str = Field(alias="storageId")
+class IMEI(BaseModel):
+    product: Union[Product, dict] = Field(alias="product")
+    customer_id: str = Field(alias="customerId")
+    referral_number: str = Field(alias="referralNumber")

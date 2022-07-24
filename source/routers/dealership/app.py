@@ -3,6 +3,7 @@ from source.config import settings
 from starlette.exceptions import HTTPException as starletteHTTPException
 from source.routers.dealership.controllers.registration_goods_request import router as post_api
 from source.routers.dealership.controllers.get_warehouse import router as get_api
+from source.routers.dealership.controllers.add_imei import router as add_imei
 
 
 
@@ -23,10 +24,11 @@ app = FastAPI(
 )
 
 
-# @app.exception_handler(starletteHTTPException)
-# def validation_exception_handler(request, exc):
-#     return responses.JSONResponse(exc.detail, status_code=exc.status_code)
+@app.exception_handler(starletteHTTPException)
+def validation_exception_handler(request, exc):
+    return responses.JSONResponse(exc.detail, status_code=exc.status_code)
 
 
 app.include_router(post_api)
 app.include_router(get_api)
+app.include_router(add_imei)

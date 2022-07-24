@@ -59,7 +59,7 @@ def create_request(data: RequestGoods,
                                 "action": "add_to_reserve_dealership",
                                 "body": {
                                     "referral_number": referral_response.get("message"),
-                                    "customer_id": str(user.get("user_id")),
+                                    "customer_id": user.get("user_id"),
                                     "customer_type": user.get("customer_type"),
                                     "data": data.dict(),
                                 }
@@ -92,6 +92,7 @@ def create_request(data: RequestGoods,
                                         "body": {
                                             "referral_number": referral_response.get("message"),
                                             "customer_id": str(user.get("user_id")),
+                                            "total_price": compare_digits_response.get("total_price"),
                                             "data": data.dict()
                                         }
                                     }
