@@ -9,8 +9,7 @@ from source.helpers import case_converter
 from source.helpers.create_class import CreateClass
 from source.helpers.rabbit_config import new_rpc
 from source.routers.customer.module.auth import AuthHandler
-from source.routers.customer.validators import validation_profile
-from source.routers.customer.validators.validation_profile import EditProfile, Delivery, Person
+from source.routers.customer.validators.validation_profile import EditProfile, Delivery, Person, ChangePassword
 import source.services.customer.router_profile as profile_funcs
 import source.services.attribute.assignee_controller as attribute_funcs
 import source.services.kosar.router_customer as customer_funcs
@@ -81,21 +80,8 @@ def edit_profile_data(
         auth_header=Depends(auth_handler.check_current_user_tokens),
 ):
     user_data, header = auth_header
-    attribute_result = new_rpc.publish(
-        message=[attribute_funcs.get_all_attributes_by_assignee(name="customer")]
-    )
-    if not attribute_result.get("success"):
-        return HTTPException(status_code=attribute_result.get("status_code", 500),
-                             detail={"error": attribute_result.get("error", "Something went wrong")})
-    attrs = case_converter.convert_case(attribute_result.get("message"), "camel")
-    attrs = {obj.get("name"): obj for obj in attrs}
-    profile_model = CreateClass(class_name="EditProfileModel", attributes=attrs).get_pydantic_class()
-    try:
-        profile_object = profile_model(**value.data)
-    except ValidationError as e:
-        raise HTTPException(status_code=422, detail={"error": e.errors()}) from e
     customer_result = new_rpc.publish(
-        message=[profile_funcs.edit_profile_data(customer_phone_number=user_data, data=profile_object.json())]
+        message=[profile_funcs.edit_profile_data(customer_phone_number=user_data.get("phone_number"), data=value.json())]
     )
     if not customer_result.get("success"):
         raise HTTPException(
@@ -110,13 +96,13 @@ def edit_profile_data(
     response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
     response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
     response.status_code = customer_result.get("status_code", 202)
-    return customer_result.get("message", 202)
+    return customer_result.get("message")
 
 
 @router_profile.put("/change-password")
 def change_customer_password(
         response: Response,
-        data: validation_profile.ChangePassword,
+        data: ChangePassword,
         auth_header=Depends(auth_handler.check_current_user_tokens),
 ):
     user_data, token_dict = auth_header

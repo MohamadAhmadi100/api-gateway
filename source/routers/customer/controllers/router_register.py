@@ -1,12 +1,12 @@
-from fastapi import APIRouter, HTTPException, Response
-import codemelli
-from unidecode import unidecode
-# from source.message_broker.rabbit_server import RabbitRPC
-from source.routers.customer.module.auth import AuthHandler
-from source.routers.customer.validators import validation_register
 import logging
+
+import codemelli
+from fastapi import APIRouter, HTTPException, Response
+
 from source.helpers.exception_handler import LogHandler
 from source.helpers.rabbit_config import new_rpc
+from source.routers.customer.module.auth import AuthHandler
+from source.routers.customer.validators import validation_register
 import source.services.customer.router_register as register_funcs
 import source.services.address.address_router as address_funcs
 
@@ -37,10 +37,10 @@ def register(
         raise HTTPException(status_code=422, detail={"error": "کد ملی وارد شده صحیح نمی باشد"}) from e
     address = {
         "customer_name": f"{value.customer_first_name} {value.customer_last_name}",
-        "state_name": value.customer_province,
-        "state_id": value.customer_province_id,
-        "city_id": value.customer_city_id,
-        "city_name": value.customer_city,
+        "state_name": value.customer_address_province,
+        "state_id": value.customer_address_province_id,
+        "city_id": value.customer_address_city_id,
+        "city_name": value.customer_address_city,
         "region_code": value.customer_region_code,
         "street": value.customer_street,
         "alley": value.customer_alley,
@@ -51,18 +51,19 @@ def register(
         "is_default": True
     }
     customer_address = {
-        "customerStateName": value.customer_province,
-        "customerStateId": value.customer_province_id,
-        "customerCityId": value.customer_city_id,
-        "customerCityName": value.customer_city,
-        "customerRegionCode": value.customer_region_code,
-        "customerStreet": value.customer_street,
-        "customerAlley": value.customer_alley,
-        "customerPlaque": value.customer_plaque,
-        "customerUnit": value.customer_unit,
-        "customerTelephone": value.customer_telephone,
-        "customerPostalCode": value.customer_postal_code,
-        "fullAddress": f"{value.customer_province}, {value.customer_city}, {value.customer_street}, {value.customer_alley}, پلاک: {value.customer_plaque}, ,واحد: {value.customer_unit}"
+        "customer_name": f"{value.customer_first_name} {value.customer_last_name}",
+        "state_name": value.customer_address_province,
+        "state_id": value.customer_address_province_id,
+        "city_id": value.customer_address_city_id,
+        "city_name": value.customer_address_city,
+        "region_code": value.customer_region_code,
+        "street": value.customer_street,
+        "alley": value.customer_alley,
+        "plaque": value.customer_plaque,
+        "unit": value.customer_unit,
+        "tel": value.customer_telephone,
+        "postal_code": value.customer_postal_code,
+        "fullAddress": f"{value.customer_address_province}, {value.customer_address_city}, {value.customer_street}, {value.customer_alley}, پلاک: {value.customer_plaque}, ,واحد: {value.customer_unit}"
     }
     data = {
         "customer_phone_number": value.customer_phone_number,
@@ -71,9 +72,14 @@ def register(
         "customer_national_id": value.customer_national_id,
         "customer_password": value.customer_password,
         "customer_verify_password": value.customer_verify_password,
-        "customer_street": value.customer_street,
         "customer_address": [customer_address],
-        "customer_document_status": value.customer_document_status
+        "customer_document_status": value.customer_document_status,
+        "customer_region_code": value.customer_region_code,
+        "customer_city_name": value.customer_city,
+        "customer_city_id": value.customer_city_id,
+        "customer_state_name": value.customer_province,
+        "customer_state_id": value.customer_province_id,
+        "customer_postal_code": value.customer_postal_code
     }
     customer_result = new_rpc.publish(
         message=[
@@ -96,7 +102,7 @@ def register(
     customer_id = customer_result.get("message").get("data").get("customerID")
     address_result = new_rpc.publish(
         message=[
-            address_funcs.insert_address(data=address,customerId= str(customer_id))]
+            address_funcs.insert_address(data=address, customerId=str(customer_id))]
     )
     if not address_result.get("success"):
         raise HTTPException(
