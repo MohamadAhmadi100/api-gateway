@@ -108,7 +108,7 @@ def get_favorite_teams(auth_header=Depends(auth_handler.check_current_user_token
                 "mobile_app": {
                     "action": "get_favorite_teams",
                     "body": {
-                        "customer_id": 0
+                        "customer_id": user.get("user_id")
                     }
                 }
             },
