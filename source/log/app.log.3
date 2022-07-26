@@ -1,5 +1,4 @@
-2022-06-28 16:55:12,064 [INFO] AMQPConnector - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f2bf3844eb0> params=<ConnectionParameters host=200.100.100.208 port=5672 virtual_host=/ ssl=False>>
-2022-06-28 16:55:12,065 [INFO] AMQPConnectionWorkflow - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f2bf3844eb0> params=<ConnectionParameters host=200.100.100.208 port=5672 virtual_host=/ ssl=False>>
-2022-06-28 16:55:12,065 [INFO] Connection workflow succeeded: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f2bf3844eb0> params=<ConnectionParameters host=200.100.100.208 port=5672 virtual_host=/ ssl=False>>
-2022-06-28 16:55:12,065 [INFO] Created channel=1
-2022-06-28 16:55:12,284 [INFO] Closing connection (200): Normal shutdown
+2022-06-28 16:55:12,336 [INFO] _AsyncTransportBase._initate_abort(): Initiating abrupt asynchronous transport shutdown: state=1; error=None; <socket.socket fd=40, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('5.210.0.37', 36484), raddr=('200.100.100.208', 5672)>
+2022-06-28 16:55:12,337 [INFO] Deactivating transport: state=1; <socket.socket fd=40, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('5.210.0.37', 36484), raddr=('200.100.100.208', 5672)>
+2022-06-28 16:55:12,337 [INFO] AMQP stack terminated, failed to connect, or aborted: opened=True, error-arg=None; pending-error=ConnectionClosedByClient: (200) 'Normal shutdown'
+2022-06-28 16:55:12,337 [INFO] Stack terminated due to ConnectionClosedByClient: (200) 'Normal shutdown'

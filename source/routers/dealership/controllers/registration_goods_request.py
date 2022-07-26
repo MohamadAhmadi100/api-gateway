@@ -76,8 +76,8 @@ def create_request(data: RequestGoods,
                                     "body": {
                                         "referral_number": referral_response.get("message"),
                                         "amount": compare_digits_response.get("total_price"),
-                                        "customer_id": user.get("user_id")
-                                        #TODO send total item
+                                        "customer_id": user.get("user_id"),
+                                        "total_items": compare_digits_response.get("total_item")
                                     }
                                 }
                             },

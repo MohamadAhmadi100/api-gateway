@@ -1,4 +1,19 @@
-2022-06-28 16:55:12,336 [INFO] _AsyncTransportBase._initate_abort(): Initiating abrupt asynchronous transport shutdown: state=1; error=None; <socket.socket fd=40, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('5.210.0.37', 36484), raddr=('200.100.100.208', 5672)>
-2022-06-28 16:55:12,337 [INFO] Deactivating transport: state=1; <socket.socket fd=40, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('5.210.0.37', 36484), raddr=('200.100.100.208', 5672)>
-2022-06-28 16:55:12,337 [INFO] AMQP stack terminated, failed to connect, or aborted: opened=True, error-arg=None; pending-error=ConnectionClosedByClient: (200) 'Normal shutdown'
-2022-06-28 16:55:12,337 [INFO] Stack terminated due to ConnectionClosedByClient: (200) 'Normal shutdown'
+2022-07-24 14:16:37,154 [INFO] AMQPConnectionWorkflow - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f10e757a730> params=<ConnectionParameters host=200.100.100.208 port=5672 virtual_host=/ ssl=False>>
+2022-07-24 14:16:37,156 [INFO] Connection workflow succeeded: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f10e757a730> params=<ConnectionParameters host=200.100.100.208 port=5672 virtual_host=/ ssl=False>>
+2022-07-24 14:16:37,157 [INFO] Created channel=1
+2022-07-24 14:16:37,292 [INFO] Pika version 1.2.0 connecting to ('200.100.100.208', 5672)
+2022-07-24 14:16:37,321 [INFO] Socket connected: <socket.socket fd=25, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('5.210.0.37', 44474), raddr=('200.100.100.208', 5672)>
+2022-07-24 14:16:37,321 [INFO] Streaming transport linked up: (<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f10e75a4b20>, _StreamingProtocolShim: <SelectConnection PROTOCOL transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f10e75a4b20> params=<ConnectionParameters host=200.100.100.208 port=5672 virtual_host=/ ssl=False>>).
+2022-07-24 14:16:37,382 [INFO] AMQPConnector - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f10e75a4b20> params=<ConnectionParameters host=200.100.100.208 port=5672 virtual_host=/ ssl=False>>
+2022-07-24 14:16:37,383 [INFO] AMQPConnectionWorkflow - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f10e75a4b20> params=<ConnectionParameters host=200.100.100.208 port=5672 virtual_host=/ ssl=False>>
+2022-07-24 14:16:37,383 [INFO] Connection workflow succeeded: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f10e75a4b20> params=<ConnectionParameters host=200.100.100.208 port=5672 virtual_host=/ ssl=False>>
+2022-07-24 14:16:37,384 [INFO] Created channel=1
+2022-07-24 14:16:37,541 [INFO] Started server process [12279]
+2022-07-24 14:16:37,542 [INFO] Waiting for application startup.
+2022-07-24 14:16:37,542 [INFO] Application is starting...
+2022-07-24 14:16:37,542 [INFO] Application startup complete.
+2022-07-24 15:23:16,572 [INFO] Shutting down
+2022-07-24 15:23:16,672 [INFO] Waiting for application shutdown.
+2022-07-24 15:23:16,673 [INFO] Application is shutting down...
+2022-07-24 15:23:16,673 [INFO] Application shutdown complete.
+2022-07-24 15:23:16,673 [INFO] Finished server process [12279]
