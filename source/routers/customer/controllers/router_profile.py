@@ -95,7 +95,7 @@ def edit_profile_data(
     }
     response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
     response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
-    response.status_code = customer_result.get("status_code", 202)
+    response.status_code = customer_result.get("status_code", 317)
     return customer_result.get("message")
 
 
