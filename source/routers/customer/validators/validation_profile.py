@@ -285,21 +285,21 @@ class EditProfile(BaseModel):
 
     @validator("customer_shop_status")
     def validate_customer_shop_status(cls, customer_shop_status):
-        values = ["owner", "rent", "mortgage"]
+        values = ["مالک", "استیجاری", "رهن"]
         if customer_shop_status not in values:
             raise HTTPException(status_code=422, detail={"message": "لطفا وضعیت فروشگاه را به درستی وارد کنید"})
         return customer_shop_status
 
     @validator("customer_shop_location")
     def validate_customer_shop_location(cls, customer_shop_location):
-        values = ["passage", "street"]
+        values = ["داخل پاساژ", "خیابان اصلی", "خیابان فرعی"]
         if customer_shop_location not in values:
             raise HTTPException(status_code=422, detail={"message": "لطفا موقعیت مکانی فروشگاه را به درستی وارد کنید"})
         return customer_shop_location
 
     @validator("customer_education")
     def validate_customer_education(cls, customer_education):
-        values = ["diploma", "postgraduate", "bachelor", "master", "doctorate"]
+        values = ["دیپلم", "کارشناسی", "کارشناسی ارشد", "دکتری"]
         if customer_education not in values:
             raise HTTPException(status_code=422, detail={"message": "لطفا تحصیلات را به درستی وارد کنید"})
         return customer_education

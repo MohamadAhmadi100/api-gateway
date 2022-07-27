@@ -6,9 +6,6 @@ from source.helpers.rabbit_config import new_rpc
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.customer.validators import validation_auth
 
-# from customer.modules import log
-
-
 router_auth = APIRouter(
     prefix="/auth",
     tags=["auth"]
@@ -17,19 +14,26 @@ router_auth = APIRouter(
 auth_handler = AuthHandler()
 
 
-# generate and send mobile number validations to front side
-
 @router_auth.get("/")
 def mobile_number_validation_generator():
+    """
+    generate and send mobile number validations to front side
+    :return: front-end required values for generate form
+    """
     return validation_auth.CustomerAuth.schema().get("properties").copy()
 
 
-# mobile number generator and validation
 @router_auth.post("/")
 def check_is_registered(
         response: Response,
         value: validation_auth.CustomerAuth
 ):
+    """
+    for generate mobile number and validate it
+    :param response: as annotation
+    :param value: as annotation
+    :return: Response
+    """
     customer_result = new_rpc.publish(
         message=[ra.check_is_registered(customer_phone_number=value.customer_phone_number)]
     )
@@ -94,8 +98,6 @@ def checking_login_otp_code(
         value: validation_auth.CustomerVerifyOTP,
         response: Response,
 ):
-    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-    #     rpc.response_len_setter(response_len=1)
     customer_result = new_rpc.publish(
         message=[
             ra.checking_login_otp_code(customer_phone_number=value.customer_phone_number,
