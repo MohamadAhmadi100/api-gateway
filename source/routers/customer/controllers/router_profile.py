@@ -79,9 +79,11 @@ def edit_profile_data(
         value: EditProfile,
         auth_header=Depends(auth_handler.check_current_user_tokens),
 ):
+    print("******", value.json())
     user_data, header = auth_header
     customer_result = new_rpc.publish(
-        message=[profile_funcs.edit_profile_data(customer_phone_number=user_data.get("phone_number"), data=value.json())]
+        message=[
+            profile_funcs.edit_profile_data(customer_phone_number=user_data.get("phone_number"), data=value.json())]
     )
     if not customer_result.get("success"):
         raise HTTPException(
