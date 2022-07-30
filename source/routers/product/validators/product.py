@@ -83,7 +83,7 @@ class CreateChild(BaseModel):
         return value
 
 
-class AddAtributes(BaseModel):
+class AddAttributes(BaseModel):
     system_code: str = Field(
         ..., title="شناسه محصول", maxLength=12, minLength=12, placeholder="100104021006", isRequired=True,
         alias="systemCode"
@@ -244,5 +244,64 @@ class CustomCategory(BaseModel):
             raise HTTPException(status_code=417, detail={
                 "error": "image must be a string",
                 "label": "تصویر باید از نوع رشته باشد"
+            })
+        return value
+
+
+class Product(BaseModel):
+    system_codes: list = Field(..., maxLength=11, minLength=11, isRequired=True, alias="systemCodes")
+    name: Optional[str] = Field(None, minLength=3, maxLength=256, isRequired=False)
+    url_name: Optional[str] = Field(..., minLength=3, maxLength=256, isRequired=True, alias="urlName")
+
+    @validator('system_codes')
+    def system_codes_validator(cls, value):
+        if not isinstance(value, list):
+            raise HTTPException(status_code=417, detail={
+                "error": "system_codes must be a list",
+                "label": "لیست شناسه های محصول باید از نوع لیست باشد"
+            })
+        for item in value:
+            if not isinstance(item, str):
+                raise HTTPException(status_code=417, detail={
+                    "error": "system_codes must be a list of strings",
+                    "label": "لیست شناسه های محصول باید از نوع لیست رشته باشد"
+                })
+        return value
+
+    @validator('url_name')
+    def url_name_validator(cls, value):
+        if not isinstance(value, str):
+            raise HTTPException(status_code=417, detail={
+                "error": "url_name must be a string",
+                "label": "نام باید از نوع رشته باشد"
+            })
+        elif len(value) < 3:
+            raise HTTPException(status_code=417, detail={
+                "error": "url_name must be at least 3 characters",
+                "label": "طول نام باید حداقل ۳ کاراکتر باشد"
+            })
+        elif len(value) > 256:
+            raise HTTPException(status_code=417, detail={
+                "error": "url_name must be at most 256 characters",
+                "label": "طول نام باید حداکثر ۲۵۶ کاراکتر باشد"
+            })
+        return value
+
+    @validator('name')
+    def name_validator(cls, value):
+        if not isinstance(value, str):
+            raise HTTPException(status_code=417, detail={
+                "error": "name must be a string",
+                "label": "نام باید از نوع رشته باشد"
+            })
+        elif len(value) < 3:
+            raise HTTPException(status_code=417, detail={
+                "error": "name must be at least 3 characters",
+                "label": "طول نام باید حداقل ۳ کاراکتر باشد"
+            })
+        elif len(value) > 256:
+            raise HTTPException(status_code=417, detail={
+                "error": "name must be at most 256 characters",
+                "label": "طول نام باید حداکثر ۲۵۶ کاراکتر باشد"
             })
         return value
