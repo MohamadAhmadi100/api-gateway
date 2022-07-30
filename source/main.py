@@ -28,7 +28,7 @@ from source.routers.credit.app import app as credit_app
 app = FastAPI(title="API Gateway",
               description="Backend for frontend aka. API Gateway!",
               version="0.0.1")
-
+# app.middleware()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

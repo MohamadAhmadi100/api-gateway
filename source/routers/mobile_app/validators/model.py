@@ -26,8 +26,8 @@ class ForceUpdate(BaseModel):
 
 
 class MatchResult(str, Enum):
-    Win = "Win"
-    Loss = "Loss"
+    Home = "Home"
+    Away = "Away"
     Draw = "Draw"
 
 

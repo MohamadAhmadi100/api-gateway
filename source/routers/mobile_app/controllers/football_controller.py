@@ -231,9 +231,10 @@ def predict_match_result(
                     "action": "predict_match_result",
                     "body": {
                         "customer_id": user.get("user_id"),
-                        "match_id": match_id,
-                        "team_name": team_name,
-                        "result": result
+                        "match_id": item.match_id,
+                        "match_result": item.match_result,
+                        "home_team_score": item.home_team_score,
+                        "away_team_score": item.away_team_score
                     }
                 }
             },
