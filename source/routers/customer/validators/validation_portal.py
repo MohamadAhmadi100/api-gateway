@@ -1,9 +1,8 @@
-import re
+from enum import Enum
 from enum import Enum
 from typing import Optional
 
-from fastapi import HTTPException
-from pydantic import BaseModel, validator, Field
+from pydantic import BaseModel, Field
 
 
 class SortType(str, Enum):

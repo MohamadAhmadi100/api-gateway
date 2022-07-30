@@ -28,12 +28,11 @@ def get_profile(
         response: Response,
         auth_header=Depends(auth_handler.check_current_user_tokens),
 ):
+    print(auth_header)
     user_data, header = auth_header
-    print("111", user_data)
     customer_result = new_rpc.publish(
         message=[profile_funcs.get_profile(customer_phone_number=user_data)]
     )
-    print("222", customer_result)
     if not customer_result.get("success"):
         raise HTTPException(
             status_code=customer_result.get("status_code", 500),
@@ -69,10 +68,14 @@ def get_profile(
                 mobile_confirm = True
     if mobile_confirm and confirm:
         valid_attrs.append({"profileStatus": "تایید شده"})
-    print("333", valid_attrs)
+    sub_dict = {
+        "user_id": user_data.get('user_id'),
+        "customer_type": user_data.get('customer_type'),
+        "phone_number": user_data.get('phone_number'),
+    }
     response.status_code = status.HTTP_200_OK
-    response.headers["accessToken"] = header.get("access_token")
-    response.headers["refresh_token"] = header.get("refresh_token")
+    response.headers["accessToken"] = auth_handler.encode_refresh_token(sub_dict)
+    response.headers["refresh_token"] = auth_handler.encode_access_token(sub_dict)
     return valid_attrs
 
 
