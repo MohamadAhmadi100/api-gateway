@@ -33,7 +33,7 @@ def get_profile_attributes(data):
     return CreateClass(class_name="EditProfileModel", attributes=attrs).get_pydantic_class()(**data.attributes)
 
 
-class EditProfile(BaseModel):
+class Data(BaseModel):
     # data: dict
 
     customer_first_name: Optional[str] = Field(
@@ -328,7 +328,8 @@ class EditProfile(BaseModel):
             raise HTTPException(status_code=422, detail={"message": "لطفا کد پستی محل کسب خود را به درستی وارد کنید"})
         return customer_shop_postal_code
 
-
+class EditProfile(BaseModel):
+    data: Data
 # ----------------------- change password ----------------------------#
 class ChangePassword(BaseModel):
     oldPassword: str = Field(
