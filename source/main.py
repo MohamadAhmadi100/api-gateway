@@ -1,4 +1,3 @@
-from starlette_prometheus import PrometheusMiddleware, metrics
 # important import... don't remove this at home(even you dear friend)
 import source.services.invoker
 import logging
@@ -39,8 +38,6 @@ app.add_middleware(
     expose_headers=["*"]
 )
 
-app.add_middleware(PrometheusMiddleware)
-app.add_route("/metrics", metrics)
 
 # ----------------------------------------- Mount all services here -------------------------------------------------- #
 
