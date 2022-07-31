@@ -17,7 +17,7 @@ services:
         build: .
         ports:
           - 8000:80
-          - 80:8008
+          - 8075:8008
         volumes:
           - /gallery-files:/gallery-files
           - /home/masood/logs/api-gateway:/api-gateway/log
