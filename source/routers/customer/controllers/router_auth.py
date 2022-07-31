@@ -1,6 +1,5 @@
 from fastapi import Response, Depends, HTTPException
 from fastapi import status, APIRouter
-from prometheus_client import Summary
 
 import source.services.customer.router_auth as ra
 from source.helpers.rabbit_config import new_rpc
@@ -13,10 +12,8 @@ router_auth = APIRouter(
 )
 
 auth_handler = AuthHandler()
-REQUEST_TIME = Summary('request_processing_seconds', 'Time spent processing request')
 
 
-@REQUEST_TIME.time()
 @router_auth.get("/")
 def mobile_number_validation_generator():
     """

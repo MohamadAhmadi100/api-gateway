@@ -1,3 +1,4 @@
+from starlette_prometheus import PrometheusMiddleware, metrics
 # important import... don't remove this at home(even you dear friend)
 import source.services.invoker
 import logging
@@ -5,7 +6,6 @@ import logging
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from prometheus_client import start_http_server
 from starlette.staticfiles import StaticFiles
 
 from config import settings
@@ -38,6 +38,9 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"]
 )
+
+app.add_middleware(PrometheusMiddleware)
+app.add_route("/metrics", metrics)
 
 # ----------------------------------------- Mount all services here -------------------------------------------------- #
 
@@ -106,5 +109,4 @@ def main():
 
 
 if __name__ == "__main__":
-    start_http_server(8008)
     uvicorn.run("main:app", host=settings.UVICORN_HOST, port=settings.UVICORN_PORT, reload=True)
