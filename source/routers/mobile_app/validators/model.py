@@ -34,8 +34,8 @@ class MatchResult(str, Enum):
 class PredictClass(BaseModel):
     match_id: int = Body(..., alias="matchId")
     match_result: MatchResult = Body(..., alias="matchResult")
-    home_team_score: Optional[int] = Body(None, alias="homeTeamScore")
-    away_team_score: Optional[int] = Body(None, alias="awayTeamScore")
+    home_team_score: Optional[str] = Body(default=None, alias="homeTeamScore")
+    away_team_score: Optional[str] = Body(default=None, alias="awayTeamScore")
 
 
 class FavoriteTeam(BaseModel):
