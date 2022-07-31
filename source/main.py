@@ -5,6 +5,7 @@ import logging
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_client import start_http_server
 from starlette.staticfiles import StaticFiles
 
 from config import settings
@@ -105,4 +106,5 @@ def main():
 
 
 if __name__ == "__main__":
+    start_http_server(8008)
     uvicorn.run("main:app", host=settings.UVICORN_HOST, port=settings.UVICORN_PORT, reload=True)
