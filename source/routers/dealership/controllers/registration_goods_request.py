@@ -53,9 +53,9 @@ def create_request(data: RequestGoods,
                 ).get("dealership", {})
                 if referral_response.get("success"):
                     rpc.response_len_setter(response_len=1)
-                    quantity_response = rpc.publish(
+                    product_response = rpc.publish(
                         message={
-                            "quantity": {
+                            "product": {
                                 "action": "add_to_reserve_dealership",
                                 "body": {
                                     "referral_number": referral_response.get("message"),
@@ -65,9 +65,9 @@ def create_request(data: RequestGoods,
                                 }
                             }
                         },
-                        headers={'quantity': True}
-                    ).get("quantity", {})
-                    if quantity_response.get("success"):
+                        headers={'product': True}
+                    ).get("product", {})
+                    if product_response.get("success"):
                         rpc.response_len_setter(response_len=1)
                         reduce_credit = rpc.publish(
                             message={
@@ -103,7 +103,7 @@ def create_request(data: RequestGoods,
                                 return insert_response
                             return insert_response
                         return reduce_credit
-                    return quantity_response
+                    return product_response
                 return referral_response
             return compare_digits_response
         return check_credit
