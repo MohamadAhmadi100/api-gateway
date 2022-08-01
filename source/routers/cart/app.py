@@ -48,19 +48,14 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
     user, token_dict = auth_header
     customer_type = user.get("customer_type")[0]
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=4)
+        rpc.response_len_setter(response_len=3)
         result = rpc.publish(
             message={
                 "product": {
                     "action": "get_product_by_system_code",
                     "body": {
-                        "system_code": item.parent_system_code,
+                        "system_code": item.system_code,
                         "lang": "fa_ir"
-                    }
-                }, "quantity": {
-                    "action": "get_quantity",
-                    "body": {
-                        "system_code": item.parent_system_code
                     }
                 },
                 "customer": {
@@ -76,18 +71,14 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
                     }
                 }
             },
-            headers={'product': True, "quantity": True, "customer": True, "order": True},
+            headers={'product': True, "customer": True, "order": True},
         )
         product_result = result.get("product", {})
-        quantity_result = result.get("quantity", {})
         customer_result = result.get("customer", {})
         order_result = result.get("order", {})
         if not product_result.get("success"):
             raise HTTPException(status_code=product_result.get("status_code", 500),
                                 detail={"error": product_result.get("error", "Something went wrong")})
-        elif not quantity_result.get("success"):
-            raise HTTPException(status_code=quantity_result.get("status_code", 500),
-                                detail={"error": quantity_result.get("error", "Something went wrong")})
         elif not customer_result.get("message", {}).get('customerIsActive'):
             raise HTTPException(status_code=403, detail={"error": "Customer is not confirmed"})
         else:
@@ -99,24 +90,16 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
             product_result = product_result.get("message").copy()
             final_result = dict()
             final_result["user_info"] = {"user_id": user.get("user_id")}
-            for product in product_result.get("products", []):
-                if product.get("system_code") == item.system_code:
-                    product['name'] = product_result.get("name")
-                    product['parent_system_code'] = product_result.get("system_code")
-                    product['model'] = product_result.get("model")
-                    product['brand'] = product_result.get("brand")
-                    final_result["product"] = product
-                    break
-            if not final_result.get("product"):
-                raise HTTPException(status_code=404, detail={"error": "Product not found"})
+            cart_product = product_result.copy()
+            del cart_product['visible_in_site']
+            del cart_product['step']
+            del cart_product['warehouse_details']
+            final_result["product"] = cart_product
 
             # quantity actions
 
-            main_quantity = quantity_result.get("message", {}).get("products", {}).get(item.system_code, {})
-            cusomer_type_quantity = main_quantity.get("customer_types", {}).get(customer_type, {})
-            storage_quantity = cusomer_type_quantity.get("storages", {}).get(item.storage_id, {})
-
-            quantity = storage_quantity if storage_quantity else cusomer_type_quantity if cusomer_type_quantity else main_quantity
+            quantity = product_result.get('warehouse_details', {}).get(customer_type, {}).get("storages", {}).get(
+                item.storage_id, {})
 
             rpc.response_len_setter(response_len=1)
             user_cart = rpc.publish(
@@ -137,7 +120,7 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
                     now_count = cart_product.get("count", 0)
                     break
 
-            allowed_count = (quantity.get("stock_for_sale", 0) - quantity.get('reserved', 0))
+            allowed_count = (quantity.get("quantity", 0) - quantity.get('reserved', 0))
             if allowed_count >= (now_count + item.count):
                 final_result["count"] = item.count
                 final_result["storage_id"] = item.storage_id
@@ -202,70 +185,55 @@ def get_cart(response: Response,
             base_price = 0
             profit = 0
             for product in cart_result["message"]["products"]:
-                rpc.response_len_setter(response_len=2)
-                pricing_result = rpc.publish(
+                rpc.response_len_setter(response_len=1)
+                product_result = rpc.publish(
                     message={
-                        "pricing": {
-                            "action": "get_price",
+                        "product": {
+                            "action": "get_product_backoffice",
                             "body": {
-                                "system_code": product.get("parent_system_code")
-                            }
-                        },
-                        "quantity": {
-                            "action": "get_quantity",
-                            "body": {
-                                "system_code": product.get("parent_system_code")
+                                "system_code": product.get("system_code")
                             }
                         }
                     },
-                    headers={'pricing': True, "quantity": True}
-                )
-                quantity_result = pricing_result.get("quantity", {})
-                pricing_result = pricing_result.get("pricing", {})
-
-                main_price = pricing_result.get("message", {}).get("products", {}).get(product.get("system_code"), {})
-                customer_type_price = main_price.get("customer_type", {}).get(customer_type, {})
-                storage_price = customer_type_price.get("storages", {}).get(product.get("storage_id"), {})
-
-                price = storage_price if storage_price else customer_type_price if customer_type_price else main_price
+                    headers={'product': True}
+                ).get("product", {}).get("message", {})
+                storage_details = product_result.get("warehouse_details", {}).get(customer_type, {}).get("storages",
+                                                                                                         {}).get(
+                    product.get("storage_id"), {})
 
                 now_formated_date_time = jdatetime.datetime.strptime(
                     jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
 
-                if not price.get("special"):
-                    product["price"] = price.get("regular")
+                if not storage_details.get("special"):
+                    product["price"] = storage_details.get("regular")
                 else:
                     special_formated_date_time = jdatetime.datetime.strptime(
-                        price.get("special_to_date", jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+                        storage_details.get("special_to_date", jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
                         "%Y-%m-%d %H:%M:%S")
-                    if now_formated_date_time < special_formated_date_time and price.get(
+                    if now_formated_date_time < special_formated_date_time and storage_details.get(
                             "special"):
-                        product["price"] = price.get("special")
-                        profit += (price.get("regular") - price.get("special")) * product.get("count")
+                        product["price"] = storage_details.get("special")
+                        profit += (storage_details.get("regular") - storage_details.get("special")) * product.get(
+                            "count")
                     else:
-                        product["price"] = price.get("regular")
+                        product["price"] = storage_details.get("regular")
 
                 if informal:
-                    product["price"] = price.get("informal") if price.get("informal") else product["price"]
+                    product["price"] = storage_details.get("informal") if storage_details.get("informal") else product[
+                        "price"]
 
-                quantity_obj = quantity_result.get("message", {}).get("products", {}).get(
-                    product.get("system_code"), {}).get("customer_types", {}).get(customer_type, {}).get("storages",
-                                                                                                         {}).get(
-                    product.get("storage_id"), {})
-
-                avaible_count = (quantity_obj.get("stock_for_sale", 0) - quantity_obj.get("reserved", 0))
+                avaible_count = (storage_details.get("stock_for_sale", 0) - storage_details.get("reserved", 0))
 
                 product["quantity"] = {
-                    "storageId": quantity_obj.get("storage_id"),
-                    "minQty": quantity_obj.get("min_qty"),
-                    "maxQty": quantity_obj.get("max_qty") if avaible_count > quantity_obj.get(
-                        "max_qty") else avaible_count,
-                    "warehouseState": quantity_obj.get("warehouse_state"),
-                    "warehouseCity": quantity_obj.get("warehouse_city"),
-                    "warehouseStateId": quantity_obj.get("warehouse_state_id"),
-                    "warehouseCityId": quantity_obj.get("warehouse_city_id"),
-                    "warehouseLabel": quantity_obj.get("warehouse_label"),
-                    "attributeLabel": quantity_obj.get("attribute_label")
+                    "storageId": storage_details.get("storage_id"),
+                    "minQty": storage_details.get("min_qty"),
+                    "maxQty": storage_details.get("max_qty", 0) if avaible_count > storage_details.get(
+                        "max_qty", 0) else avaible_count,
+                    "warehouseState": storage_details.get("warehouse_state"),
+                    "warehouseCity": storage_details.get("warehouse_city"),
+                    "warehouseStateId": storage_details.get("warehouse_state_id"),
+                    "warehouseCityId": storage_details.get("warehouse_city_id"),
+                    "warehouseLabel": storage_details.get("warehouse_label"),
                 }
 
                 if product.get("price"):
@@ -292,7 +260,7 @@ def get_cart(response: Response,
 @app.delete("/cart/{systemCode}/{storageId}", status_code=200, tags=["Cart"])
 def remove_product_from_cart(response: Response, auth_header=Depends(auth_handler.check_current_user_tokens),
                              storage_id: str = Path(..., min_length=1, max_length=2, alias='storageId'),
-                             system_code: str = Path(..., min_length=12, max_length=12, alias='systemCode')) -> dict:
+                             system_code: str = Path(..., min_length=25, max_length=25, alias='systemCode')) -> dict:
     """
     remove an item from cart
     """

@@ -12,27 +12,16 @@ class Cart(BaseCart):
 
 
 class AddCart(BaseCart):
-    parent_system_code: str = Field(..., alias="parentSystemCode")
     system_code: str = Field(..., alias="systemCode")
     storage_id: str = Field(..., alias="storageId")
     count: int
-
-    @validator("parent_system_code")
-    def parent_system_code_validator(cls, value):
-        if not isinstance(value, str):
-            raise HTTPException(status_code=400, detail="system_code must be a string")
-        if len(value) != 11:
-            raise HTTPException(status_code=400, detail="system_code must be 11 characters")
-        if ";" in value:
-            raise HTTPException(status_code=400, detail="forbidden character ';' in system_code")
-        return value
 
     @validator("system_code")
     def system_code_validator(cls, value):
         if not isinstance(value, str):
             raise HTTPException(status_code=400, detail="system_code must be a string")
-        if len(value) != 12:
-            raise HTTPException(status_code=400, detail="system_code must be 12 characters")
+        if len(value) != 25:
+            raise HTTPException(status_code=400, detail="system_code must be 25 characters")
         if ";" in value:
             raise HTTPException(status_code=400, detail="forbidden character ';' in system_code")
         return value
@@ -56,7 +45,6 @@ class AddCart(BaseCart):
     class Config:
         schema_extra = {
             "example": {
-                "parentSystemCode": "10010100201",
                 "systemCode": "100101002001",
                 "storageId": "1",
                 "count": 1
