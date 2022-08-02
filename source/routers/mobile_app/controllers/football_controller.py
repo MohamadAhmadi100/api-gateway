@@ -225,7 +225,7 @@ def predict_match_result(
     user, token_dict = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
-        product_result = rpc.publish(
+        predict_result = rpc.publish(
             message={
                 "mobile_app": {
                     "action": "predict_match_result",
@@ -240,8 +240,33 @@ def predict_match_result(
             },
             headers={'mobile_app': True}
         )
-        product_result = product_result.get("mobile_app", {})
-        if product_result.get("success"):
-            return convert_case({"message": product_result.get("message")}, 'camel')
-        raise HTTPException(status_code=product_result.get("status_code", 500),
-                            detail={"error": product_result.get("error", "Something went wrong")})
+        predict_result = predict_result.get("mobile_app", {})
+        if predict_result.get("success"):
+            return convert_case({"message": predict_result.get("message")}, 'camel')
+        raise HTTPException(status_code=predict_result.get("status_code", 500),
+                            detail={"error": predict_result.get("error", "Something went wrong")})
+
+
+@router.post("/get_profile_data/", tags=["GetUserData"])
+def get_user_profile_date(
+        auth_header=Depends(auth_handler.check_current_user_tokens)
+):
+    user, token_dict = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        user_result = rpc.publish(
+            message={
+                "mobile_app": {
+                    "action": "get_user_profile_data",
+                    "body": {
+                        "customer_id": user.get("user_id")
+                    }
+                }
+            },
+            headers={'mobile_app': True}
+        )
+        user_result = user_result.get("mobile_app", {})
+        if user_result.get("success"):
+            return convert_case({"message": user_result.get("message")}, 'camel')
+        raise HTTPException(status_code=user_result.get("status_code", 500),
+                            detail={"error": user_result.get("error", "Something went wrong")})
