@@ -14,7 +14,7 @@ class Attribute(BaseModel):
     portal_use_in_search: bool
     show_in_ecommerce: bool
     show_in_portal: bool
-    value: str
+    value: Optional[str] = None
 
 
 class Product(BaseModel):
@@ -262,3 +262,189 @@ p = {
 }
 
 
+
+
+# attr = [
+#             {
+#                 "name": "simnum-pd",
+#                 "ecommerce_use_in_filter": false,
+#                 "ecommerce_use_in_search": false,
+#                 "editable_in_ecommerce": true,
+#                 "editable_in_portal": true,
+#                 "label": "سیم کارت",
+#                 "portal_use_in_filter": false,
+#                 "portal_use_in_search": false,
+#                 "show_in_ecommerce": true,
+#                 "show_in_portal": true,
+#                 "value": None
+#             },
+#             {
+#                 "name": "description-pd",
+#                 "ecommerce_use_in_filter": false,
+#                 "ecommerce_use_in_search": false,
+#                 "editable_in_ecommerce": true,
+#                 "editable_in_portal": true,
+#                 "label": "توضیحات",
+#                 "portal_use_in_filter": false,
+#                 "portal_use_in_search": false,
+#                 "show_in_ecommerce": true,
+#                 "show_in_portal": true,
+#                 "value": None
+#             },
+#             {
+#                 "name": "charger-pd",
+#                 "ecommerce_use_in_filter": false,
+#                 "ecommerce_use_in_search": false,
+#                 "editable_in_ecommerce": true,
+#                 "editable_in_portal": true,
+#                 "label": "شارژر",
+#                 "portal_use_in_filter": false,
+#                 "portal_use_in_search": false,
+#                 "show_in_ecommerce": true,
+#                 "show_in_portal": true,
+#                 "value": None
+#             },
+#             {
+#                 "name": "handsfree-pd",
+#                 "ecommerce_use_in_filter": false,
+#                 "ecommerce_use_in_search": false,
+#                 "editable_in_ecommerce": true,
+#                 "editable_in_portal": true,
+#                 "label": "هندزفری",
+#                 "portal_use_in_filter": false,
+#                 "portal_use_in_search": false,
+#                 "show_in_ecommerce": true,
+#                 "show_in_portal": true,
+#                 "value": None
+#             },
+#             {
+#                 "name":True,
+#                 "ecommerce_use_in_filter": false,
+#                 "ecommerce_use_in_search": false,
+#                 "editable_in_ecommerce": true,
+#                 "editable_in_portal": true,
+#                 "label": "گلس",
+#                 "portal_use_in_filter": false,
+#                 "portal_use_in_search": false,
+#                 "show_in_ecommerce": true,
+#                 "show_in_portal": true,
+#                 "value": None
+#             },
+#             {
+#                 "name": "case-pd",
+#                 "ecommerce_use_in_filter": false,
+#                 "ecommerce_use_in_search": false,
+#                 "editable_in_ecommerce": true,
+#                 "editable_in_portal": true,
+#                 "label": "قاب",
+#                 "portal_use_in_filter": false,
+#                 "portal_use_in_search": false,
+#                 "show_in_ecommerce": true,
+#                 "show_in_portal": true,
+#                 "value": None
+#             },
+#             {
+#                 "name": "weight-pd",
+#                 "ecommerce_use_in_filter": false,
+#                 "ecommerce_use_in_search": false,
+#                 "editable_in_ecommerce": true,
+#                 "editable_in_portal": true,
+#                 "label": "وزن",
+#                 "portal_use_in_filter": false,
+#                 "portal_use_in_search": false,
+#                 "show_in_ecommerce": true,
+#                 "show_in_portal": true,
+#                 "value": None
+#             },
+#             {
+#                 "name": "screen-pd",
+#                 "ecommerce_use_in_filter": false,
+#                 "ecommerce_use_in_search": false,
+#                 "editable_in_ecommerce": true,
+#                 "editable_in_portal": true,
+#                 "label": "صفحه نمایش",
+#                 "portal_use_in_filter": false,
+#                 "portal_use_in_search": false,
+#                 "show_in_ecommerce": true,
+#                 "show_in_portal": true,
+#                 "value": None
+#             },
+#             {
+#                 "name": "storage-pd",
+#                 "ecommerce_use_in_filter": false,
+#                 "ecommerce_use_in_search": false,
+#                 "editable_in_ecommerce": true,
+#                 "editable_in_portal": true,
+#                 "label": "حافظه",
+#                 "portal_use_in_filter": false,
+#                 "portal_use_in_search": false,
+#                 "show_in_ecommerce": true,
+#                 "show_in_portal": true,
+#                 "value": None
+#             },
+#             {
+#                 "name": "fa-support-pd",
+#                 "ecommerce_use_in_filter": false,
+#                 "ecommerce_use_in_search": false,
+#                 "editable_in_ecommerce": true,
+#                 "editable_in_portal": true,
+#                 "label": "پشتیبانی از زبان فارسی",
+#                 "portal_use_in_filter": false,
+#                 "portal_use_in_search": false,
+#                 "show_in_ecommerce": true,
+#                 "show_in_portal": true,
+#                 "value": None
+#             },
+#             {
+#                 "name": "communication-networks-pd",
+#                 "ecommerce_use_in_filter": false,
+#                 "ecommerce_use_in_search": false,
+#                 "editable_in_ecommerce": true,
+#                 "editable_in_portal": true,
+#                 "label": "شبکه های ارتباطی",
+#                 "portal_use_in_filter": false,
+#                 "portal_use_in_search": false,
+#                 "show_in_ecommerce": true,
+#                 "show_in_portal": true,
+#                 "value": None
+#             },
+#             {
+#                 "name": "mainImage-pd",
+#                 "ecommerce_use_in_filter": false,
+#                 "ecommerce_use_in_search": false,
+#                 "editable_in_ecommerce": true,
+#                 "editable_in_portal": true,
+#                 "label": "تصویر اصلی",
+#                 "portal_use_in_filter": false,
+#                 "portal_use_in_search": false,
+#                 "show_in_ecommerce": true,
+#                 "show_in_portal": true,
+#                 "value": "https://devapi.aasood.com/gallery_files/product/100103008001/mainImage-pd/500x400.jpg"
+#             },
+#             {
+#                 "name": "otherImage-pd",
+#                 "ecommerce_use_in_filter": false,
+#                 "ecommerce_use_in_search": false,
+#                 "editable_in_ecommerce": true,
+#                 "editable_in_portal": true,
+#                 "label": "تصاویر دیگر",
+#                 "portal_use_in_filter": false,
+#                 "portal_use_in_search": false,
+#                 "show_in_ecommerce": true,
+#                 "show_in_portal": true,
+#                 "value": None
+#             },
+#             {
+#                 "name": "closeImage-pd",
+#                 "ecommerce_use_in_filter": false,
+#                 "ecommerce_use_in_search": false,
+#                 "editable_in_ecommerce": true,
+#                 "editable_in_portal": true,
+#                 "label": "نمای نزدیک",
+#                 "portal_use_in_filter": false,
+#                 "portal_use_in_search": false,
+#                 "show_in_ecommerce": true,
+#                 "show_in_portal": true,
+#                 "value": None
+#             }
+#         ]
