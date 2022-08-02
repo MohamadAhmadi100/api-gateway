@@ -85,7 +85,6 @@ def edit_profile_data(
         value: EditProfile,
         auth_header=Depends(auth_handler.check_current_user_tokens),
 ):
-    print("******", value.json())
     user_data, header = auth_header
     customer_result = new_rpc.publish(
         message=[
