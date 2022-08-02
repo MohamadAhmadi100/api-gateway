@@ -4,8 +4,7 @@ from source.routers.product.modules.allowed_storages import get_allowed_storages
 
 
 class EditQuantity:
-    def __init__(self, parent_system_code, system_code, storage_id, count):
-        self.parent_system_code = parent_system_code
+    def __init__(self, system_code, storage_id, count):
         self.system_code = system_code
         self.storage_id = storage_id
         self.count = count
@@ -54,17 +53,17 @@ def check_price_qty(auth_header, cart, response):
         rpc.response_len_setter(response_len=1)
         quantity_result = rpc.publish(
             message={
-                "quantity": {
+                "product": {
                     "action": "get_quantity_list",
                     "body": {
                         "item": products
                     }
                 }
             },
-            headers={'quantity': True}
+            headers={'product': True}
         )
 
-        for checkout_data in quantity_result['quantity']['message'][0]:
+        for checkout_data in quantity_result['product']['message'][0]:
 
             rpc.response_len_setter(response_len=1)
             # get product data
@@ -89,32 +88,12 @@ def check_price_qty(auth_header, cart, response):
                     "message": f"{checkout_data['name']} از سبد خرید به دلیل اتمام موجودی حذف شد"
                 })
             else:
-                parent_system_code_result = rpc.publish(
-                    message={
-                        "product": {
-                            "action": "get_product_by_system_code",
-                            "body": {
-                                "system_code": checkout_data['parent_system_code'],
-                                "lang": "fa_ir"
-                            }
-                        }
-                    },
-                    headers={'product': True}
-                )
-                parent_system_code_result = parent_system_code_result['product'].get("message").copy()
-                final_result = dict()
-                final_result["user_info"] = {"user_id": auth_header[0].get("user_id")}
-                for product in parent_system_code_result.get("products", []):
-                    if product.get("system_code") == checkout_data['systemCode']:
-                        final_result["product"] = product
-                        break
                 # edit cart after checking
                 # TODO response error handeling
                 if checkout_data['quantity_checkout'] == "pass":  # and checkout_data['price_checkout'] == "pass"
                     pass
                 elif checkout_data['quantity_checkout'] == "edited":  # and checkout_data['price_checkout'] == "pass"
-                    object_to_edit = EditQuantity(checkout_data['parent_system_code'], checkout_data['systemCode'],
-                                                  checkout_data['storage_id'],
+                    object_to_edit = EditQuantity(checkout_data['systemCode'], checkout_data['storage_id'],
                                                   checkout_data['new_quantity'] - checkout_data['count'])
 
                     edit = add_and_edit_product(item=object_to_edit, response=response, auth_header=auth_header)
