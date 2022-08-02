@@ -1,3 +1,4 @@
+from starlette_prometheus import PrometheusMiddleware, metrics
 from fastapi import FastAPI
 from fastapi import responses
 from starlette.exceptions import HTTPException as starletteHTTPException
@@ -19,8 +20,8 @@ app = FastAPI(
     debug=settings.DEBUG_MODE
 )
 
-# app.add_middleware(PrometheusMiddleware)
-# app.add_route("/metrics", metrics)
+app.add_middleware(PrometheusMiddleware)
+app.add_route("/metrics", metrics)
 
 app.include_router(router_auth)
 app.include_router(router_register)
