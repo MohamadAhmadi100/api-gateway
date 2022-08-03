@@ -1,9 +1,15 @@
 import re
+from enum import Enum
 from typing import Optional
 
 from fastapi import HTTPException
 from pydantic import BaseModel, Field
 from pydantic import validator
+
+
+class CustomerType(str, Enum):
+    B2B = "B2B"
+    B2C = "B2c"
 
 
 class CustomerRegister(BaseModel):
@@ -302,6 +308,18 @@ class CustomerRegister(BaseModel):
         dataType="string",
         type="str",
         isRquired=True
+    )
+    customer_type: Optional[CustomerType] = Field(
+        alias="customerType",
+        description="",
+        title="نوع مشتری",
+        name="customerType",
+        minLength=1,
+        maxLength=4,
+        dataType="string",
+        type="hidden",
+        regexPattern="",
+        isRquired=False,
     )
 
     @validator("customer_password")

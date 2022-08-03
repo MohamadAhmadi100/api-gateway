@@ -28,7 +28,6 @@ def get_profile(
         response: Response,
         auth_header=Depends(auth_handler.check_current_user_tokens),
 ):
-    print(auth_header)
     user_data, header = auth_header
     customer_result = new_rpc.publish(
         message=[profile_funcs.get_profile(customer_phone_number=user_data)]
@@ -261,6 +260,16 @@ def create_informal(person: Person, response: Response, auth_header=Depends(auth
         message=[customer_funcs.get_customer_kosar_data(data=kosar_data)]
     )
     kosar_data = kosar_result.get("message")
+    if not kosar_data:
+        sub_dict = {
+            "user_id": user_data.get('user_id'),
+            "customer_type": user_data.get('customer_type'),
+            "phone_number": user_data.get('phone_number'),
+        }
+        response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
+        response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
+        response.status_code = customer_result.get("status_code", 200)
+        return {"message": "کاربر غیر رسمی با موفقیت ثبت شد"}
     new_rpc.publish(
         message=[back_office_funcs.set_kosar_data(mobileNumber=user_data.get("phone_number"), kosarData=kosar_data)]
     )
