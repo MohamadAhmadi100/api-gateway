@@ -108,14 +108,10 @@ class LogHandler(RotatingFileHandler):
         if record.levelname == "ERROR":
             stream = self.stream
             date = datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3]
-            try:
-                message = [
-                    record.exc_info[2].tb_frame.f_locals["error"].exceptions.__str__()
-                    if record.exc_info else record.msg
-                ]
-            except Exception as e:
-                message = record.msg
-                logging.error("error occurred ask masood", e)
+            message = [
+                record.exc_info[2].tb_frame.f_locals["error"].exceptions.__str__()
+                if record.exc_info[2].tb_frame.f_locals.get("error") else record.msg
+            ]
             msg = str(f"{date} [{record.levelname}] {message[0]}").replace("\n", "")
             stream.write(msg)
             stream.write("\n")

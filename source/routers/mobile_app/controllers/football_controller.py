@@ -133,6 +133,22 @@ def add_favorite_team(
     user, token_dict = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
+        customer_result = rpc.publish(
+            message={
+                "customer": {
+                    "action": "get_customer_data_by_id_league",
+                    "body": {
+                        "customer_id": user.get("user_id"),
+                    }
+                }
+            },
+            headers={'customer': True}
+        )
+        customer_result = customer_result.get("customer", {})
+        if not customer_result.get("success"):
+            raise HTTPException(status_code=customer_result.get("status_code", 500),
+                                detail={"error": customer_result.get("error", "Something went wrong")})
+        customer_result = customer_result.get("message")
         product_result = rpc.publish(
             message={
                 "mobile_app": {
@@ -140,7 +156,9 @@ def add_favorite_team(
                     "body": {
                         "customer_id": user.get("user_id"),
                         "team_name": team.team_name,
-                        "device_id": device_id
+                        "device_id": device_id,
+                        "first_name": customer_result.get("first_name"),
+                        "last_name": customer_result.get("last_name")
                     }
                 }
             },
@@ -227,6 +245,23 @@ def predict_match_result(
     user, token_dict = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
+        customer_result = rpc.publish(
+            message={
+                "customer": {
+                    "action": "get_customer_data_by_id_league",
+                    "body": {
+                        "customer_id": user.get("user_id"),
+                    }
+                }
+            },
+            headers={'customer': True}
+        )
+        customer_result = customer_result.get("customer", {})
+        if not customer_result.get("success"):
+            raise HTTPException(status_code=customer_result.get("status_code", 500),
+                                detail={"error": customer_result.get("error", "Something went wrong")})
+        customer_result = customer_result.get("message")
+
         predict_result = rpc.publish(
             message={
                 "mobile_app": {
@@ -236,7 +271,9 @@ def predict_match_result(
                         "match_id": item.match_id,
                         "match_result": item.match_result,
                         "home_team_score": item.home_team_score,
-                        "away_team_score": item.away_team_score
+                        "away_team_score": item.away_team_score,
+                        "first_name": customer_result.get("first_name"),
+                        "last_name": customer_result.get("last_name")
                     }
                 }
             },
@@ -272,3 +309,28 @@ def get_user_profile_date(
             return convert_case({"message": user_result.get("message")}, 'camel')
         raise HTTPException(status_code=user_result.get("status_code", 500),
                             detail={"error": user_result.get("error", "Something went wrong")})
+
+
+@router.post("/get_user_rank/", tags=["GetUserData"])
+def get_user_profile_date(
+        auth_header=Depends(auth_handler.check_current_user_tokens)
+):
+    user, token_dict = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        rank_result = rpc.publish(
+            message={
+                "mobile_app": {
+                    "action": "get_user_rank",
+                    "body": {
+                        "customer_id": user.get("user_id")
+                    }
+                }
+            },
+            headers={'mobile_app': True}
+        )
+        rank_result = rank_result.get("mobile_app", {})
+        if rank_result.get("success"):
+            return convert_case({"message": rank_result.get("message")}, 'camel')
+        raise HTTPException(status_code=rank_result.get("status_code", 500),
+                            detail={"error": rank_result.get("error", "Something went wrong")})
