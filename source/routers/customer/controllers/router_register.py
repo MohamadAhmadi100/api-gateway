@@ -66,7 +66,6 @@ def register(
         "fullAddress": f"{value.customer_address_province}, {value.customer_address_city}, {value.customer_street}, {value.customer_alley}, پلاک: {value.customer_plaque}, ,واحد: {value.customer_unit}"
     }
     customer_type = [value.customer_type] if value.customer_type else ["B2B"]
-    print(customer_type)
     data = {
         "customer_phone_number": value.customer_phone_number,
         "customer_first_name": value.customer_first_name,
