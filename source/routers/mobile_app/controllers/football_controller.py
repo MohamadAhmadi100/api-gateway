@@ -124,7 +124,8 @@ def get_favorite_teams(auth_header=Depends(auth_handler.check_current_user_token
 @router.post("/add_favorite_team/", tags=["FavoriteTeams"])
 def add_favorite_team(
         auth_header=Depends(auth_handler.check_current_user_tokens),
-        team: FavoriteTeam = Body(...)
+        team: FavoriteTeam = Body(...),
+        device_id: str = Body(..., alias="deviceId")
 ):
     """
     Add favorite team
@@ -138,7 +139,8 @@ def add_favorite_team(
                     "action": "add_favorite_team",
                     "body": {
                         "customer_id": user.get("user_id"),
-                        "team_name": team.team_name
+                        "team_name": team.team_name,
+                        "device_id": device_id
                     }
                 }
             },
