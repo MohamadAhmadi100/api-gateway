@@ -579,3 +579,47 @@ def get_product_list_by_system_code(
             return convert_case(product_result, 'camel')
         raise HTTPException(status_code=product_result.get("status_code", 500),
                             detail={"error": product_result.get("error", "Something went wrong")})
+
+
+# product page get api
+@router.get("/product/get_product_page/{systemCode}/{lang}/", tags=["Product"])
+def get_product_page(
+        response: Response,
+        system_code: str = Path(..., alias='systemCode', max_length=16, min_length=16),
+        lang: Optional[str] = Path("fa_ir", min_length=2, max_length=8),
+        access: Optional[str] = Header(None),
+        refresh: Optional[str] = Header(None)
+):
+    """
+    Get product page
+    """
+    customer_type = "B2B"
+    allowed_storages = ['1']
+    if access or refresh:
+        user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
+        customer_type = user_data.get("customer_type", ["B2B"])[0]
+        allowed_storages = get_allowed_storages(user_data.get("user_id"))
+
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_product_page",
+                    "body": {
+                        "system_code": system_code,
+                        "user_allowed_storages": allowed_storages,
+                        "customer_type": customer_type,
+                        "lang": lang
+                    }
+                }
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            product_result = product_result.get("message", {})
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(product_result, 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
