@@ -623,3 +623,43 @@ def get_product_page(
             return convert_case(product_result, 'camel')
         raise HTTPException(status_code=product_result.get("status_code", 500),
                             detail={"error": product_result.get("error", "Something went wrong")})
+
+
+@router.get("/get_category_list", tags=["Product"])
+def get_category_list(
+        response: Response,
+        access: Optional[str] = Header(None),
+        refresh: Optional[str] = Header(None)
+):
+    """
+    Get category list
+    """
+    customer_type = "B2B"
+    allowed_storages = ['1']
+    if access or refresh:
+        user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
+        customer_type = user_data.get("customer_type", ["B2B"])[0]
+        allowed_storages = get_allowed_storages(user_data.get("user_id"))
+
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_category_list",
+                    "body": {
+                        "user_allowed_storages": allowed_storages,
+                        "customer_type": customer_type,
+                    }
+                }
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            message_product = product_result.get("message", {})
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(message_product, 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
