@@ -3,12 +3,12 @@ import logging
 import codemelli
 from fastapi import APIRouter, HTTPException, Response
 
+import source.services.address.address_router as address_funcs
+import source.services.customer.router_register as register_funcs
 from source.helpers.exception_handler import LogHandler
 from source.helpers.rabbit_config import new_rpc
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.customer.validators import validation_register
-import source.services.customer.router_register as register_funcs
-import source.services.address.address_router as address_funcs
 
 router_register = APIRouter(
     prefix="/register",
@@ -65,6 +65,7 @@ def register(
         "postal_code": value.customer_postal_code,
         "fullAddress": f"{value.customer_address_province}, {value.customer_address_city}, {value.customer_street}, {value.customer_alley}, پلاک: {value.customer_plaque}, ,واحد: {value.customer_unit}"
     }
+    customer_type = [value.customer_type] if value.customer_type else ["B2B"]
     data = {
         "customer_phone_number": value.customer_phone_number,
         "customer_first_name": value.customer_first_name,
@@ -79,7 +80,8 @@ def register(
         "customer_city_id": value.customer_city_id,
         "customer_state_name": value.customer_province,
         "customer_state_id": value.customer_province_id,
-        "customer_postal_code": value.customer_postal_code
+        "customer_postal_code": value.customer_postal_code,
+        "customer_type": customer_type
     }
     customer_result = new_rpc.publish(
         message=[

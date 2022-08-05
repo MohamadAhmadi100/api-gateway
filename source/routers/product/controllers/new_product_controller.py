@@ -1,10 +1,12 @@
 from typing import Optional, List
 
-from fastapi import HTTPException, APIRouter, Response, Path, Body, Query
+from fastapi import HTTPException, APIRouter, Response, Path, Body, Query, Header
 
 from source.helpers.case_converter import convert_case
 from source.helpers.create_class import CreateClass
 from source.message_broker.rabbit_server import RabbitRPC
+from source.routers.customer.module.auth import AuthHandler
+from source.routers.product.modules.allowed_storages import get_allowed_storages
 from source.routers.product.validators.price_models import UpdatePrice
 from source.routers.product.validators.kowsar import KowsarConfig, KowsarGroup, KowsarPart
 from source.routers.product.validators.price_models import Price
@@ -12,6 +14,8 @@ from source.routers.product.validators.product import Product, AddAttributes, Ed
 from source.routers.product.validators.quantity_models import UpdateQuantity, Quantity
 
 router = APIRouter()
+
+auth_handler = AuthHandler()
 
 
 @router.post("/kowsar/static/", tags=["Kowsar"])
@@ -496,15 +500,126 @@ def get_product_list_back_office(
                 "product": {
                     "action": "get_product_list_back_office",
                     "body": {
+                        "brands": brands,
+                        "warehouses": warehouses,
+                        "price_from": price_from,
+                        "price_to": price_to,
+                        "sellers": sellers,
+                        "colors": colors,
+                        "quantity_from": quantity_from,
+                        "quantity_to": quantity_to,
+                        "date_from": date_from,
+                        "date_to": date_to,
+                        "guarantees": guarantees,
+                        "steps": steps,
+                        "visible_in_site": visible_in_site,
+                        "approved": approved,
+                        "available": available,
+                        "page": page,
+                        "per_page": per_page,
+                        "lang": lang
                     }
                 }
             },
             headers={'product': True}
         )
         product_result = product_result.get("product", {})
-        message_product = product_result.get("message", {})
         if product_result.get("success"):
             response.status_code = product_result.get("status_code", 200)
-            return convert_case(message_product, 'camel')
+            return convert_case(product_result.get("message"), 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
+
+
+@router.get("/get_product_list_by_system_code/{systemCode}/", tags=["Product"])
+def get_product_list_by_system_code(
+        response: Response,
+        system_code: str = Path(..., alias='systemCode'),
+        page: int = Query(1, alias='page'),
+        per_page: int = Query(10, alias='perPage'),
+        storages: List[str] = Query([], alias='storages'),
+        access: Optional[str] = Header(None),
+        refresh: Optional[str] = Header(None)
+):
+    """
+    Get product list by brand
+    """
+    customer_type = "B2B"
+    allowed_storages = storages if storages else ['1']
+    if access or refresh:
+        user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
+        customer_type = user_data.get("customer_type", ["B2B"])[0]
+        user_allowed_storages = get_allowed_storages(user_data.get("user_id"))
+        allowed_storages = [storage for storage in storages if
+                            storage in user_allowed_storages] if storages else user_allowed_storages
+        if not allowed_storages:
+            raise HTTPException(status_code=404, detail={"error": "No products found"})
+
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_product_list_by_system_code",
+                    "body": {
+                        "system_code": system_code,
+                        "page": page,
+                        "per_page": per_page,
+                        "user_allowed_storages": allowed_storages,
+                        "customer_type": customer_type
+                    }
+                }
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            product_result = product_result.get("message", {})
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(product_result, 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
+
+
+# product page get api
+@router.get("/product/get_product_page/{systemCode}/{lang}/", tags=["Product"])
+def get_product_page(
+        response: Response,
+        system_code: str = Path(..., alias='systemCode', max_length=16, min_length=16),
+        lang: Optional[str] = Path("fa_ir", min_length=2, max_length=8),
+        access: Optional[str] = Header(None),
+        refresh: Optional[str] = Header(None)
+):
+    """
+    Get product page
+    """
+    customer_type = "B2B"
+    allowed_storages = ['1']
+    if access or refresh:
+        user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
+        customer_type = user_data.get("customer_type", ["B2B"])[0]
+        allowed_storages = get_allowed_storages(user_data.get("user_id"))
+
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_product_page",
+                    "body": {
+                        "system_code": system_code,
+                        "user_allowed_storages": allowed_storages,
+                        "customer_type": customer_type,
+                        "lang": lang
+                    }
+                }
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            product_result = product_result.get("message", {})
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(product_result, 'camel')
         raise HTTPException(status_code=product_result.get("status_code", 500),
                             detail={"error": product_result.get("error", "Something went wrong")})

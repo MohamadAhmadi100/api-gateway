@@ -54,11 +54,12 @@ class CreateClass:
             self._class_validator_dict[f'{key}_validate'] = validator(key, allow_reuse=True)(
                 self.make_validator_function)
 
-    def make_validator_function(self, value: any) -> any:
-        value_type = self._attributes_dict.get(self._key, {}).get("type")
-        regex_pattern = self._attributes_dict.get(self._key, {}).get("regex_pattern")
-        max_length = self._attributes_dict.get(self._key, {}).get("maxLength")
-        min_length = self._attributes_dict.get(self._key, {}).get("minLength")
+    def make_validator_function(cls, value: any, **kwargs) -> any:
+        key_of_value = kwargs.get("field").name
+        value_type = cls._attributes_dict.get(key_of_value, {}).get("type")
+        regex_pattern = cls._attributes_dict.get(key_of_value, {}).get("regex_pattern")
+        max_length = cls._attributes_dict.get(key_of_value, {}).get("maxLength")
+        min_length = cls._attributes_dict.get(key_of_value, {}).get("minLength")
         if regex_pattern:
             match = re.fullmatch(regex_pattern, value)
             if not match:
