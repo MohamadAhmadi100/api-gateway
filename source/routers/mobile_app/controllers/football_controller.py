@@ -14,16 +14,12 @@ auth_handler = AuthHandler()
 
 @router.get("/get_league_table", tags=["Football"])
 def get_league_table(
-        access: Optional[str] = Header(None),
-        refresh: Optional[str] = Header(None)
+        auth_header=Depends(auth_handler.check_current_user_tokens)
 ):
     """
     Get league table
     """
-    user_id = None
-    if access or refresh:
-        user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
-        user_id = user_data.get("user_id")
+    user, token_dict = auth_header
 
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
@@ -32,7 +28,7 @@ def get_league_table(
                 "mobile_app": {
                     "action": "get_league_table",
                     "body": {
-                        "user_id": user_id
+                        "user_id": user.get("user_id")
                     }
                 }
             },
