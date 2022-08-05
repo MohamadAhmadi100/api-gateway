@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from starlette.exceptions import HTTPException
 
 from source.message_broker.rabbit_server import RabbitRPC
-from source.routers.wallet.app import reserve_wallet, complete_order_wallet
+from source.routers.wallet.controllers.other_controllers import reserve_wallet, complete_order_wallet
 
 
 def get_remaining_wallet(user):

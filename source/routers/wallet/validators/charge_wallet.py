@@ -1,10 +1,12 @@
+import re
+
+from fastapi import HTTPException
 from pydantic import BaseModel, Field, validator
 
 
 class Charge(BaseModel):
     amount: int = Field(..., alias="amount")
     wallet_id: int = Field(..., alias="walletId")
-    bank_name: str = Field(..., alias="bankName")
     customer_id: int = Field(..., alias="customerId")
 
     @validator('amount')

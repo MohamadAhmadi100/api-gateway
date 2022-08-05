@@ -11,7 +11,7 @@ from source.routers.order.helpers.final_helper import place_order, handle_order_
     delete_order_reserving_fail, add_final_flag_to_cart
 from source.routers.order.helpers.payment_helper import wallet_final_consume
 from source.routers.order.helpers.shipment_helper import check_shipment_per_stock
-from source.routers.payment.app import get_url
+from source.routers.payment.controllers.bank_controller import get_url
 from source.routers.payment.validators.payment import SendData
 
 final_step_order = APIRouter()
