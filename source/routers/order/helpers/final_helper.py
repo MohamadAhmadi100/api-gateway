@@ -89,15 +89,15 @@ def reserve_order_items(order_object):
         rpc.response_len_setter(response_len=1)
         order_response = rpc.publish(
             message={
-                "quantity": {
+                "product": {
                     "action": "add_to_reserve",
                     "body": {
                         "order": order_object,
                     }
                 }
             },
-            headers={'quantity': True}
-        ).get("quantity", {})
+            headers={'product': True}
+        ).get("product", {})
         return order_response
 
 def remove_from_reserve_order_items(order_object):
@@ -105,15 +105,15 @@ def remove_from_reserve_order_items(order_object):
         rpc.response_len_setter(response_len=1)
         order_response = rpc.publish(
             message={
-                "quantity": {
+                "product": {
                     "action": "remove_from_reserve",
                     "body": {
                         "order": order_object,
                     }
                 }
             },
-            headers={'quantity': True}
-        ).get("quantity", {})
+            headers={'product': True}
+        ).get("product", {})
         return order_response
 
 def delete_order_reserving_fail(order_object):
