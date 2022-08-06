@@ -332,3 +332,28 @@ def get_user_ranks(
         rank_result["user"].update(customer_result.get(str(rank_result["user"]["customer_id"])))
         del rank_result["user_list"]
         return convert_case({"message": rank_result}, 'camel')
+
+
+@router.get("/get_today_matches", tags=["Football"])
+def get_today_matches():
+    """
+    Get league table
+    """
+
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "mobile_app": {
+                    "action": "get_today_matches",
+                    "body": {
+                    }
+                }
+            },
+            headers={'mobile_app': True}
+        )
+        product_result = product_result.get("mobile_app", {})
+        if product_result.get("success"):
+            return convert_case({"message": product_result.get("message")}, 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
