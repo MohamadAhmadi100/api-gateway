@@ -8,7 +8,7 @@ build:
   only:
     - dev
   tags:
-    - api-jon
+    - hi-jon
   script:
     - ls
     - echo APP_NAME=$APP_NAME >> .env
@@ -33,7 +33,7 @@ dev_deploy:
   only:
     - dev
   tags:
-    - api-jon
+    - hi-jon
   script:
     - echo APP_NAME=$APP_NAME >> .env
     - echo DEBUG_MODE=$DEBUG_MODE >> .env
