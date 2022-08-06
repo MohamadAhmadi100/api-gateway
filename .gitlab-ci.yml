@@ -3,16 +3,12 @@ stages:
   - push
   - deploy
 
-cache:
-  paths:
-    - .cache/pip
-
 build:
   stage: build
   only:
     - dev
   tags:
-    - ci-jon
+    - api-gw
   script:
     - ls
     - echo APP_NAME=$APP_NAME >> .env
@@ -29,7 +25,7 @@ build:
     - echo TEMPLATE=$TEMPLATE >> .env
     - echo GALLERY_DIR=$GALLERY_DIR >> .env
     - echo SECRET_KEY=$SECRET_KEY >> .env
-    - docker login 200.100.100.219:80 -u registry -p $REGPASS 
+    - docker login nexus.aasood.com -u registry -p $REGPASS 
     - docker build -t api-gateway:0.0.1 .
 
 dev_deploy:
@@ -37,7 +33,7 @@ dev_deploy:
   only:
     - dev
   tags:
-    - ci-jon
+    - api-gw
   script:
     - echo APP_NAME=$APP_NAME >> .env
     - echo DEBUG_MODE=$DEBUG_MODE >> .env
@@ -53,7 +49,7 @@ dev_deploy:
     - echo TEMPLATE=$TEMPLATE >> .env
     - echo GALLERY_DIR=$GALLERY_DIR >> .env
     - echo SECRET_KEY=$SECRET_KEY >> .env
-    - docker login 200.100.100.219:80 -u registry -p $REGPASS
+    - docker login nexus.aasood.com -u registry -p $REGPASS
     - docker-compose -f docker-compose.yaml up -d --build
 
 push:
@@ -77,9 +73,9 @@ push:
     - echo TEMPLATE=$TEMPLATE >> .env
     - echo GALLERY_DIR=$GALLERY_DIR >> .env
     - echo SECRET_KEY=$SECRET_KEY >> .env
-    - docker login 200.100.100.219:80 -u registry -p $REGPASS
-    - docker build -t api-gateway:0.0.1 . -t 200.100.100.219:80/backend/web-api-gateway:$CI_COMMIT_SHORT_SHA
-    - docker push 200.100.100.219:80/backend/web-api-gateway:$CI_COMMIT_SHORT_SHA
+    - docker login nexus.aasood.com -u registry -p $REGPASS
+    - docker build -t api-gateway:0.0.1 . -t nexus.aasood.com/backend/web-api-gateway:$CI_COMMIT_SHORT_SHA
+    - docker push nexus.aasood.com/backend/web-api-gateway:$CI_COMMIT_SHORT_SHA
 
 master_deploy:
   stage: deploy

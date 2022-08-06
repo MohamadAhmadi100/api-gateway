@@ -18,7 +18,7 @@ callback_service_handler = {
     "order": handle_order_bank_callback
 }
 
-BANK_NAMES = ["melli"]
+BANK_NAMES = ["mellat"]
 
 router = APIRouter()
 
