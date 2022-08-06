@@ -68,9 +68,9 @@ def get_url(data: payment.SendData, response: Response):
 
 
 @router.post("/callback")
-async def set_callback(response_string):
-    # response_string: bytes = await request.body()
-    # response_string: str = response_string.decode("utf-8")
+async def set_callback(request: Request, response: Response):
+    response_string: bytes = await request.body()
+    response_string: str = response_string.decode("utf-8")
     result = new_rpc.publish(
         message=[
             bank_controller.callback_pay(
@@ -85,7 +85,6 @@ async def set_callback(response_string):
     #         data=result.get("message", {}).get("bank_data"),
     #         bank_name=result.get("message", {}).get("bank_name")
     #     )
-    #     return verify_result
     #     if verify_result.get("response"):
     #         verify_log = {"verify_log": verify_result.get("message")}
     #         del result.get("message")["url"], result.get("message")["bank_data"]
