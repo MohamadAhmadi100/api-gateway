@@ -24,9 +24,9 @@ def mellat_handler(step: str, data: dict):
     if step == "verify":
         verify = soap_request("bpVerifyRequest", data)
         settle = soap_request("bpSettleRequest", data)
-        if verify.get("status_code") != 204:
+        if verify.get("message") != 0:
             return {"response": False, "error": verify.get("error")}
-        elif settle.get("status_code") != 204:
+        elif settle.get("message") != 0:
             return {"response": False, "error": verify.get("error")}
         return {
             "response": True,
