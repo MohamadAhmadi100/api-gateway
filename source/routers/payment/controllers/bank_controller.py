@@ -43,28 +43,29 @@ def get_url(data: payment.SendData, response: Response):
         data=payment_result.get("message", {}).get("bank_data"),
         bank_name=payment_result.get("message", {}).get("bank_name")
     )
-    url_result = new_rpc.publish(
-        message=[
-            bank_controller.redirect_url(
-                data=token_result,
-                payment_id=payment_result.get("message", {}).get("payment_id"),
-                bank_name=payment_result.get("message", {}).get("bank_name")
-            )
-        ]
-    )
-    if not url_result.get("success"):
-        raise HTTPException(status_code=url_result.get("status_code", 500),
-                            detail={"error": url_result.get("error", "Something went wrong")})
-
-    uis_result = new_rpc.publish(
-        message=[
-            uis_controller.hashed_generator(
-                link=url_result.get("message")
-            )
-        ]
-    )
-    response.status_code = uis_result.get("status_code")
-    return uis_result
+    return token_result
+    # url_result = new_rpc.publish(
+    #     message=[
+    #         bank_controller.redirect_url(
+    #             data=token_result,
+    #             payment_id=payment_result.get("message", {}).get("payment_id"),
+    #             bank_name=payment_result.get("message", {}).get("bank_name")
+    #         )
+    #     ]
+    # )
+    # if not url_result.get("success"):
+    #     raise HTTPException(status_code=url_result.get("status_code", 500),
+    #                         detail={"error": url_result.get("error", "Something went wrong")})
+    #
+    # uis_result = new_rpc.publish(
+    #     message=[
+    #         uis_controller.hashed_generator(
+    #             link=url_result.get("message")
+    #         )
+    #     ]
+    # )
+    # response.status_code = uis_result.get("status_code")
+    # return uis_result
 
 
 @router.post("/callback")
