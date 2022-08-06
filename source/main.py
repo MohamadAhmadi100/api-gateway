@@ -6,7 +6,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.staticfiles import StaticFiles
-
+from source.routers.uis.app import app as uis_app
 from config import settings
 from source.routers.cart.app import app as cart_app
 from source.routers.pricing.app import app as pricing_app
@@ -24,6 +24,8 @@ from source.routers.order.app import app as order_app
 from source.routers.mobile_app.app import app as mobile_app
 from source.routers.dealership.app import app as dealership
 from source.routers.credit.app import app as credit_app
+from fastapi_utils.tasks import repeat_every
+from source.routers.payment.modules.payment_callback import closing_tab_handling
 
 app = FastAPI(title="API Gateway",
               description="Backend for frontend aka. API Gateway!",
@@ -37,7 +39,6 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"]
 )
-
 
 # ----------------------------------------- Mount all services here -------------------------------------------------- #
 
@@ -75,6 +76,8 @@ app.mount("/dealership/api/v1", dealership)
 
 app.mount("/credit/api/v1", credit_app)
 
+app.mount("/uis/api/v1", uis_app)
+
 
 # ----------------------------------------- Start logging features  -------------------------------------------------- #
 
@@ -98,6 +101,12 @@ def shutdown_event() -> None:
     This function will be called when the application stops.
     """
     logging.info("Application is shutting down...")
+
+
+@app.on_event("startup")
+@repeat_every(seconds=60)
+def payment_close_tab_handler():
+    closing_tab_handling()
 
 
 @app.get("/")
