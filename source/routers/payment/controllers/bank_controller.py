@@ -106,27 +106,27 @@ async def set_callback(request: Request, response: Response):
                                               " اما با خطای مانگو مواجه هستیم"
             else:
                 result = check_verify_res
-    # if result.get("message", {}).get("is_paid") and result.get("success"):
-    #     kowsar_result = new_rpc.publish(
-    #         message=[
-    #             kosar_controller.kowsar_transaction(
-    #                 order_id=result.get("message", {}).get("order_id"),
-    #                 price=result.get("message", {}).get("amount"),
-    #                 customer_id=result.get("message", {}).get("customer_id"),
-    #                 bank_code=result.get("message", {}).get("bank_code"),
-    #                 bank_name=result.get("message", {}).get("bank_name")
-    #             )
-    #         ]
-    #     )
-    #     kowsar_status_result = new_rpc.publish(
-    #         message=[
-    #             bank_controller.change_kowsar_status(
-    #                 kowsar_status=kowsar_result,
-    #                 payment_id=result.get("message", {}).get("payment_id")
-    #             )
-    #         ]
-    #     )
-    #     result = kowsar_status_result
+    if result.get("message", {}).get("is_paid") and result.get("success"):
+        kowsar_result = new_rpc.publish(
+            message=[
+                kosar_controller.kowsar_transaction(
+                    order_id=result.get("message", {}).get("order_id"),
+                    price=result.get("message", {}).get("amount"),
+                    customer_id=result.get("message", {}).get("customer_id"),
+                    bank_code=result.get("message", {}).get("bank_code"),
+                    bank_name=result.get("message", {}).get("bank_name")
+                )
+            ]
+        )
+        kowsar_status_result = new_rpc.publish(
+            message=[
+                bank_controller.change_kowsar_status(
+                    kowsar_status=kowsar_result,
+                    payment_id=result.get("message", {}).get("payment_id")
+                )
+            ]
+        )
+        result = kowsar_status_result
 
     service_name = result.get("message", {}).get("service", {})
     if service_name == "offline":
