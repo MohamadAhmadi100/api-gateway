@@ -110,7 +110,7 @@ async def set_callback(request: Request, response: Response):
         kowsar_result = new_rpc.publish(
             message=[
                 kosar_controller.kowsar_transaction(
-                    order_id=result.get("message", {}).get("order_id"),
+                    order_id=result.get("message", {}).get("service_id"),
                     price=result.get("message", {}).get("amount"),
                     customer_id=result.get("message", {}).get("customer_id"),
                     bank_code=result.get("message", {}).get("bank_code"),
