@@ -166,7 +166,6 @@ class KowsarCustomCategory(BaseModel):
 class CustomCategory(BaseModel):
     name: str
     products: List[str]
-    label: str
     visible_in_site: bool
     image: Optional[str]
 
@@ -189,25 +188,6 @@ class CustomCategory(BaseModel):
             })
         return value
 
-    @validator('label')
-    def label_validator(cls, value):
-        if not isinstance(value, str):
-            raise HTTPException(status_code=417, detail={
-                "error": "label must be a string",
-                "label": "برچسب باید از نوع رشته باشد"
-            })
-        elif len(value) < 3:
-            raise HTTPException(status_code=417, detail={
-                "error": "label must be at least 3 characters",
-                "label": "طول برچسب باید حداقل ۳ کاراکتر باشد"
-            })
-        elif len(value) > 256:
-            raise HTTPException(status_code=417, detail={
-                "error": "label must be at most 256 characters",
-                "label": "طول برچسب باید حداکثر ۲۵۶ کاراکتر باشد"
-            })
-        return value
-
     @validator('products')
     def products_validator(cls, value):
         if not isinstance(value, list):
@@ -221,11 +201,11 @@ class CustomCategory(BaseModel):
                     "error": "products must be a list of strings",
                     "label": "لیست محصولات باید از نوع لیست رشته باشد"
                 })
-            elif len(item) != 12:
+            elif len(item) != 25:
 
                 raise HTTPException(status_code=417, detail={
-                    "error": "products must be a list of 12-character strings",
-                    "label": "لیست محصولات باید از نوع لیست رشته باشد"
+                    "error": "products must be a list of 25-character strings",
+                    "label": "لیست محصولات باید از نوع لیست رشته با طول ۲۵ کاراکتر باشد"
                 })
         return value
 
