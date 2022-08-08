@@ -154,12 +154,12 @@ class UpdateQuantity(BaseModel):
             raise HTTPException(status_code=422, detail={"error": "system_code must be 25 length"})
         return value
 
-    @validator("customer_types")
+    @validator("customer_type")
     def customer_type_validator(cls, value):
         if not isinstance(value, str):
-            raise HTTPException(status_code=422, detail={"error": "customer_types must be str"})
+            raise HTTPException(status_code=422, detail={"error": "customer_type must be str"})
         elif value not in ["B2B", "B2C", "B2G"]:
-            raise HTTPException(status_code=422, detail={"error": "customer_types must be B2B, B2C, B2G"})
+            raise HTTPException(status_code=422, detail={"error": "customer_type must be B2B, B2C, B2G"})
         return value
 
     @validator("storage_id")
