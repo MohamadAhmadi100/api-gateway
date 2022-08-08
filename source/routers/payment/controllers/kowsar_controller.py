@@ -2,7 +2,7 @@ import json
 from typing import Optional, List
 from fastapi import HTTPException, Response, Query, APIRouter
 from source.helpers.case_converter import convert_case
-# from source.message_broker.rabbit_server import RabbitRPC
+from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.order.helpers.final_helper import handle_order_bank_callback
 import requests
 from source.routers.wallet.wallet_modules.wallet_callback import callback_payment
@@ -11,6 +11,7 @@ from source.helpers.rabbit_config import new_rpc
 import source.services.payment.payment_controller as payment_controller
 import source.services.kosar.payment_controller as kosar_controller
 import source.services.payment.bank_controller as bank_controller
+import source.services.customer.router_back_office as customer_controller
 
 callback_service_handler = {
     "wallet": callback_payment,
@@ -36,17 +37,19 @@ def get_payment(
         search: Optional[str] = Query(None)
 ):
     if search and search.isalpha():
-        customer_result = new_rpc.publish(
-            message={
-                "customer": {
-                    "action": "search_customers_by_name",
-                    "body": {
-                        "phrase": search
+        with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+            rpc.response_len_setter(response_len=1)
+            customer_result = new_rpc.publish(
+                message={
+                    "customer": {
+                        "action": "search_customers_by_name",
+                        "body": {
+                            "phrase": search
+                        }
                     }
-                }
-            },
-            headers={'customer': True}
-        )
+                },
+                headers={'customer': True}
+            )
         customer_result = customer_result.get("customer", {})
         if not customer_result.get("success"):
             raise HTTPException(status_code=customer_result.get("status_code", 500),
@@ -81,16 +84,12 @@ def get_payment(
         response.status_code = status_code
         return payment_result
     final_result = new_rpc.publish(
-        message={
-            "customer": {
-                "action": "get_customer_data_by_id",
-                "body": {
-                    "id_list": list(set(payment_result.get("customer_id_list")))
-                }
-            }
-        },
-        headers={'customer': True}
-    ).get("customer", {})
+        message=[
+            customer_controller.get_customer_data_by_id(
+                id_list=list(set(payment_result.get("customer_id_list")))
+            )
+        ]
+    )
     response.status_code = final_result.get("status_code")
     final_result = convert_case(final_result.get("message"), "camel")
     for result in payment_result.get("transaction"):
