@@ -140,7 +140,7 @@ class Quantity(BaseModel):
 
 class UpdateQuantity(BaseModel):
     system_code: str = Field(..., alias="systemCode")
-    customer_types: str = Field(..., alias="customerTypes")
+    customer_type: str = Field(..., alias="customerType")
     storage_id: str = Field(..., alias="storageId")
     quantity: int = Field(None, alias="quantity")
     min_qty: int = Field(None, alias="minQty")
@@ -198,7 +198,7 @@ class UpdateQuantity(BaseModel):
         schema_extra = {
             "example": {
                 "systemCode": "2000010010001001001001001",
-                "customer_types": "B2B",
+                "customerType": "B2B",
                 "storageId": "1",
                 "quantity": 100,
                 "minQty": 1,
