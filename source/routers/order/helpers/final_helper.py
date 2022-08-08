@@ -1,7 +1,6 @@
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.order.helpers.payment_helper import wallet_payment_consume
 
-
 def handle_order_bank_callback(result, response):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
@@ -16,14 +15,38 @@ def handle_order_bank_callback(result, response):
             },
             headers={'cart': True}
         ).get('cart', {}).get('message', {})
-
+        wallet_amount = user_cart['payment'].get("walletAmount")
         # consume wallet
         if user_cart['payment'].get("walletAmount") is not None:
-            wallet_result = wallet_payment_consume(result, user_cart)
+            if result.get("is_paid"):
+                data_reserve_wallet = {"amount": wallet_amount, "order_number": result['service_id'],
+                                       "action_type": "auto",
+                                       "balance": "consume", "type": "order", 'status': "success",
+                                       "customer_id": result.get("customer_id")}
+
+            else:
+                data_reserve_wallet = {"amount": wallet_amount, "order_number": result['service_id'],
+                                       "action_type": "auto",
+                                       "balance": "charge", "type": "order", 'status': "failed",
+                                       "customer_id": result.get("customer_id")}
+
+            # send refresh and access token to front in header
+            rpc.response_len_setter(response_len=1)
+            wallet_result = rpc.publish(
+                message={
+                    "wallet": {
+                        "action": "result_checkout",
+                        "body": {
+                            "data": data_reserve_wallet
+                        }
+                    }
+                },
+                headers={'wallet': True}
+            ).get("wallet", {})
 
         if result['is_paid']:
             rpc.response_len_setter(response_len=2)
-            rpc.publish(
+            car_order_result = rpc.publish(
                 message={
                     "order": {
                         "action": "order_bank_callback_processing",
@@ -34,13 +57,14 @@ def handle_order_bank_callback(result, response):
                     "cart": {
                         "action": "delete_cart",
                         "body": {
-                            "user_id": result.get("customerId")
+                            "user_id": result.get("customer_id")
                         }
                     }
 
                 },
                 headers={'order': True, "cart": True}
-            ).get("order", {})
+            )
+
             response.status_code = 200
             return {"result": True, "service_id": result.get("service_id")}
         else:
@@ -80,6 +104,18 @@ def handle_order_bank_callback(result, response):
                 },
                 headers={"product": True}
             ).get("product")
+            rpc.response_len_setter(response_len=1)
+            rpc.publish(
+                message={
+                    "cart": {
+                        "action": "remove_cart_bank_callback",
+                        "body": {
+                            "user_id": result.get("customer_id")
+                        }
+                    }
+                },
+                headers={"cart": True}
+            )
             response.status_code = 200
             return {"result": False, "service_id": result.get("service_id")}
 
