@@ -21,8 +21,8 @@ services:
         volumes:
           - /gallery-files:/gallery-files
           - /home/masood/logs/api-gateway:/api-gateway/log
-        environment:
-        - TZ=Asia/Tehran
+          - /etc/timezone:/etc/timezone:ro
+          - /etc/localtime:/etc/localtime:ro
 
 
 networks:
