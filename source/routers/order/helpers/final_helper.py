@@ -71,15 +71,15 @@ def handle_order_bank_callback(result, response):
             rpc.response_len_setter(response_len=1)
             rpc.publish(
                 message={
-                    "quantity": {
+                    "product": {
                         "action": "remove_from_reserve",
                         "body": {
                             "order": order_get_response.get("order_object")
                         }
                     }
                 },
-                headers={"quantity": True}
-            ).get("quantity")
+                headers={"product": True}
+            ).get("product")
             response.status_code = 200
             return {"result": False, "service_id": result.get("service_id")}
 
