@@ -892,3 +892,37 @@ def edit_custom_category(
             return convert_case({"message": product_result.get("message")}, 'camel')
         raise HTTPException(status_code=product_result.get("status_code", 500),
                             detail={"error": product_result.get("error", "Something went wrong")})
+
+
+@router.get("/categories_products/", tags=["Custom Category"])
+def get_categories_products(
+        response: Response,
+        system_code: str = Query(None, alias="systemCode"),
+        page: int = Query(1, alias="page"),
+        per_page: int = Query(20, alias="perPage")
+):
+    """
+    Get products of a category
+    """
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_categories_products",
+                    "body": {
+                        "system_code": system_code,
+                        "page": page,
+                        "per_page": per_page
+                    }
+                }
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            message_product = product_result.get("message", {})
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(message_product, 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
