@@ -38,8 +38,8 @@ def get_formal_payment(response: Response, auth_header=Depends(auth_handler.chec
         elif cart['totalPrice'] == 0:
             payment_method = []
         else:
-            payment_method = [{"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"}]
-                              # {"methodName": "aiBanking", "methodLabe": "پرداخت انلاین"}]
+            payment_method = [{"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"},
+                              {"methodName": "aiBanking", "methodLabe": "پرداخت انلاین"}]
 
         response_result = {
             "walletAmount": wallet_amount,
