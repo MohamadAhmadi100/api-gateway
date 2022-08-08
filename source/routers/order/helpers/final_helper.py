@@ -84,7 +84,7 @@ def handle_order_bank_callback(result, response):
             order_get_response = rpc.publish(
                 message={
                     "order": {
-                        "action": "get_order",
+                        "action": "get_one_order",
                         "body": {
                             "order_id": result.get("service_id")
                         }
@@ -215,3 +215,16 @@ def add_final_flag_to_cart(auth_header):
             return result_to_order
         else:
             return {"success": False, "message": "something went wrong!"}
+handle_order_bank_callback({'payment_id': 8, 'service_id': '200000013', 'customer_id': 20003, 'amount': 27010000,
+                             'bank_name': 'mellat', 'bank_code': '1011125', 'is_paid': False,
+                             'start_payment': 1659987824.49168, 'start_payment_jalali': '1401-05-18 00:13:44',
+                             'service': 'order',
+                             'kowsar_status': {'success': True, 'message': 'successful', 'status_code': 202},
+                             'return_bank': True, 'send_status': 'successful', 'status': 'واریز با موفقیت انجام شد',
+                             'token': '67EA550BFC553588', 'end_payment': 1659987926.935799,
+                             'end_payment_jalali': '1401-05-18 00:15:26',
+                             'payment_log': {'RefId': '67EA550BFC553588', 'ResCode': '0', 'SaleOrderId': '8',
+                                             'SaleReferenceId': '220144736988',
+                                             'CardHolderInfo': '2E30B27888DCCBF7378307AC1115F91828BF21C9CCD3C0C0C1FE8B8685E1978E',
+                                             'CardHolderPan': '610433****2021', 'FinalAmount': '27010000'},
+                             'verify_log': {'ResCode': '0'}, 'settle_log': '0'},200)
