@@ -9,6 +9,10 @@ from source.routers.wallet.validators.update_wallet import UpdateData
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.wallet.validators.checkout_wallet import Reserve, ResultOrder, CompleteOrderWallet
 from fastapi import HTTPException, Response, Depends, Query, APIRouter
+
+from source.helpers.rabbit_config import new_rpc
+from source.services.wallet import router_wallet as wallet_funcs
+
 from enum import Enum
 from typing import Optional
 
@@ -110,32 +114,37 @@ def get_wallet_by_customer_id_(
         response: Response,
         auth_header=Depends(auth.check_current_user_tokens)
 ):
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        sub_data, token_data = auth_header
-        response.headers["accessToken"] = token_data.get("access_token")
-        response.headers["refreshToken"] = token_data.get("refresh_token")
-        rpc.response_len_setter(response_len=1)
+    sub_data, token_data = auth_header
+    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+    #     response.headers["accessToken"] = token_data.get("access_token")
+    #     response.headers["refreshToken"] = token_data.get("refresh_token")
+    #     rpc.response_len_setter(response_len=1)
+    #
+    #     wallet_response = rpc.publish(
+    #         message={
+    #             "wallet": {
+    #                 "action": "get_wallet_by_customer_id",
+    #                 "body": {
+    #                     "customer_id": sub_data.get("user_id")
+    #                 }
+    #             }
+    #         },
+    #         headers={'wallet': True}
+    #     ).get("wallet", {})
 
-        wallet_response = rpc.publish(
-            message={
-                "wallet": {
-                    "action": "get_wallet_by_customer_id",
-                    "body": {
-                        "customer_id": sub_data.get("user_id")
-                    }
-                }
-            },
-            headers={'wallet': True}
-        ).get("wallet", {})
+    wallet_response = new_rpc.publish(
+        message=[
+            wallet_funcs.get_wallet_by_customer_id(customer_id=sub_data.get("user_id"))]
+    )
 
-        if wallet_response.get("success"):
-            response.status_code = wallet_response.get("status_code", 200)
-            return wallet_response
-        elif not wallet_response.get("success"):
-            response.status_code = wallet_response.get("status_code", 417)
-            return wallet_response
-        raise HTTPException(status_code=wallet_response.get("status_code", 500),
-                            detail={"error": wallet_response.get("error", "Wallet service Internal error")})
+    if wallet_response.get("success"):
+        response.status_code = wallet_response.get("status_code", 200)
+        return wallet_response
+    elif not wallet_response.get("success"):
+        response.status_code = wallet_response.get("status_code", 417)
+        return wallet_response
+    raise HTTPException(status_code=wallet_response.get("status_code", 500),
+                        detail={"error": wallet_response.get("error", "Wallet service Internal error")})
 
 
 @router.post("/reserve-wallet", tags=["customer side"])
