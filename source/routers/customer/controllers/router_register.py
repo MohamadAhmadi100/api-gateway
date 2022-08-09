@@ -37,10 +37,10 @@ def register(
         raise HTTPException(status_code=422, detail={"error": "کد ملی وارد شده صحیح نمی باشد"}) from e
     address = {
         "customer_name": f"{value.customer_first_name} {value.customer_last_name}",
-        "state_name": value.customer_address_province,
-        "state_id": value.customer_address_province_id,
-        "city_id": value.customer_address_city_id,
-        "city_name": value.customer_address_city,
+        "state_name": value.customer_province,
+        "state_id": value.customer_province_id,
+        "city_id": value.customer_city_id,
+        "city_name": value.customer_city,
         "region_code": value.customer_region_code,
         "street": value.customer_street,
         "alley": value.customer_alley,
