@@ -1,4 +1,4 @@
-from starlette_prometheus import PrometheusMiddleware, metrics
+# from starlette_prometheus import PrometheusMiddleware, metrics
 from fastapi import FastAPI
 from fastapi import responses
 from starlette.exceptions import HTTPException as starletteHTTPException
