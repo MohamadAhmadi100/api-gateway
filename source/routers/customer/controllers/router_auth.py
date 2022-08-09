@@ -150,7 +150,7 @@ def checking_login_password(
     response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
     response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
     response.status_code = customer_result.get("status_code", 200)
-    return customer_result.get("message")
+    return customer_result
 
 
 @router_auth.post("/check-token/")
