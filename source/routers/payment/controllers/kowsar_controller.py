@@ -90,6 +90,9 @@ def get_payment(
             )
         ]
     )
+    if not final_result.get("success"):
+        raise HTTPException(status_code=final_result.get("status_code", 500),
+                            detail={"error": final_result.get("error", "Something went wrong")})
     response.status_code = final_result.get("status_code")
     final_result = convert_case(final_result.get("message"), "camel")
     for result in payment_result.get("transaction"):
