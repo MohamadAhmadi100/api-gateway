@@ -50,23 +50,7 @@ def get_profile(
         if customer_data.get(attr.get("name")) is None or not None:
             attr["value"] = customer_data.get(attr.get("name"))
             valid_attrs.append(attr)
-    confirm = False
-    mobile_confirm = False
-    for attr in valid_attrs:
-        if attr.get("name") == "customerStatus":
-            if attr.get("value") == "cancel":
-                valid_attrs.append({"profileStatus": "لغو شده"})
-            if attr.get("value") == "pend":
-                valid_attrs.append({"profileStatus": "در انتظار تایید"})
-            if attr.get("value") == "confirm":
-                confirm = True
-        if attr.get("name") == "customerIsMobileConfirm":
-            if not attr.get("value"):
-                valid_attrs.append({"profileStatus": "اعتبار سنجی شماره موبایل"})
-            elif attr.get("value"):
-                mobile_confirm = True
-    if mobile_confirm and confirm:
-        valid_attrs.append({"profileStatus": "تایید شده"})
+    valid_attrs.append({"profileStatus": customer_data.get("profileStatus")})
     sub_dict = {
         "user_id": user_data.get('user_id'),
         "customer_type": user_data.get('customer_type'),
