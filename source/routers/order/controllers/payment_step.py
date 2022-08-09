@@ -7,7 +7,7 @@ from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.cart.app import get_cart
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.order.helpers.payment_helper import get_remaining_wallet, informal_to_cart
-from source.routers.order.helpers.shipment_helper import check_shipment_per_stock
+from source.routers.order.helpers.shipment_helper import check_shipment_per_stock, shipment_detail, is_shipment_aasood
 from source.routers.order.validators.order import wallet, payment, informal
 
 payment_step_order = APIRouter()
@@ -33,13 +33,18 @@ def get_formal_payment(response: Response, auth_header=Depends(auth_handler.chec
 
         if cart['totalPrice'] > 50000000:
             payment_method = [
-                {"methodName": "deposit", "methodLabe": "واریز به حساب"},
-                {"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"}]
+                {"methodName": "deposit", "methodLabe": "واریز به حساب"}]
         elif cart['totalPrice'] == 0:
             payment_method = []
         else:
-            payment_method = [{"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"},
+            payment_method = [
                               {"methodName": "aiBanking", "methodLabe": "پرداخت انلاین"}]
+
+        # pardakht dar mahal
+        shipment_details = shipment_detail(auth_header, response)
+        check_is_shipment_aasood = is_shipment_aasood(shipment_details)
+        if check_is_shipment_aasood:
+            payment_method.append({"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"})
 
         response_result = {
             "walletAmount": wallet_amount,

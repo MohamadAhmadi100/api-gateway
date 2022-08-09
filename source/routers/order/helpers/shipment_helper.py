@@ -95,18 +95,7 @@ def shipment_detail(auth_header, response):
                 if reciver_info['success']:
                     reciver_data = reciver_info.get("message").get("data")
 
-                rpc.response_len_setter(response_len=1)
-                rpc.publish(
-                    message={
-                        "cart": {
-                            "action": "remove_cart",
-                            "body": {
-                                "user_id": auth_header[0].get("user_id")
-                            }
-                        }
-                    },
-                    headers={'cart': True}
-                ).get("cart", {})
+
                 result = {
                     "customerData": {
                         "customerName": f'{customer["customerFirstName"]} {customer["customerLastName"]}',
@@ -152,3 +141,12 @@ def check_shipment_per_stock(cart):
         for items in storage_result:
             response.append(items['warehouse_id'])
         return response
+
+
+def is_shipment_aasood(shipment_detail):
+    success = False
+    for items in shipment_detail['message']['shipmentDetail']['message']:
+        for cursor in items['shippingMethods']:
+            if cursor['method'] == "aasood":
+                success = True
+    return success

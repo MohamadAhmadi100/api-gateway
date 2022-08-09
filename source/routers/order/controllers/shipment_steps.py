@@ -20,8 +20,21 @@ def get_shipment(response: Response, auth_header=Depends(auth_handler.check_curr
     """
     response_result = shipment_detail(auth_header, response)
     if response_result.get("success"):
-        response.status_code = response_result.get("status_code")
-        return {"success": True, "message": response_result.get("message")}
+        with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+            rpc.response_len_setter(response_len=1)
+            rpc.publish(
+                message={
+                    "cart": {
+                        "action": "remove_cart",
+                        "body": {
+                            "user_id": auth_header[0].get("user_id")
+                        }
+                    }
+                },
+                headers={'cart': True}
+            ).get("cart", {})
+            response.status_code = response_result.get("status_code")
+            return {"success": True, "message": response_result.get("message")}
     else:
         raise HTTPException(status_code=500,
                             detail={"success": False, "message": response_result.get("message")})
