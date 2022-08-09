@@ -20,8 +20,8 @@ app = FastAPI(
     debug=settings.DEBUG_MODE
 )
 
-app.add_middleware(PrometheusMiddleware)
-app.add_route("/metrics", metrics)
+# app.add_middleware(PrometheusMiddleware)
+# app.add_route("/metrics", metrics)
 
 app.include_router(router_auth)
 app.include_router(router_register)
