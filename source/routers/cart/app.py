@@ -222,7 +222,7 @@ def get_cart(response: Response,
                     product["price"] = storage_details.get("informal") if storage_details.get("informal") else product[
                         "price"]
 
-                avaible_count = (storage_details.get("stock_for_sale", 0) - storage_details.get("reserved", 0))
+                avaible_count = (storage_details.get("quantity", 0) - storage_details.get("reserved", 0))
 
                 product["quantity"] = {
                     "storageId": storage_details.get("storage_id"),
