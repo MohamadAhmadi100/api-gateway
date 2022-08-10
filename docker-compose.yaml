@@ -1,4 +1,4 @@
-version: "2"
+version: "3"
 
 services:
     web:
@@ -26,8 +26,8 @@ services:
         deploy:
             resources:
                 limits:
-                    cpus: '5.5'
-                    memory: 16384M
+                    cpus: '8.5'
+                    memory: 16350M
                 reservations:
                     cpus: '2.5'
                     memory: 2048M
