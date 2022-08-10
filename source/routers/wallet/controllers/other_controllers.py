@@ -115,27 +115,27 @@ def get_wallet_by_customer_id_(
         auth_header=Depends(auth.check_current_user_tokens)
 ):
     sub_data, token_data = auth_header
-    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-    #     response.headers["accessToken"] = token_data.get("access_token")
-    #     response.headers["refreshToken"] = token_data.get("refresh_token")
-    #     rpc.response_len_setter(response_len=1)
-    #
-    #     wallet_response = rpc.publish(
-    #         message={
-    #             "wallet": {
-    #                 "action": "get_wallet_by_customer_id",
-    #                 "body": {
-    #                     "customer_id": sub_data.get("user_id")
-    #                 }
-    #             }
-    #         },
-    #         headers={'wallet': True}
-    #     ).get("wallet", {})
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        response.headers["accessToken"] = token_data.get("access_token")
+        response.headers["refreshToken"] = token_data.get("refresh_token")
+        rpc.response_len_setter(response_len=1)
 
-    wallet_response = new_rpc.publish(
-        message=[
-            wallet_funcs.get_wallet_by_customer_id(customer_id=sub_data.get("user_id"))]
-    )
+        wallet_response = rpc.publish(
+            message={
+                "wallet": {
+                    "action": "get_wallet_by_customer_id",
+                    "body": {
+                        "customer_id": sub_data.get("user_id")
+                    }
+                }
+            },
+            headers={'wallet': True}
+        ).get("wallet", {})
+
+    # wallet_response = new_rpc.publish(
+    #     message=[
+    #         wallet_funcs.get_wallet_by_customer_id(customer_id=sub_data.get("user_id"))]
+    # )
 
     if wallet_response.get("success"):
         response.status_code = wallet_response.get("status_code", 200)

@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi import Response, status
 from pydantic.error_wrappers import ValidationError
 
+from source.message_broker.rabbit_server import RabbitRPC
 from source.helpers import case_converter
 from source.helpers.create_class import CreateClass
 from source.helpers.rabbit_config import new_rpc
@@ -29,9 +30,22 @@ def get_profile(
         auth_header=Depends(auth_handler.check_current_user_tokens),
 ):
     user_data, header = auth_header
-    customer_result = new_rpc.publish(
-        message=[profile_funcs.get_profile(customer_phone_number=user_data)]
-    )
+    # customer_result = new_rpc.publish(
+    #     message=[profile_funcs.get_profile(customer_phone_number=user_data)]
+    # )
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        customer_result = rpc.publish(
+            message={
+                "customer": {
+                    "action": "get_profile",
+                    "body": {
+                        "customer_phone_number": user_data
+                    }
+                }
+            },
+            headers={'customer': True}
+        ).get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
             status_code=customer_result.get("status_code", 500),
