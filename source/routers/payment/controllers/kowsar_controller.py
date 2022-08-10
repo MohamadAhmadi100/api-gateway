@@ -39,7 +39,7 @@ def get_payment(
     if search and search.isalpha():
         with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
             rpc.response_len_setter(response_len=1)
-            customer_result = new_rpc.publish(
+            customer_result = rpc.publish(
                 message={
                     "customer": {
                         "action": "search_customers_by_name",
