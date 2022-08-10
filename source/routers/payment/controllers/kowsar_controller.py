@@ -116,7 +116,6 @@ def change_kowsar_status(
             )
         ]
     )
-    check_order_result = check_order_result.get("payment", {})
     if not check_order_result.get("success"):
         raise HTTPException(status_code=check_order_result.get("status_code", 500),
                             detail={"error": check_order_result.get("error", "Something went wrong")})
