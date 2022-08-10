@@ -38,7 +38,7 @@ def charge_wallet(
         if wallet_response.get("success"):
             transaction = wallet_response.get("message")
             send_data = SendData(
-                amount=int(charge_data.amount),
+                amount=int(charge_data.amount)*10,
                 customerId=int(charge_data.customer_id),
                 serviceName="wallet",
                 serviceId=f'w{transaction.get("transactionId")}',
