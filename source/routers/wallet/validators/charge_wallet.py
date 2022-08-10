@@ -11,6 +11,6 @@ class Charge(BaseModel):
 
     @validator('amount')
     def check_amount(cls, amount):
-        if amount < 10000:
+        if amount < 1000:
             raise ValueError("must be greater than 1000 rial")
         return amount
