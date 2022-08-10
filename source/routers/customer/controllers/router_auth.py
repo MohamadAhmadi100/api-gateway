@@ -5,6 +5,7 @@ import source.services.customer.router_auth as ra
 from source.helpers.rabbit_config import new_rpc
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.customer.validators import validation_auth
+from source.message_broker.rabbit_server import RabbitRPC
 
 router_auth = APIRouter(
     prefix="/auth",
@@ -98,11 +99,25 @@ def checking_login_otp_code(
         value: validation_auth.CustomerVerifyOTP,
         response: Response,
 ):
-    customer_result = new_rpc.publish(
-        message=[
-            ra.checking_login_otp_code(customer_phone_number=value.customer_phone_number,
-                                       customer_code=value.customer_code)]
-    )
+    # customer_result = new_rpc.publish(
+    #     message=[
+    #         ra.checking_login_otp_code(customer_phone_number=value.customer_phone_number,
+    #                                    customer_code=value.customer_code)]
+    # )
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        customer_result = rpc.publish(
+            message={
+                "customer": {
+                    "action": "checking_login_otp_code",
+                    "body": {
+                        "customer_phone_number": value.customer_phone_number,
+                        "customer_code": value.customer_code
+                    }
+                }
+            },
+            headers={'customer': True}
+        ).get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
             status_code=customer_result.get("status_code", 500),
