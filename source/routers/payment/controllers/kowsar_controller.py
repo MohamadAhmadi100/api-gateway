@@ -142,7 +142,7 @@ def change_kowsar_status(
                     payment_id=check_order_result.get("payment_id")
                 )
             ]
-        ).get("payment", {})
+        )
         result = kowsar_status_result.get("message")
         service_name = result.get("service", {})
         if service_name == "offline":
