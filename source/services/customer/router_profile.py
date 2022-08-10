@@ -1,3 +1,14 @@
+def get_raw_profile(customer_phone_number: dict):
+    return {
+            "customer": {
+                "action": "get_raw_profile",
+                "body": {
+                    "customer_phone_number": customer_phone_number,
+                }
+            }
+        }
+
+
 def get_profile(customer_phone_number: dict):
     return {
             "customer": {
