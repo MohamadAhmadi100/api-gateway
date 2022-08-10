@@ -23,15 +23,6 @@ services:
           - /home/masood/logs/api-gateway:/api-gateway/log
           - /etc/timezone:/etc/timezone:ro
           - /etc/localtime:/etc/localtime:ro
-        deploy:
-            resources:
-                limits:
-                    cpus: '8.5'
-                    memory: 16350M
-                reservations:
-                    cpus: '2.5'
-                    memory: 2048M
-
 networks:
     apinet:
         driver: bridge
