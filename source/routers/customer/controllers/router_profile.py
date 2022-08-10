@@ -37,20 +37,20 @@ def get_profile(
             status_code=customer_result.get("status_code", 500),
             detail={"error": customer_result.get("error", "Something went wrong")}
         )
-    attribute_result = new_rpc.publish(
-        message=[attribute_funcs.get_all_attributes_by_assignee(name="customer")]
-    )
-    if not attribute_result.get("success"):
-        raise HTTPException(status_code=attribute_result.get("status_code", 500),
-                            detail={"error": attribute_result.get("error", "Something went wrong")})
+    # attribute_result = new_rpc.publish(
+    #     message=[attribute_funcs.get_all_attributes_by_assignee(name="customer")]
+    # )
+    # if not attribute_result.get("success"):
+    #     raise HTTPException(status_code=attribute_result.get("status_code", 500),
+    #                         detail={"error": attribute_result.get("error", "Something went wrong")})
     customer_data = customer_result.get("message", {})
-    attributes = attribute_result.get("message", [])
-    valid_attrs = []
-    for attr in case_converter.convert_case(attributes, "camel"):
-        if customer_data.get(attr.get("name")) is None or not None:
-            attr["value"] = customer_data.get(attr.get("name"))
-            valid_attrs.append(attr)
-    valid_attrs.append({"profileStatus": customer_data.get("profileStatus")})
+    # attributes = attribute_result.get("message", [])
+    # valid_attrs = []
+    # for attr in case_converter.convert_case(attributes, "camel"):
+    #     if customer_data.get(attr.get("name")) is None or not None:
+    #         attr["value"] = customer_data.get(attr.get("name"))
+    #         valid_attrs.append(attr)
+    # valid_attrs.append({"profileStatus": customer_data.get("profileStatus")})
     sub_dict = {
         "user_id": user_data.get('user_id'),
         "customer_type": user_data.get('customer_type'),
@@ -59,7 +59,7 @@ def get_profile(
     response.status_code = status.HTTP_200_OK
     response.headers["accessToken"] = auth_handler.encode_refresh_token(sub_dict)
     response.headers["refresh_token"] = auth_handler.encode_access_token(sub_dict)
-    return valid_attrs
+    return customer_data
 
 
 @router_profile.put("/")
