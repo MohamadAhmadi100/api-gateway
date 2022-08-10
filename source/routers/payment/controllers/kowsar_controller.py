@@ -37,6 +37,7 @@ def get_payment(
         search: Optional[str] = Query(None)
 ):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
         if search and search.isalpha():
             rpc.response_len_setter(response_len=1)
             customer_result = rpc.publish(
@@ -110,6 +111,7 @@ def change_kowsar_status(
         response: Response
 ):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
         check_order_result = rpc.publish(
             message=
             payment_controller.get_payment_by_service_id(

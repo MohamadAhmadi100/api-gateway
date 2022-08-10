@@ -27,6 +27,7 @@ router = APIRouter()
 def get_url(data: payment.SendData, response: Response):
     bank_name = random.choice(BANK_NAMES)
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
         payment_result = rpc.publish(
             message=
             bank_controller.get_data(
@@ -77,6 +78,7 @@ async def set_callback(request: Request, response: Response):
     response_string: bytes = await request.body()
     response_string: str = response_string.decode("utf-8")
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
         result = rpc.publish(
             message=
             bank_controller.callback_pay(
