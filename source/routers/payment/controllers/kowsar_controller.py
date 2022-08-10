@@ -7,7 +7,7 @@ from source.routers.order.helpers.final_helper import handle_order_bank_callback
 import requests
 from source.routers.wallet.wallet_modules.wallet_callback import callback_payment
 from source.routers.payment.validators.kowsar import DateSort
-from source.helpers.rabbit_config import new_rpc
+# from source.helpers.rabbit_config import new_rpc
 import source.services.payment.payment_controller as payment_controller
 import source.services.kosar.payment_controller as kosar_controller
 import source.services.payment.bank_controller as bank_controller
@@ -36,8 +36,8 @@ def get_payment(
         kowsar_status: Optional[list] = Query(None),
         search: Optional[str] = Query(None)
 ):
-    if search and search.isalpha():
-        with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        if search and search.isalpha():
             rpc.response_len_setter(response_len=1)
             customer_result = rpc.publish(
                 message={
@@ -50,15 +50,15 @@ def get_payment(
                 },
                 headers={'customer': True}
             )
-        customer_result = customer_result.get("customer", {})
-        if not customer_result.get("success"):
-            raise HTTPException(status_code=customer_result.get("status_code", 500),
-                                detail={"error": customer_result.get("error", "Something went wrong")})
-        search = {"customer_id": customer_result.get("message")}
-    else:
-        search = {"service_id": search}
-    payment_result = new_rpc.publish(
-        message=[
+            customer_result = customer_result.get("customer", {})
+            if not customer_result.get("success"):
+                raise HTTPException(status_code=customer_result.get("status_code", 500),
+                                    detail={"error": customer_result.get("error", "Something went wrong")})
+            search = {"customer_id": customer_result.get("message")}
+        else:
+            search = {"service_id": search}
+        payment_result = rpc.publish(
+            message=
             payment_controller.get_payment(
                 page=page,
                 per_page=per_page,
@@ -71,37 +71,37 @@ def get_payment(
                     "kowsar_status": kowsar_status,
                     **search
                 }
-            )
-        ]
-    )
-    if not payment_result.get("success"):
-        raise HTTPException(status_code=payment_result.get("status_code", 500),
-                            detail={"error": payment_result.get("error", "Something went wrong")})
-    status_code = payment_result.get("status_code")
-    payment_result = payment_result.get("message", {})
-    if not payment_result.get("transaction"):
-        del payment_result["customer_id_list"]
-        response.status_code = status_code
-        return payment_result
-    final_result = new_rpc.publish(
-        message=[
+            ),
+            headers={"payment": True}
+        ).get("payment", {})
+        if not payment_result.get("success"):
+            raise HTTPException(status_code=payment_result.get("status_code", 500),
+                                detail={"error": payment_result.get("error", "Something went wrong")})
+        status_code = payment_result.get("status_code")
+        payment_result = payment_result.get("message", {})
+        if not payment_result.get("transaction"):
+            del payment_result["customer_id_list"]
+            response.status_code = status_code
+            return payment_result
+        final_result = rpc.publish(
+            message=
             customer_controller.get_customer_data_by_id(
                 id_list=list(set(payment_result.get("customer_id_list")))
-            )
-        ]
-    )
-    if not final_result.get("success"):
-        raise HTTPException(status_code=final_result.get("status_code", 500),
-                            detail={"error": final_result.get("error", "Something went wrong")})
-    response.status_code = final_result.get("status_code")
-    final_result = convert_case(final_result.get("message"), "camel")
-    for result in payment_result.get("transaction"):
-        customer_result = final_result.get(str(result.get("customerId")))
-        if customer_result is None:
-            customer_result = {'firstName': None, 'lastName': None, 'kowsarNumber': None}
-        result.update(customer_result)
-    del payment_result["customer_id_list"]
-    return payment_result
+            ),
+            headers={"customer": True}
+        ).get("customer", {})
+        if not final_result.get("success"):
+            raise HTTPException(status_code=final_result.get("status_code", 500),
+                                detail={"error": final_result.get("error", "Something went wrong")})
+        response.status_code = final_result.get("status_code")
+        final_result = convert_case(final_result.get("message"), "camel")
+        for result in payment_result.get("transaction"):
+            customer_result = final_result.get(str(result.get("customerId")))
+            if customer_result is None:
+                customer_result = {'firstName': None, 'lastName': None, 'kowsarNumber': None}
+            result.update(customer_result)
+        del payment_result["customer_id_list"]
+        return payment_result
 
 
 @router.put("/change_kowsar_status/")
@@ -109,61 +109,61 @@ def change_kowsar_status(
         service_id: str,
         response: Response
 ):
-    check_order_result = new_rpc.publish(
-        message=[
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        check_order_result = rpc.publish(
+            message=
             payment_controller.get_payment_by_service_id(
                 service_id=service_id
-            )
-        ]
-    )
-    if not check_order_result.get("success"):
-        raise HTTPException(status_code=check_order_result.get("status_code", 500),
-                            detail={"error": check_order_result.get("error", "Something went wrong")})
-    check_order_result = check_order_result.get("message")
-    kowsar_result = new_rpc.publish(
-        message=[
+            ),
+            headers={"payment": True}
+        ).get("payment", {})
+        if not check_order_result.get("success"):
+            raise HTTPException(status_code=check_order_result.get("status_code", 500),
+                                detail={"error": check_order_result.get("error", "Something went wrong")})
+        check_order_result = check_order_result.get("message")
+        kowsar_result = rpc.publish(
+            message=
             kosar_controller.kowsar_transaction(
                 order_id=service_id,
                 price=check_order_result.get("amount"),
                 customer_id=check_order_result.get("customer_id"),
                 bank_code=check_order_result.get("bank_code"),
                 bank_name=check_order_result.get("bank_name")
-            )
-        ]
-    )
-    if not kowsar_result.get("success"):
-        raise HTTPException(status_code=kowsar_result.get("status_code", 500),
-                            detail={"error": kowsar_result.get("error", "Something went wrong")})
-    try:
-        kowsar_status_result = new_rpc.publish(
-            message=[
-                bank_controller.change_kowsar_status(
-                    kowsar_status=kowsar_result.get("message"),
-                    payment_id=check_order_result.get("payment_id")
-                )
-            ]
-        )
+            ),
+            headers={"kosar": True}
+        ).get("kosar", {})
+        if not kowsar_result.get("success"):
+            raise HTTPException(status_code=kowsar_result.get("status_code", 500),
+                                detail={"error": kowsar_result.get("error", "Something went wrong")})
+        kowsar_status_result = rpc.publish(
+            message=
+            bank_controller.change_kowsar_status(
+                kowsar_status=kowsar_result.get("message"),
+                payment_id=check_order_result.get("payment_id")
+            ),
+            headers={"payment": True}
+        ).get("payment", {})
         result = kowsar_status_result.get("message")
-        service_name = result.get("service", {})
-        if service_name == "offline":
-            del result["service"]
-            data = requests.put(
-                "http://devob.aasood.com/offline/update_status/",
-                data=json.dumps(result)
-            )
-            service_data = {"offline": {
-                "success": data.json().get("type"),
-                "message": data.json().get("message"),
-                "status_code": data.status_code
-            }}
-        else:
-            service_data = callback_service_handler.get(
-                service_name
-            )(
-                result=result,
-                response=response
-            )
-    except:
-        ...
-    response.status_code = kowsar_result.get("status_code")
-    return kowsar_result.get("message")
+        #     service_name = result.get("service", {})
+        #     if service_name == "offline":
+        #         del result["service"]
+        #         data = requests.put(
+        #             "http://devob.aasood.com/offline/update_status/",
+        #             data=json.dumps(result)
+        #         )
+        #         service_data = {"offline": {
+        #             "success": data.json().get("type"),
+        #             "message": data.json().get("message"),
+        #             "status_code": data.status_code
+        #         }}
+        #     else:
+        #         service_data = callback_service_handler.get(
+        #             service_name
+        #         )(
+        #             result=result,
+        #             response=response
+        #         )
+        # except:
+        #     ...
+        response.status_code = kowsar_result.get("status_code")
+        return kowsar_result.get("message")
