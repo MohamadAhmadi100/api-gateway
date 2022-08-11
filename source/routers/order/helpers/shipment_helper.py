@@ -142,11 +142,10 @@ def check_shipment_per_stock(cart):
         return response
 
 
-def is_shipment_aasood(shipment_detail):
+def is_pos_allowed(cart):
     success = False
-    allowed_methods = ['aasood', 'courier']
-    for items in shipment_detail['message']['shipmentDetail']['message']:
-        for cursor in items['shippingMethods']:
-            if cursor['method'] in allowed_methods:
-                success = True
+    allowed_pos_methods = ['aasood', 'courier']
+    for key, value in cart['shipment'].items():
+        if value['shippingMethod'] in allowed_pos_methods:
+            success = True
     return success
