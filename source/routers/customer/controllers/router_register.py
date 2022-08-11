@@ -9,6 +9,7 @@ from source.helpers.exception_handler import LogHandler
 from source.helpers.rabbit_config import new_rpc
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.customer.validators import validation_register
+from source.message_broker.rabbit_server import RabbitRPC
 
 router_register = APIRouter(
     prefix="/register",
@@ -83,10 +84,23 @@ def register(
         "customer_postal_code": value.customer_postal_code,
         "customer_type": customer_type
     }
-    customer_result = new_rpc.publish(
-        message=[
-            register_funcs.register(data=data)]
-    )
+    # customer_result = new_rpc.publish(
+    #     message=[
+    #         register_funcs.register(data=data)]
+    # )
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        customer_result = rpc.publish(
+            message={
+                "customer": {
+                    "action": "register",
+                    "body": {
+                        "data": data
+                    }
+                }
+            },
+            headers={'customer': True}
+        ).get("customer", {})
     if not customer_result.get("success"):
         raise HTTPException(
             status_code=customer_result.get("status_code", 500),
@@ -102,10 +116,24 @@ def register(
         ]
     )
     customer_id = customer_result.get("message").get("data").get("customerID")
-    address_result = new_rpc.publish(
-        message=[
-            address_funcs.insert_address(data=address, customerId=str(customer_id))]
-    )
+    # address_result = new_rpc.publish(
+    #     message=[
+    #         address_funcs.insert_address(data=address, customerId=str(customer_id))]
+    # )
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        address_result = rpc.publish(
+            message={
+                "address": {
+                    "action": "insert_address",
+                    "body": {
+                        "data": address,
+                        "customerId": str(customer_id)
+                    }
+                }
+            },
+            headers={'address': True}
+        ).get("address", {})
     if not address_result.get("success"):
         raise HTTPException(
             status_code=317,
