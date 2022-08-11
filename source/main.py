@@ -103,10 +103,10 @@ def shutdown_event() -> None:
     logging.info("Application is shutting down...")
 
 
-@app.on_event("startup")
-@repeat_every(seconds=60)
-def payment_close_tab_handler():
-    closing_tab_handling()
+#@app.on_event("startup")
+#@repeat_every(seconds=60)
+#def payment_close_tab_handler():
+#    closing_tab_handling()
 
 
 @app.get("/")
