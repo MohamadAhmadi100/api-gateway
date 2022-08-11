@@ -106,8 +106,7 @@ async def set_callback(request: Request, response: Response):
                         bank_name=result.get("message", {}).get("bank_name")
                     ),
                     headers={"payment": True}
-                )
-                result = result.get("payment", {})
+                ).get("payment", {})
                 if not check_verify_res.get("message", {}):
                     verify_data = check_verify_res.get("data")
                     result["message"].update(verify_data)
