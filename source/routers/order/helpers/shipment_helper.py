@@ -95,7 +95,6 @@ def shipment_detail(auth_header, response):
                 if reciver_info['success']:
                     reciver_data = reciver_info.get("message").get("data")
 
-
                 result = {
                     "customerData": {
                         "customerName": f'{customer["customerFirstName"]} {customer["customerLastName"]}',
@@ -145,8 +144,9 @@ def check_shipment_per_stock(cart):
 
 def is_shipment_aasood(shipment_detail):
     success = False
+    allowed_methods = ['aasood', 'courier']
     for items in shipment_detail['message']['shipmentDetail']['message']:
         for cursor in items['shippingMethods']:
-            if cursor['method'] == "aasood":
+            if cursor['method'] in allowed_methods:
                 success = True
     return success
