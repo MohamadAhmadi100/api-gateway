@@ -72,7 +72,7 @@ class Data(BaseModel):
         maxLength=10,
         dataType="string",
         type="text",
-        regexPattern="^[0-9]{10}$",
+        regexPattern="^[0-9۰-۹]{10}$",
         isRquired=False,
     )
     customer_email: Optional[str] = Field(
@@ -223,7 +223,7 @@ class Data(BaseModel):
         maxLength=32,
         dataType="string",
         type="text",
-        regexPattern=r"^[0-9]*10",
+        regexPattern=r"^[0-9۰-۹]{10}$",
         isRquired=False,
     )
 
@@ -245,7 +245,7 @@ class Data(BaseModel):
 
     @validator("customer_postal_code")
     def validate_customer_postal_code(cls, customer_postal_code):
-        pattern = r"^[0-9]{10}$"
+        pattern = r"^[0-9۰-۹]{10}$"
         match = re.fullmatch(pattern, customer_postal_code)
         if not match:
             raise HTTPException(status_code=422, detail={"error": "کد پستی وارد شده صحیح نمیباشد"})
@@ -322,14 +322,17 @@ class Data(BaseModel):
 
     @validator("customer_shop_postal_code")
     def validate_customer_shop_postal_code(cls, customer_shop_postal_code):
-        pattern = "^[0-9]{10}$"
+        pattern = "^[0-9۰-۹]{10}$"
         match = re.fullmatch(pattern, customer_shop_postal_code)
         if not match:
             raise HTTPException(status_code=422, detail={"message": "لطفا کد پستی محل کسب خود را به درستی وارد کنید"})
         return customer_shop_postal_code
 
+
 class EditProfile(BaseModel):
     data: Data
+
+
 # ----------------------- change password ----------------------------#
 class ChangePassword(BaseModel):
     oldPassword: str = Field(
