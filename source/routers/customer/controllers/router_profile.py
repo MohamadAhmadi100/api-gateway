@@ -8,11 +8,11 @@ import logging
 from source.message_broker.rabbit_server import RabbitRPC
 from source.helpers import case_converter
 from source.helpers.create_class import CreateClass
-from source.helpers.rabbit_config import new_rpc
+# from source.helpers.rabbit_config import new_rpc
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.customer.validators.validation_profile import EditProfile, Delivery, Person, ChangePassword
-import source.services.customer.router_profile as profile_funcs
-import source.services.attribute.assignee_controller as attribute_funcs
+# import source.services.customer.router_profile as profile_funcs
+# import source.services.attribute.assignee_controller as attribute_funcs
 # import source.services.kosar.router_customer as customer_funcs
 # import source.services.customer.router_back_office as back_office_funcs
 
@@ -30,31 +30,31 @@ def get_profile(
         auth_header=Depends(auth_handler.check_current_user_tokens),
 ):
     user_data, header = auth_header
-    customer_result = new_rpc.publish(
-        message=[profile_funcs.get_profile(customer_phone_number=user_data)]
-    )
-    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-    #     rpc.response_len_setter(response_len=1)
-    #     customer_result = rpc.publish(
-    #         message={
-    #             "customer": {
-    #                 "action": "get_profile",
-    #                 "body": {
-    #                     "customer_phone_number": user_data
-    #                 }
-    #             }
-    #         },
-    #         headers={'customer': True}
-    #     ).get("customer", {})
+    # customer_result = new_rpc.publish(
+    #     message=[profile_funcs.get_profile(customer_phone_number=user_data)]
+    # )
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        customer_result = rpc.publish(
+            message={
+                "customer": {
+                    "action": "get_profile",
+                    "body": {
+                        "customer_phone_number": user_data
+                    }
+                }
+            },
+            headers={'customer': True}
+        ).get("customer", {})
     if not customer_result.get("success"):
-        logging.basicConfig(
-            format='%(asctime)s %(levelname)-8s %(message)s',
-            filename="app.log",
-            level=logging.ERROR,
-            datefmt='%Y-%m-%d %H:%M:%S'
-        )
-        logging.error(f"Exception raised, RESULT: {customer_result}")
-        print(customer_result)
+        # logging.basicConfig(
+        #     format='%(asctime)s %(levelname)-8s %(message)s',
+        #     filename="app.log",
+        #     level=logging.ERROR,
+        #     datefmt='%Y-%m-%d %H:%M:%S'
+        # )
+        # logging.error(f"Exception raised, RESULT: {customer_result}")
+        # print(customer_result)
         raise HTTPException(
             status_code=customer_result.get("status_code", 500),
             detail={"error": customer_result.get("error", "Something went wrong")}
