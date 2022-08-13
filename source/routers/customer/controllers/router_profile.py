@@ -8,13 +8,13 @@ from pydantic.error_wrappers import ValidationError
 from source.message_broker.rabbit_server import RabbitRPC
 from source.helpers import case_converter
 from source.helpers.create_class import CreateClass
-from source.helpers.rabbit_config import new_rpc
+# from source.helpers.rabbit_config import new_rpc
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.customer.validators.validation_profile import EditProfile, Delivery, Person, ChangePassword
-import source.services.customer.router_profile as profile_funcs
-import source.services.attribute.assignee_controller as attribute_funcs
-import source.services.kosar.router_customer as customer_funcs
-import source.services.customer.router_back_office as back_office_funcs
+# import source.services.customer.router_profile as profile_funcs
+# import source.services.attribute.assignee_controller as attribute_funcs
+# import source.services.kosar.router_customer as customer_funcs
+# import source.services.customer.router_back_office as back_office_funcs
 
 router_profile = APIRouter(
     prefix="/profile",
