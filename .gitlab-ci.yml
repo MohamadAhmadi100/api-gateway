@@ -57,11 +57,11 @@ push:
   only:
     - master
   tags:
-    - stage-jon
+    - deploy
   script:
     - echo APP_NAME=$APP_NAME >> .env
     - echo DEBUG_MODE=$DEBUG_MODE >> .env
-    - echo RABBITMQ_HOST=200.100.100.215 >> .env
+    - echo RABBITMQ_HOST="172.16.16.16" >> .env
     - echo RABBITMQ_PORT=$RABBITMQ_PORT >> .env
     - echo RABBITMQ_USER=$RABBITMQ_USER >> .env
     - echo RABBITMQ_PASS=$RABBITMQ_PASS >> .env
@@ -82,11 +82,11 @@ master_deploy:
   only:
     - master
   tags:
-    - stage-jon
+    - deploy
   script:
     - echo APP_NAME=$APP_NAME >> .env
     - echo DEBUG_MODE=$DEBUG_MODE >> .env
-    - echo RABBITMQ_HOST="200.100.100.215" >> .env
+    - echo RABBITMQ_HOST="172.16.16.16" >> .env
     - echo RABBITMQ_PORT=$RABBITMQ_PORT >> .env
     - echo RABBITMQ_USER=$RABBITMQ_USER >> .env
     - echo RABBITMQ_PASS=$RABBITMQ_PASS >> .env
@@ -98,5 +98,5 @@ master_deploy:
     - echo TEMPLATE=$TEMPLATE >> .env
     - echo GALLERY_DIR=$GALLERY_DIR >> .env
     - echo SECRET_KEY=$SECRET_KEY >> .env
-    - docker login 200.100.100.219:80 -u registry -p $REGPASS
+    - docker login nexus.aasood.com -u registry -p $REGPASS
     - docker-compose -f docker-compose.yaml up -d --build
