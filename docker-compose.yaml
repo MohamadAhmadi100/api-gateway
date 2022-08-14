@@ -23,6 +23,8 @@ services:
           - /home/masood/logs/api-gateway:/api-gateway/log
           - /etc/timezone:/etc/timezone:ro
           - /etc/localtime:/etc/localtime:ro
+        networks:
+          - apinet
 networks:
     apinet:
         driver: bridge
