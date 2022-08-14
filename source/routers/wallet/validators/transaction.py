@@ -29,9 +29,8 @@ class SortName(str, Enum):
 
 
 class SortType(str, Enum):
-    asc = "asc"
-    desc = "desc"
-
+    ascend = "ascend"
+    descend = "descend"
 
 class Transaction(BaseModel):
     page: Optional[int] = Field(alias="page", default=1)

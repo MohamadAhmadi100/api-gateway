@@ -21,8 +21,8 @@ auth = AuthHandler()
 
 
 class SortType(str, Enum):
-    asc = "asc"
-    desc = "desc"
+    ascend = "ascend"
+    descend = "descend"
 
 
 @router.put("/update-wallet", tags=["customer side"])
