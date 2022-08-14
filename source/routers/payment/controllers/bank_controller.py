@@ -1,7 +1,8 @@
 import json
+import logging
 import random
 from fastapi.responses import RedirectResponse
-from fastapi import HTTPException, Response, APIRouter, Request
+from fastapi import HTTPException, Response, APIRouter, Request, Body
 # from source.helpers.rabbit_config import new_rpc
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.order.helpers.final_helper import handle_order_bank_callback
@@ -165,3 +166,83 @@ async def set_callback(request: Request, response: Response):
                 result = 1 if service_data.get("result") else 2
             return RedirectResponse(
                 f"https://m.aasood.com/payment-result/{result}/{service_data.get('service_id')}")
+
+
+@router.post("/closed_tabs")
+def closing_tab_handling(data=Body(...)):
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        for result in data.get("message"):
+            service_name = result.get("service", {})
+            try:
+                if service_name == "offline":
+                    del result.get("message")["service"], result.get("message")["return_bank"]
+                    data = requests.put(
+                        "http://devob.aasood.com/offline/update_status/",
+                        data=json.dumps(result.get("message", {}))
+                    )
+                    service_data = {"offline": {
+                        "success": data.json().get("type"),
+                        "message": data.json().get("message"),
+                        "status_code": data.status_code
+                    }}
+                else:
+                    service_data = callback_service_handler.get(
+                        service_name
+                    )(
+                        result=result,
+                        response=Response
+                    )
+            except Exception as e:
+                logging.error(e)
+                continue
+
+
+@router.post("/test")
+def test(data: payment.SendData, response: Response):
+    bank_name = "saman"
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        payment_result = rpc.publish(
+            message=
+            bank_controller.get_data(
+                data=dict(data),
+                bank_name=bank_name
+            )
+            ,
+            headers={"payment": True}
+        )
+        payment_result = payment_result.get("payment", {})
+        if not payment_result.get("success"):
+            raise HTTPException(status_code=payment_result.get("status_code", 500),
+                                detail={"error": payment_result.get("error", "Something went wrong")})
+
+        token_result = payment_modules.request_bank_handler(
+            api=payment_result.get("message", {}).get("url"),
+            data=payment_result.get("message", {}).get("bank_data"),
+            bank_name=payment_result.get("message", {}).get("bank_name")
+        )
+        url_result = rpc.publish(
+            message=
+            bank_controller.redirect_url(
+                data=token_result,
+                payment_id=payment_result.get("message", {}).get("payment_id"),
+                bank_name=payment_result.get("message", {}).get("bank_name")
+            ),
+            headers={"payment": True}
+        )
+        url_result = url_result.get("payment", {})
+        if not url_result.get("success"):
+            raise HTTPException(status_code=url_result.get("status_code", 500),
+                                detail={"error": url_result.get("error", "Something went wrong")})
+
+        uis_result = rpc.publish(
+            message=
+            uis_controller.hashed_generator(
+                link=url_result.get("message")
+            ),
+            headers={"uis": True}
+        )
+        uis_result = uis_result.get("uis", {})
+        response.status_code = uis_result.get("status_code")
+        return uis_result
