@@ -1,6 +1,6 @@
 FROM python:3.9
 
-echo "CipherString = DEFAULT@SECLEVEL=1" >> /etc/ssl/openssl.cnf
+ECHO "CipherString = DEFAULT@SECLEVEL=1" >> /etc/ssl/openssl.cnf
 
 WORKDIR /api-gateway
 
