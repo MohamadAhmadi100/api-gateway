@@ -25,7 +25,7 @@ from source.routers.mobile_app.app import app as mobile_app
 from source.routers.dealership.app import app as dealership
 from source.routers.credit.app import app as credit_app
 from fastapi_utils.tasks import repeat_every
-from source.routers.payment.modules.payment_callback import closing_tab_handling
+# from source.routers.payment.modules.payment_callback import closing_tab_handling
 
 app = FastAPI(title="API Gateway",
               description="Backend for frontend aka. API Gateway!",

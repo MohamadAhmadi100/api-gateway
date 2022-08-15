@@ -168,11 +168,11 @@ async def set_callback(request: Request, response: Response):
                 f"https://m.aasood.com/payment-result/{result}/{service_data.get('service_id')}")
 
 
-@router.post("/closed_tabs")
-def closing_tab_handling(data=Body(...)):
+@router.post("/closed_tabs", include_in_schema=False)
+def closing_tab_handling(data: list = Body(...)):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
-        for result in data.get("message"):
+        for result in data:
             service_name = result.get("service", {})
             try:
                 if service_name == "offline":
