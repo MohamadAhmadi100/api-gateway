@@ -165,7 +165,7 @@ async def set_callback(request: Request, response: Response):
             elif service_name == "order":
                 result = 1 if service_data.get("result") else 2
             return RedirectResponse(
-                f"https://m.aasood.com/payment-result/{result}/{service_data.get('service_id')}")
+                f"https://aasood.com/payment-result/{result}/{service_data.get('service_id')}")
 
 
 @router.post("/closed_tabs", include_in_schema=False)
