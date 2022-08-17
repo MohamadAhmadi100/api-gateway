@@ -1,11 +1,13 @@
-from typing import Optional
-
 from fastapi import HTTPException
 from pydantic import BaseModel, Field, validator
 
 
 class BaseCart(BaseModel):
     pass
+
+
+class cancel(BaseModel):
+    orderNumber: int
 
 
 class wallet(BaseModel):
@@ -27,10 +29,6 @@ class payment(BaseModel):
 
 class informal(BaseModel):
     national_id: str
-
-
-class cancel(BaseModel):
-    orderNumber: int
 
 
 class edit_order_validator(BaseModel):

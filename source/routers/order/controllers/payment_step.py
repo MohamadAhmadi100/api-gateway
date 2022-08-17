@@ -31,7 +31,7 @@ def get_formal_payment(response: Response, auth_header=Depends(auth_handler.chec
 
         wallet_amount = get_remaining_wallet(user)
 
-        if cart['totalPrice'] > 50000000:
+        if cart['totalPrice'] > 1000:
             payment_method = [
                 {"methodName": "deposit", "methodLabe": "واریز به حساب"}]
         elif cart['totalPrice'] == 0:

@@ -24,20 +24,37 @@ def cancel_order(response: Response,
     user, token_dict = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
-        order_result = rpc.publish(
+        get_order_result = rpc.publish(
             message={
                 "order": {
-                    "action": "cancel_order_by_customer",
+                    "action": "get_one_order",
                     "body": {
-                        "order_number": data.orderNumber
+                        "order_id": data.orderNumber
                     }
                 }
             },
             headers={'order': True}
         ).get("order")
-        if order_result.get("success"):
-            reserve_action = remove_from_reserve_order_items(order_object=order_result.get("order_object"))
-            if reserve_action.get("success"):
+        allowed_statuses = ["processing", "pending_payment", "pending_accounting", "pos"]
+        order_object = get_order_result.get("order_object")
+        if order_object['status'] not in allowed_statuses:
+            response.status_code = 400
+            return {"success": False, "message": "سفارش قابل تغییر وضعیت نیست"}
+        reserve_action = remove_from_reserve_order_items(order_object=order_object)
+        if reserve_action.get("success"):
+            rpc.response_len_setter(response_len=1)
+            order_result = rpc.publish(
+                message={
+                    "order": {
+                        "action": "cancel_order_by_customer",
+                        "body": {
+                            "order_number": data.orderNumber
+                        }
+                    }
+                },
+                headers={'order': True}
+            ).get("order")
+            if order_result.get("success"):
                 if order_result['wallet_charge'] == 0:
                     return {"success": True, "message": "سفارش با موفقیت لغو شد"}
                 else:
@@ -47,10 +64,13 @@ def cancel_order(response: Response,
                         return {"success": True, "message": order_result.get("message")}
                     else:
                         return {"success": True, "message": "سفارش با موفقیت لغو شد ولی کیف پول شما شارژ نشد. با ادمین تماس بگیرید"}
+
             else:
-                return {"success": False, "message": "رزرو تغییر نکرد"}
+                response.status_code = 400
+                return order_result
         else:
-            return order_result
+            response.status_code = 400
+            return {"success": False, "message": "عملیات ناموفق بود"}
 
 
 @edit_order.put("/edit_order/", tags=["Edit order"])
