@@ -30,7 +30,7 @@ def get_formal_payment(response: Response, auth_header=Depends(auth_handler.chec
             return {"success": False, "message": "!روش ارسال برای همه انبار ها را انتخاب کنید"}
 
         wallet_amount = get_remaining_wallet(user)
-        #
+
         # if cart['totalPrice'] > 1000:
         #     payment_method = [
         #         {"methodName": "deposit", "methodLabe": "واریز به حساب"}]
@@ -42,18 +42,18 @@ def get_formal_payment(response: Response, auth_header=Depends(auth_handler.chec
                 {"methodName": "aiBanking", "methodLabe": "پرداخت انلاین"},
                 {"methodName": "deposit", "methodLabe": "واریز به حساب"}]
 
-            # pardakht dar mahal
-            allowed_pos = is_pos_allowed(cart)
-            if allowed_pos:
-                payment_method.append({"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"})
+        # pardakht dar mahal
+        allowed_pos = is_pos_allowed(cart)
+        if allowed_pos:
+            payment_method.append({"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"})
 
-            response_result = {
-                "walletAmount": wallet_amount,
-                "allowPaymentMethods": payment_method,
-            }
-            response.status_code = 200
-            return {"success": True, "message": response_result, "cart": cart}
-        except:
+        response_result = {
+            "walletAmount": wallet_amount,
+            "allowPaymentMethods": payment_method,
+        }
+        response.status_code = 200
+        return {"success": True, "message": response_result, "cart": cart}
+    except:
         response.status_code = 404
         return {"success": False, "message": "something went wrong!", "cart": None}
 
