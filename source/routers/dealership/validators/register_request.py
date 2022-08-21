@@ -45,32 +45,32 @@ p = {
         "systemCode": "2000010010001001001001001",
         "storageId": "1",
         "brand": {
-            "value": "Nokia",
-            "label": "Nokia"
+            "value": "Samsung",
+            "label": "Samsung"
         },
-        "model": "110",
-        "name": "110 - Nokia",
+        "model": "A01 Core",
+        "name": "Mobile Samsung A01 Core (1GB 16GB 4G) Vietnam",
         "color": {
             "value": "white",
             "label": "white"
         },
         "guarantee": {
-            "value": "Awat",
-            "label": "Awat"
+            "value": "Aawaat",
+            "label": "Aawaat"
         },
         "seller": {
-            "value": "Aasood",
-            "label": "Aasood"
+            "value": "ASD",
+            "label": "ASD"
         },
-        "price": 1000,
+        "price": 618000,
         "count": 1,
         "mainCategory": {
             "value": "Device",
             "label": "Device"
         },
         "subCategory": {
-            "value": "mobile",
-            "label": "mobile"
+            "value": "Mobile",
+            "label": "Mobile"
         },
         "attributes": [
             {
