@@ -79,7 +79,7 @@ def wallet_final_consume(palceorder_result, cart, auth_header, response):
             raise HTTPException(status_code=wallet_response.get("status_code", 500),
                                 detail={"error": "wallet not response"})
 
-    elif palceorder_result['totalPrice'] == 0:
+    elif palceorder_result['totalPrice'] == 0 or palceorder_result.get("Type") == "pos":
         data_reserve_wallet['status'] = "success"
         wallet_response = complete_order_wallet(order_data=data_reserve_wallet, response=response,
                                                 auth_header=auth_header)
