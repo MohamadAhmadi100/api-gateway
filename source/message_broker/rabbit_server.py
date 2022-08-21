@@ -1,3 +1,4 @@
+import datetime
 import json
 import signal
 import sys
@@ -41,15 +42,21 @@ class RabbitRPC:
         # connect to rabbit with defined credentials
         if not self.connection or self.connection.is_closed:
             credentials = pika.PlainCredentials(self.user, self.password)
-            self.connection = pika.BlockingConnection(
-                pika.ConnectionParameters(
-                    host=self.host,
-                    port=self.port,
-                    credentials=self.credentials,
-                    heartbeat=0,
-                    blocked_connection_timeout=86400  # 86400 seconds = 24 hours
+            try_counter = 1
+            try:
+                self.connection = pika.BlockingConnection(
+                    pika.ConnectionParameters(
+                        host=self.host,
+                        port=self.port,
+                        credentials=self.credentials,
+                        heartbeat=0,
+                        blocked_connection_timeout=86400  # 86400 seconds = 24 hours
+                    )
                 )
-            )
+            except Exception as e:
+                try_counter += 1
+                if try_counter > 3:
+                    raise e
             # self.connection.sleep(1)
             self.channel = self.connection.channel()
             self.channel.exchange_declare(exchange=self.exchange_name, exchange_type='headers')
