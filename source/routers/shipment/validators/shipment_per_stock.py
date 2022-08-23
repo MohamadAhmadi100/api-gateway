@@ -13,6 +13,7 @@ class Insurance(BaseModel):
 
 class PerStock(BaseModel):
     stockId: str = Field()
+    totalPrice : Optional[int] = Field(isRequired=False)
     totalItem: int
     shippingMethod: str = Field(isRequired=True)
     shippingAddress: str
