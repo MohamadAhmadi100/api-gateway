@@ -199,7 +199,7 @@ def closing_tab_handling(data: list = Body(...)):
 
 
 @router.post("/test")
-def test(data: payment.SendData, response: Response):
+def saman_test(data: payment.SendData, response: Response):
     bank_name = "saman"
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)

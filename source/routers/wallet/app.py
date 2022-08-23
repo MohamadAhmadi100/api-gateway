@@ -8,6 +8,7 @@ from starlette.exceptions import HTTPException as starletteHTTPException
 from source.config import settings
 from source.routers.wallet.controllers.other_controllers import router as other_router
 from source.routers.wallet.controllers.charge_wallet_controller import router as charge_router
+from source.routers.wallet.controllers.test_wallet import router as test_wallet
 
 TAGS = [
     {
@@ -33,3 +34,4 @@ def validation_exception_handler(request, exc):
 
 app.include_router(charge_router)
 app.include_router(other_router)
+app.include_router(test_wallet)
