@@ -210,36 +210,3 @@ def add_final_flag_to_cart(auth_header):
             return result_to_order
         else:
             return {"success": False, "message": "something went wrong!"}
-
-handle_order_bank_callback({
-    "payment_id" : 300103,
-    "service_id" : "300001882",
-    "customer_id" : 11284,
-    "amount" : 185797560,
-    "bank_name" : "mellat",
-    "bank_code" : "1011125",
-    "is_paid" : False,
-    "start_payment" : 1660142963.41641,
-    "start_payment_jalali" : "1401-05-19 19:19:23",
-    "service" : "order",
-    "kowsar_status" : {},
-    "return_bank" : True,
-    "send_status" : "sent",
-    "status" : "کاربر از بانک به ضفحه آسود بازگشت",
-    "token" : "F482517F5D252A56",
-    "end_payment" : 1660143026.61919,
-    "end_payment_jalali" : "1401-05-19 19:20:26",
-    "payment_log" : {
-        "RefId" : "F482517F5D252A56",
-        "ResCode" : "0",
-        "SaleOrderId" : "300103",
-        "SaleReferenceId" : "220273384971",
-        "CardHolderInfo" : "7BF381E437B6D995486D3720D5263ACD0110DDC34D9701D24FE10C49A5D8D1F3",
-        "CardHolderPan" : "610433****6064",
-        "FinalAmount" : "185797560"
-    },
-    "verify_log" : {
-        "ResCode" : "0"
-    },
-    "settle_log" : "0"
-},200)
