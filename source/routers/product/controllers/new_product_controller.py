@@ -926,3 +926,33 @@ def get_categories_products(
             return convert_case(message_product, 'camel')
         raise HTTPException(status_code=product_result.get("status_code", 500),
                             detail={"error": product_result.get("error", "Something went wrong")})
+
+
+@router.get("/get_csv/")
+def get_csv(
+        storage_id: str,
+        response: Response,
+):
+    """
+    Get csv
+    """
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_csv",
+                    "body": {
+                        "storage_id": storage_id
+                    }
+                }
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            message_product = product_result.get("message", {})
+            response.status_code = product_result.get("status_code", 200)
+            return Response(content=message_product.encode("utf-8-sig"), media_type="text/csv")
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
