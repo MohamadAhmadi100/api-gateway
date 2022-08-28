@@ -185,7 +185,7 @@ class Data(BaseModel):
         maxLength=16,
         dataType="string",
         type="text",
-        regexPattern=r"^[0-9]{4,5}$",
+        regexPattern=r"^[0-9]{2,32}$",
         isRquired=False,
     )
     customer_document_status: Optional[str] = Field(
