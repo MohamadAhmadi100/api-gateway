@@ -6,7 +6,7 @@ stages:
 build:
   stage: build
   only:
-    - devtest
+    - up
   tags:
     - api-gw
   script:
@@ -31,7 +31,7 @@ build:
 dev_deploy:
   stage: deploy
   only:
-    - devtest
+    - up
   tags:
     - api-gw
   script:
