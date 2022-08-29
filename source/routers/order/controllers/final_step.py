@@ -68,19 +68,31 @@ def final_order(
                         else:
                             return {"success": False, "paymentResult": payment_result.get("error")}
                     else:
+                        rpc.response_len_setter(response_len=1)
+                        rpc.publish(
+                            message={
+                                "order": {
+                                    "action": "order_delete",
+                                    "body": {
+                                        "order_data": place_order_result.get("order_object")
+                                    }
+                                }
+                            },
+                            headers={'order': True}
+                        ).get("order")
 
                         rpc.response_len_setter(response_len=1)
                         rpc.publish(
                             message={
-                                "cart": {
-                                    "action": "delete_cart",
+                                "product": {
+                                    "action": "remove_from_reserve",
                                     "body": {
-                                        "user_id": auth_header[0].get("user_id")
+                                        "order": place_order_result.get("order_object")
                                     }
                                 }
                             },
-                            headers={'cart': True}
-                        )
+                            headers={"product": True}
+                        ).get("product")
                         response.status_code = place_order_result.get("status_code")
                         return place_order_result
                 else:
