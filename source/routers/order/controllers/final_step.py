@@ -66,33 +66,45 @@ def final_order(
                             return {"success": True, "Type": "pending_payment",
                                     "paymentResult": payment_result.get("message")}
                         else:
+                            rpc.response_len_setter(response_len=1)
+                            rpc.publish(
+                                message={
+                                    "order": {
+                                        "action": "order_delete",
+                                        "body": {
+                                            "order_data": place_order_result.get("order_object")
+                                        }
+                                    }
+                                },
+                                headers={'order': True}
+                            ).get("order")
+
+                            rpc.response_len_setter(response_len=1)
+                            rpc.publish(
+                                message={
+                                    "product": {
+                                        "action": "remove_from_reserve",
+                                        "body": {
+                                            "order": place_order_result.get("order_object")
+                                        }
+                                    }
+                                },
+                                headers={"product": True}
+                            ).get("product")
                             return {"success": False, "paymentResult": payment_result.get("error")}
                     else:
                         rpc.response_len_setter(response_len=1)
                         rpc.publish(
                             message={
-                                "order": {
-                                    "action": "order_delete",
+                                "cart": {
+                                    "action": "delete_cart",
                                     "body": {
-                                        "order_data": place_order_result.get("order_object")
+                                        "user_id": auth_header[0].get("user_id")
                                     }
                                 }
                             },
-                            headers={'order': True}
-                        ).get("order")
-
-                        rpc.response_len_setter(response_len=1)
-                        rpc.publish(
-                            message={
-                                "product": {
-                                    "action": "remove_from_reserve",
-                                    "body": {
-                                        "order": place_order_result.get("order_object")
-                                    }
-                                }
-                            },
-                            headers={"product": True}
-                        ).get("product")
+                            headers={'cart': True}
+                        )
                         response.status_code = place_order_result.get("status_code")
                         return place_order_result
                 else:
