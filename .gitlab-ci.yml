@@ -55,7 +55,7 @@ dev_deploy:
 push:
   stage: push
   only:
-    - master
+    - dev
   tags:
     - deploy
   script:
@@ -75,12 +75,12 @@ push:
     - echo SECRET_KEY=$SECRET_KEY >> .env
     - docker login nexus.aasood.com -u registry -p $REGPASS
     - docker build -t api-gateway:0.0.1 . -t nexus.aasood.com/backend/web-api-gateway:$CI_COMMIT_SHORT_SHA
-    - docker push nexus.aasood.com/backend/web-api-gateway:$CI_COMMIT_SHORT_SHA
+#    - docker push nexus.aasood.com/backend/web-api-gateway:$CI_COMMIT_SHORT_SHA
 
 master_deploy:
   stage: deploy
   only:
-    - master
+    - dev
   tags:
     - deploy
   script:
