@@ -185,7 +185,7 @@ class Data(BaseModel):
         maxLength=16,
         dataType="string",
         type="text",
-        regexPattern=r"^[0-9]{4,5}$",
+        regexPattern=r"^[0-9]{2,32}$",
         isRquired=False,
     )
     customer_document_status: Optional[str] = Field(
@@ -306,7 +306,7 @@ class Data(BaseModel):
 
     @validator("customer_ofogh_code")
     def validate_customer_ofogh_code(cls, customer_ofogh_code):
-        pattern = r"^[0-9]{4,5}$"
+        pattern = r"^[0-9]{2,32}$"
         match = re.fullmatch(pattern, customer_ofogh_code)
         if not match:
             raise HTTPException(status_code=422, detail={"message": "لطفا کد افق خود را به درستی وارد کنید"})

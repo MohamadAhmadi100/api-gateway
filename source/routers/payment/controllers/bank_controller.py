@@ -19,7 +19,7 @@ callback_service_handler = {
     "order": handle_order_bank_callback
 }
 
-BANK_NAMES = ["mellat"]
+BANK_NAMES = ["mellat", "saman"]
 
 router = APIRouter()
 
@@ -196,53 +196,3 @@ def closing_tab_handling(data: list = Body(...)):
             except Exception as e:
                 logging.error(e)
                 continue
-
-
-@router.post("/test")
-def test(data: payment.SendData, response: Response):
-    bank_name = "saman"
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        payment_result = rpc.publish(
-            message=
-            bank_controller.get_data(
-                data=dict(data),
-                bank_name=bank_name
-            )
-            ,
-            headers={"payment": True}
-        )
-        payment_result = payment_result.get("payment", {})
-        if not payment_result.get("success"):
-            raise HTTPException(status_code=payment_result.get("status_code", 500),
-                                detail={"error": payment_result.get("error", "Something went wrong")})
-
-        token_result = payment_modules.request_bank_handler(
-            api=payment_result.get("message", {}).get("url"),
-            data=payment_result.get("message", {}).get("bank_data"),
-            bank_name=payment_result.get("message", {}).get("bank_name")
-        )
-        url_result = rpc.publish(
-            message=
-            bank_controller.redirect_url(
-                data=token_result,
-                payment_id=payment_result.get("message", {}).get("payment_id"),
-                bank_name=payment_result.get("message", {}).get("bank_name")
-            ),
-            headers={"payment": True}
-        )
-        url_result = url_result.get("payment", {})
-        if not url_result.get("success"):
-            raise HTTPException(status_code=url_result.get("status_code", 500),
-                                detail={"error": url_result.get("error", "Something went wrong")})
-
-        uis_result = rpc.publish(
-            message=
-            uis_controller.hashed_generator(
-                link=url_result.get("message")
-            ),
-            headers={"uis": True}
-        )
-        uis_result = uis_result.get("uis", {})
-        response.status_code = uis_result.get("status_code")
-        return uis_result
