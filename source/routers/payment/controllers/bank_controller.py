@@ -2,7 +2,7 @@ import json
 import logging
 import random
 from fastapi.responses import RedirectResponse
-from fastapi import HTTPException, Response, APIRouter, Request, Body
+from fastapi import HTTPException, Response, APIRouter, Request, Body, Query
 # from source.helpers.rabbit_config import new_rpc
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.order.helpers.final_helper import handle_order_bank_callback
@@ -201,7 +201,7 @@ def closing_tab_handling(data: list = Body(...)):
 @router.post("/cancel_pending")
 def cancel_pending_payment(
         response: Response,
-        service_id: str = Body(..., alias="serviceId")
+        service_id: str = Query(..., alias="serviceId")
 ):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
@@ -213,5 +213,5 @@ def cancel_pending_payment(
             raise HTTPException(status_code=cancel_result.get("status_code", 500),
                                 detail={"error": cancel_result.get("error", "Something went wrong")})
         response.status_code = cancel_result.get("status_code")
-        return cancel_result.get("messsage")
+        return cancel_result.get("message")
 
