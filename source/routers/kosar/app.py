@@ -2,9 +2,8 @@ from fastapi import FastAPI
 from fastapi import responses
 from starlette.exceptions import HTTPException as starletteHTTPException
 from source.routers.kosar.controllers import customer_router
+from source.routers.kosar.controllers.payment_router import router as payment
 from source.config import settings
-
-
 
 app = FastAPI(
     version="0.1.0",
@@ -15,7 +14,8 @@ app = FastAPI(
     debug=settings.DEBUG_MODE
 )
 
-app.include_router(customer_router)
+# app.include_router(customer_router)
+app.include_router(payment)
 
 
 @app.exception_handler(starletteHTTPException)
