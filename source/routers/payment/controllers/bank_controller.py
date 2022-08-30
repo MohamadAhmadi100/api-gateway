@@ -212,6 +212,24 @@ def cancel_pending_payment(
         if not cancel_result.get("success"):
             raise HTTPException(status_code=cancel_result.get("status_code", 500),
                                 detail={"error": cancel_result.get("error", "Something went wrong")})
-        response.status_code = cancel_result.get("status_code")
-        return cancel_result.get("message")
-
+        cancel_result = cancel_result.get("message")
+        service_name = cancel_result.get("service", {})
+        if service_name == "offline":
+            del cancel_result.get("message")["service"], cancel_result.get("message")["return_bank"]
+            data = requests.put(
+                "http://devob.aasood.com/offline/update_status/",
+                data=json.dumps(cancel_result.get("message", {}))
+            )
+            service_data = {"offline": {
+                "success": data.json().get("type"),
+                "message": data.json().get("message"),
+                "status_code": data.status_code
+            }}
+        else:
+            service_data = callback_service_handler.get(
+                service_name
+            )(
+                result=cancel_result,
+                response=Response
+            )
+        return "completed"
