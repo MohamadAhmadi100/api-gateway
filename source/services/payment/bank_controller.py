@@ -1,4 +1,4 @@
-def get_data(data, bank_name):
+def get_data(data: dict, bank_name: str):
     return {
             "payment": {
                 "action": "get_data",
@@ -10,7 +10,7 @@ def get_data(data, bank_name):
         }
 
 
-def redirect_url(data, payment_id, bank_name):
+def redirect_url(data: dict, payment_id: int, bank_name: str):
     return {
             "payment": {
                 "action": "redirect_url",
@@ -23,7 +23,7 @@ def redirect_url(data, payment_id, bank_name):
         }
 
 
-def callback_pay(request):
+def callback_pay(request: str):
     return {
             "payment": {
                 "action": "callback_pay",
@@ -34,7 +34,7 @@ def callback_pay(request):
         }
 
 
-def check_verify(data, token, bank_name):
+def check_verify(data: dict, token: str, bank_name: str):
     return {
             "payment": {
                 "action": "check_verify",
@@ -64,6 +64,17 @@ def check_closing_tabs():
             "payment": {
                 "action": "check_closing_tabs",
                 "body": {
+                }
+            }
+        }
+
+
+def cancel_pending_payment(service_id):
+    return {
+            "payment": {
+                "action": "cancel_pending_payment",
+                "body": {
+                    "service_id": service_id,
                 }
             }
         }

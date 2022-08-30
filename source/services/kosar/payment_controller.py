@@ -13,3 +13,14 @@ def kowsar_transaction(order_id, price, customer_id, bank_code, bank_name):
         }
 
 
+def get_kowsar_data(service_id):
+    return {
+            "kosar": {
+                "action": "get_kowsar_data",
+                "body": {
+                    "service_id": service_id,
+                }
+            }
+        }
+
+

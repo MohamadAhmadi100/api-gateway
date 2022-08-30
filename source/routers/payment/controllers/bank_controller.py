@@ -196,3 +196,22 @@ def closing_tab_handling(data: list = Body(...)):
             except Exception as e:
                 logging.error(e)
                 continue
+
+
+@router.post("/cancel_pending")
+def cancel_pending_payment(
+        response: Response,
+        service_id: str = Body(..., alias="serviceId")
+):
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        cancel_result = rpc.publish(
+            message=bank_controller.cancel_pending_payment(service_id=service_id),
+            headers={"payment": True}
+        ).get("payment", {})
+        if not cancel_result.get("success"):
+            raise HTTPException(status_code=cancel_result.get("status_code", 500),
+                                detail={"error": cancel_result.get("error", "Something went wrong")})
+        response.status_code = cancel_result.get("status_code")
+        return cancel_result.get("messsage")
+
