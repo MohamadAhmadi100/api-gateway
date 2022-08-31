@@ -1,23 +1,17 @@
 version: "3"
 
 services:
-    web:
-        build: nginx
-        expose:
-          - 80
-        ports:
-          - 8080:80
-          - 4433:443
-        depends_on:
-          - api
-        networks:
-          - apinet
-
+  nginx:
+    build: ./nginx
+    container_name: api-nginx
+    ports:
+    - 8000:80
+    networks:
+    - apinet
+networks: 
+  ecommerce:
     api:
         build: .
-        ports:
-          - 8000:80
-          - 8075:8008
         volumes:
           - /gallery-files:/gallery-files
           - /home/masood/logs/api-gateway:/api-gateway/log
