@@ -38,10 +38,13 @@ def get_formal_payment(response: Response, auth_header=Depends(auth_handler.chec
         if cart['totalPrice'] == 0:
             payment_method = []
         else:
+
             payment_method = [
                 {"methodName": "aiBanking", "methodLabe": "پرداخت انلاین"},
                 {"methodName": "deposit", "methodLabe": "واریز به حساب"}]
-
+            allowed_pos = is_pos_allowed(cart)
+            if allowed_pos:
+                payment_method.append({"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"})
         # pardakht dar mahal
         allowed_pos = is_pos_allowed(cart)
         if allowed_pos:
