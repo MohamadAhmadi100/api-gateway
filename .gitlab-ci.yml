@@ -73,8 +73,8 @@ push:
     - echo TEMPLATE=$TEMPLATE >> .env
     - echo GALLERY_DIR=$GALLERY_DIR >> .env
     - echo SECRET_KEY=$SECRET_KEY >> .env
-    - docker login nexus.aasood.com -u registry -p $REGPASS
-    - docker build -t api-gateway:0.0.1 . -t nexus.aasood.com/backend/web-api-gateway:$CI_COMMIT_SHORT_SHA
+#    - docker login nexus.aasood.com -u registry -p $REGPASS
+    - docker build -t api-gateway:0.0.1 . #-t nexus.aasood.com/backend/web-api-gateway:$CI_COMMIT_SHORT_SHA
 #    - docker push nexus.aasood.com/backend/web-api-gateway:$CI_COMMIT_SHORT_SHA
 
 master_deploy:
@@ -98,5 +98,5 @@ master_deploy:
     - echo TEMPLATE=$TEMPLATE >> .env
     - echo GALLERY_DIR=$GALLERY_DIR >> .env
     - echo SECRET_KEY=$SECRET_KEY >> .env
-    - docker login nexus.aasood.com -u registry -p $REGPASS
+#    - docker login nexus.aasood.com -u registry -p $REGPASS
     - docker-compose -f docker-compose.yaml up -d --build
