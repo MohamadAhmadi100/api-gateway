@@ -8,19 +8,17 @@ services:
       - 80:80
     networks:
       - apinet
-networks: 
-  ecommerce:
-    api:
-        build: .
-        volumes:
-          - /gallery-files:/gallery-files
-          - /home/masood/logs/api-gateway:/api-gateway/log
-          - /etc/timezone:/etc/timezone:ro
-          - /etc/localtime:/etc/localtime:ro
-        ports:
-          - 8000:80
-        networks:
-          - apinet
+  api:
+    build: .
+    volumes:
+      - /gallery-files:/gallery-files
+      - /home/masood/logs/api-gateway:/api-gateway/log
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - 8000:80
+    networks:
+      - apinet
 networks:
     apinet:
         driver: bridge
