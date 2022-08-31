@@ -49,7 +49,8 @@ class KowsarGroup(BaseModel):
                     "type": "phone",
                     "power": "500W",
                     "part_number": "12345",
-                    "processor": "snapdragon"
+                    "processor": "snapdragon",
+                    "region": "Vietnam"
                 }
             }
         }
@@ -61,25 +62,20 @@ class KowsarPart(BaseModel):
     """
     system_code: str = Field(..., alias="systemCode")
     storage_ids: list = Field(..., alias="storageIds")
-    parent_system_code: str = Field(..., alias="parentSystemCode")
     guaranty: str = Field(..., alias="guaranty")
 
     @validator("system_code")
     def check_model_code(cls, v):
         if not isinstance(v, str):
             raise ValueError('system_code must be an instance of str')
+        elif not len(v) == 25:
+            raise ValueError('system_code must be 25 characters')
         return v
 
     @validator("storage_ids")
     def check_storage_ids(cls, v):
         if not isinstance(v, list):
             raise ValueError('storage_ids must be an instance of list')
-        return v
-
-    @validator("parent_system_code")
-    def check_parent_system_code(cls, v):
-        if not isinstance(v, str):
-            raise ValueError('parent_system_code must be an instance of str')
         return v
 
     @validator("guaranty")
@@ -91,10 +87,9 @@ class KowsarPart(BaseModel):
     class Config:
         schema_extra = {
             "example": {
-                "systemCode": "12345",
+                "systemCode": "2000010010001001001001001",
                 "storageIds": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
-                "parentSystemCode": "12345",
-                "guaranty": "Awat"
+                "guaranty": "Aawaat"
             }
         }
 
