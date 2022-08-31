@@ -46,9 +46,7 @@ def get_formal_payment(response: Response, auth_header=Depends(auth_handler.chec
             if allowed_pos:
                 payment_method.append({"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"})
         # pardakht dar mahal
-        allowed_pos = is_pos_allowed(cart)
-        if allowed_pos:
-            payment_method.append({"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"})
+
 
         response_result = {
             "walletAmount": wallet_amount,
