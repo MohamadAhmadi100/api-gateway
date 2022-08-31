@@ -5,9 +5,9 @@ services:
     build: ./nginx
     container_name: api-nginx
     ports:
-    - 8000:80
+      - 80:80
     networks:
-    - apinet
+      - apinet
 networks: 
   ecommerce:
     api:
@@ -17,10 +17,10 @@ networks:
           - /home/masood/logs/api-gateway:/api-gateway/log
           - /etc/timezone:/etc/timezone:ro
           - /etc/localtime:/etc/localtime:ro
+        ports:
+          - 8000:80
         networks:
           - apinet
 networks:
     apinet:
         driver: bridge
-
-
