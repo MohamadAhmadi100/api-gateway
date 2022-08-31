@@ -57,7 +57,10 @@ def get_payment(
                                     detail={"error": customer_result.get("error", "Something went wrong")})
             search = {"customer_id": customer_result.get("message")}
         else:
-            search = {"service_id": search}
+            if len(search) == 6:
+                search = {"payment_id": search}
+            else:
+                search = {"service_id": search}
         payment_result = rpc.publish(
             message=
             payment_controller.get_payment(

@@ -24,8 +24,7 @@ from source.routers.order.app import app as order_app
 from source.routers.mobile_app.app import app as mobile_app
 from source.routers.dealership.app import app as dealership
 from source.routers.credit.app import app as credit_app
-from fastapi_utils.tasks import repeat_every
-# from source.routers.payment.modules.payment_callback import closing_tab_handling
+from source.routers.kosar.app import app as kosar_app
 
 app = FastAPI(title="API Gateway",
               description="Backend for frontend aka. API Gateway!",
@@ -57,6 +56,8 @@ app.mount("/wallet/api/v1", wallet_app)
 app.mount("/attributes/api/v1", attribute_app)
 
 app.mount("/payment/api/v1", payment_app)
+
+app.mount("/kosar/api/v1", kosar_app)
 
 app.mount("/coupon", coupon_app)
 
@@ -101,12 +102,6 @@ def shutdown_event() -> None:
     This function will be called when the application stops.
     """
     logging.info("Application is shutting down...")
-
-
-#@app.on_event("startup")
-#@repeat_every(seconds=60)
-#def payment_close_tab_handler():
-#    closing_tab_handling()
 
 
 @app.get("/")

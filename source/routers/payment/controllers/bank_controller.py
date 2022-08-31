@@ -2,7 +2,7 @@ import json
 import logging
 import random
 from fastapi.responses import RedirectResponse
-from fastapi import HTTPException, Response, APIRouter, Request, Body
+from fastapi import HTTPException, Response, APIRouter, Request, Body, Query
 # from source.helpers.rabbit_config import new_rpc
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.order.helpers.final_helper import handle_order_bank_callback
@@ -19,7 +19,7 @@ callback_service_handler = {
     "order": handle_order_bank_callback
 }
 
-BANK_NAMES = ["mellat"]
+BANK_NAMES = ["mellat", "saman"]
 
 router = APIRouter()
 
@@ -198,51 +198,38 @@ def closing_tab_handling(data: list = Body(...)):
                 continue
 
 
-@router.post("/test")
-def test(data: payment.SendData, response: Response):
-    bank_name = "saman"
+@router.post("/cancel_pending")
+def cancel_pending_payment(
+        response: Response,
+        service_id: str = Query(..., alias="serviceId")
+):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
-        payment_result = rpc.publish(
-            message=
-            bank_controller.get_data(
-                data=dict(data),
-                bank_name=bank_name
+        cancel_result = rpc.publish(
+            message=bank_controller.cancel_pending_payment(service_id=service_id),
+            headers={"payment": True}
+        ).get("payment", {})
+        if not cancel_result.get("success"):
+            raise HTTPException(status_code=cancel_result.get("status_code", 500),
+                                detail={"error": cancel_result.get("error", "Something went wrong")})
+        cancel_result = cancel_result.get("message")
+        service_name = cancel_result.get("service", {})
+        if service_name == "offline":
+            del cancel_result.get("message")["service"], cancel_result.get("message")["return_bank"]
+            data = requests.put(
+                "http://devob.aasood.com/offline/update_status/",
+                data=json.dumps(cancel_result.get("message", {}))
             )
-            ,
-            headers={"payment": True}
-        )
-        payment_result = payment_result.get("payment", {})
-        if not payment_result.get("success"):
-            raise HTTPException(status_code=payment_result.get("status_code", 500),
-                                detail={"error": payment_result.get("error", "Something went wrong")})
-
-        token_result = payment_modules.request_bank_handler(
-            api=payment_result.get("message", {}).get("url"),
-            data=payment_result.get("message", {}).get("bank_data"),
-            bank_name=payment_result.get("message", {}).get("bank_name")
-        )
-        url_result = rpc.publish(
-            message=
-            bank_controller.redirect_url(
-                data=token_result,
-                payment_id=payment_result.get("message", {}).get("payment_id"),
-                bank_name=payment_result.get("message", {}).get("bank_name")
-            ),
-            headers={"payment": True}
-        )
-        url_result = url_result.get("payment", {})
-        if not url_result.get("success"):
-            raise HTTPException(status_code=url_result.get("status_code", 500),
-                                detail={"error": url_result.get("error", "Something went wrong")})
-
-        uis_result = rpc.publish(
-            message=
-            uis_controller.hashed_generator(
-                link=url_result.get("message")
-            ),
-            headers={"uis": True}
-        )
-        uis_result = uis_result.get("uis", {})
-        response.status_code = uis_result.get("status_code")
-        return uis_result
+            service_data = {"offline": {
+                "success": data.json().get("type"),
+                "message": data.json().get("message"),
+                "status_code": data.status_code
+            }}
+        else:
+            service_data = callback_service_handler.get(
+                service_name
+            )(
+                result=cancel_result,
+                response=Response
+            )
+        return "completed"
