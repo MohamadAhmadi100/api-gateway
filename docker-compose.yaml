@@ -17,8 +17,6 @@ services:
       - /home/masood/logs/api-gateway:/api-gateway/log
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-    ports:
-      - 8000
     expose:
       - 8000
     networks:
