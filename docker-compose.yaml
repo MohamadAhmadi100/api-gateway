@@ -5,7 +5,7 @@ services:
     build: ./nginx
     container_name: api-nginx
     ports:
-      - 80:80
+      - "80:80"
     networks:
       - apinet
     depends_on:
@@ -18,7 +18,7 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     expose:
-      - 8000
+      - "8000"
     networks:
       - apinet
 networks:
