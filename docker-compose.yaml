@@ -19,8 +19,6 @@ services:
       - /etc/localtime:/etc/localtime:ro
     expose:
       - 8000
-    ports:
-      - 8000
     networks:
       - apinet
 networks:
