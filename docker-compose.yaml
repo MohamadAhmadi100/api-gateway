@@ -8,6 +8,8 @@ services:
       - 80:80
     networks:
       - apinet
+    depends_on:
+      - api
   api:
     build: .
     volumes:
