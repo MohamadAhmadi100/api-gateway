@@ -21,6 +21,8 @@ services:
       - 8000
     networks:
       - apinet
+    deploy:
+      replicas: 2
 networks:
     apinet:
         driver: bridge
