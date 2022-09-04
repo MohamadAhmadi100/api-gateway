@@ -40,8 +40,11 @@ def get_url(data: payment.SendData, response: Response):
         )
         payment_result = payment_result.get("payment", {})
         if not payment_result.get("success"):
-            response.status_code = payment_result.get("status_code", 500)
-            return {"error": payment_result.get("error", "Something went wrong")}
+            return {
+                "error": payment_result.get("error", "Something went wrong"),
+                "success": False,
+                "status_code": payment_result.get("status_code", 500)
+            }
 
         token_result = payment_modules.request_bank_handler(
             api=payment_result.get("message", {}).get("url"),
@@ -59,8 +62,11 @@ def get_url(data: payment.SendData, response: Response):
         )
         url_result = url_result.get("payment", {})
         if not url_result.get("success"):
-            response.status_code = url_result.get("status_code", 500)
-            return {"error": url_result.get("error", "Something went wrong")}
+            return {
+                "error": url_result.get("error", "Something went wrong"),
+                "success": False,
+                "status_code": url_result.get("status_code", 500)
+            }
 
         uis_result = rpc.publish(
             message=
