@@ -60,7 +60,7 @@ def soap_request(method: str, data: dict):
 
 def post_request(api: str, data: dict) -> dict:
     try:
-        post_response = requests.post(api, json=data, timeout=5, allow_redirects=True)
+        post_response = requests.post(api, json=data, timeout=10, allow_redirects=True)
     except requests.Timeout as e:
         logging.exception("bank time out gateway {}".format(e))
         return {"response": False, "error": "bank time out gateway {}".format(e)}
