@@ -104,73 +104,74 @@ async def set_callback(request: Request, response: Response):
             del result.get("message")["url"], result.get("message")["bank_data"]
             verify_result["message"] = {**verify_log, **result.get("message")}
             result = verify_result
-            check_verify_res = rpc.publish(
-                message=
-                bank_controller.check_verify(
-                    data=result.get("message", {}).get("verify_log"),
-                    token=result.get("message", {}).get("token"),
-                    bank_name=result.get("message", {}).get("bank_name")
-                ),
-                headers={"payment": True}
-            ).get("payment", {})
-            if not check_verify_res.get("message", {}):
-                verify_data = check_verify_res.get("data")
-                result["message"].update(verify_data)
-                result["message"]["status"] = "پرداخت موفقیت آمیز بود و اعتبارسنجی" \
-                                              " با موفقیت انجام شد" \
-                                              " اما با خطای مانگو مواجه هستیم"
-            else:
-                result = check_verify_res
-        if result.get("message", {}).get("is_paid") and result.get("success"):
-            kowsar_result = rpc.publish(
-                message=
-                kosar_controller.kowsar_transaction(
-                    order_id=result.get("message", {}).get("service_id"),
-                    price=result.get("message", {}).get("amount"),
-                    customer_id=result.get("message", {}).get("customer_id"),
-                    bank_code=result.get("message", {}).get("bank_code"),
-                    bank_name=result.get("message", {}).get("bank_name")
-                )
-                ,
-                headers={"kosar": True}
-            )
-            kowsar_result = kowsar_result.get("kosar", {})
-            kowsar_status_result = rpc.publish(
-                message=
-                bank_controller.change_kowsar_status(
-                    kowsar_status=kowsar_result,
-                    payment_id=result.get("message", {}).get("payment_id")
-                ),
-                headers={"payment": True}
-            )
-            kowsar_status_result = kowsar_status_result.get("payment", {})
-            result = kowsar_status_result
-
-        service_name = result.get("message", {}).get("service", {})
-        if service_name == "offline":
-            del result.get("message")["service"], result.get("message")["return_bank"]
-            data = requests.put(
-                "http://devob.aasood.com/offline/update_status/",
-                data=json.dumps(result.get("message", {}))
-            )
-            service_data = {
-                "success": data.json().get("type"),
-                "message": data.json().get("message"),
-                "status_code": data.status_code
-            }
-        else:
-            service_data = callback_service_handler.get(
-                service_name
-            )(
-                result=result.get("message", {}),
-                response=response
-            )
-            if service_name == "wallet":
-                result = 3 if service_data.get("result") else 4
-            elif service_name == "order":
-                result = 1 if service_data.get("result") else 2
-            return RedirectResponse(
-                f"https://aasood.com/payment-result/{result}/{service_data.get('service_id')}")
+            print(result)
+        #     check_verify_res = rpc.publish(
+        #         message=
+        #         bank_controller.check_verify(
+        #             data=result.get("message", {}).get("verify_log"),
+        #             token=result.get("message", {}).get("token"),
+        #             bank_name=result.get("message", {}).get("bank_name")
+        #         ),
+        #         headers={"payment": True}
+        #     ).get("payment", {})
+        #     if not check_verify_res.get("message", {}):
+        #         verify_data = check_verify_res.get("data")
+        #         result["message"].update(verify_data)
+        #         result["message"]["status"] = "پرداخت موفقیت آمیز بود و اعتبارسنجی" \
+        #                                       " با موفقیت انجام شد" \
+        #                                       " اما با خطای مانگو مواجه هستیم"
+        #     else:
+        #         result = check_verify_res
+        # if result.get("message", {}).get("is_paid") and result.get("success"):
+        #     kowsar_result = rpc.publish(
+        #         message=
+        #         kosar_controller.kowsar_transaction(
+        #             order_id=result.get("message", {}).get("service_id"),
+        #             price=result.get("message", {}).get("amount"),
+        #             customer_id=result.get("message", {}).get("customer_id"),
+        #             bank_code=result.get("message", {}).get("bank_code"),
+        #             bank_name=result.get("message", {}).get("bank_name")
+        #         )
+        #         ,
+        #         headers={"kosar": True}
+        #     )
+        #     kowsar_result = kowsar_result.get("kosar", {})
+        #     kowsar_status_result = rpc.publish(
+        #         message=
+        #         bank_controller.change_kowsar_status(
+        #             kowsar_status=kowsar_result,
+        #             payment_id=result.get("message", {}).get("payment_id")
+        #         ),
+        #         headers={"payment": True}
+        #     )
+        #     kowsar_status_result = kowsar_status_result.get("payment", {})
+        #     result = kowsar_status_result
+        #
+        # service_name = result.get("message", {}).get("service", {})
+        # if service_name == "offline":
+        #     del result.get("message")["service"], result.get("message")["return_bank"]
+        #     data = requests.put(
+        #         "http://devob.aasood.com/offline/update_status/",
+        #         data=json.dumps(result.get("message", {}))
+        #     )
+        #     service_data = {
+        #         "success": data.json().get("type"),
+        #         "message": data.json().get("message"),
+        #         "status_code": data.status_code
+        #     }
+        # else:
+        #     service_data = callback_service_handler.get(
+        #         service_name
+        #     )(
+        #         result=result.get("message", {}),
+        #         response=response
+        #     )
+        #     if service_name == "wallet":
+        #         result = 3 if service_data.get("result") else 4
+        #     elif service_name == "order":
+        #         result = 1 if service_data.get("result") else 2
+        #     return RedirectResponse(
+        #         f"https://aasood.com/payment-result/{result}/{service_data.get('service_id')}")
 
 
 @router.post("/closed_tabs", include_in_schema=False)
