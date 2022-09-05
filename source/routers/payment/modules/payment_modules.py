@@ -43,7 +43,7 @@ response = {}
 def soap_request(method: str, data: dict):
     global response
     try:
-        transport = Transport(timeout=5, operation_timeout=5)
+        transport = Transport(timeout=10, operation_timeout=10)
         client = Client('https://bpm.shaparak.ir/pgwchannel/services/pgw?wsdl', transport=transport)
         exec(f"global response ; response = client.service.{method}(**{data})")
     except TimeoutError:

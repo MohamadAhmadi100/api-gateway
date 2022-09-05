@@ -100,28 +100,27 @@ async def set_callback(request: Request, response: Response):
                 data=result.get("message", {}).get("bank_data"),
                 bank_name=result.get("message", {}).get("bank_name")
             )
-            if verify_result.get("response"):
-                verify_log = {"verify_log": verify_result.get("message")}
-                del result.get("message")["url"], result.get("message")["bank_data"]
-                verify_result["message"] = {**verify_log, **result.get("message")}
-                result = verify_result
-                check_verify_res = rpc.publish(
-                    message=
-                    bank_controller.check_verify(
-                        data=result.get("message", {}).get("verify_log"),
-                        token=result.get("message", {}).get("token"),
-                        bank_name=result.get("message", {}).get("bank_name")
-                    ),
-                    headers={"payment": True}
-                ).get("payment", {})
-                if not check_verify_res.get("message", {}):
-                    verify_data = check_verify_res.get("data")
-                    result["message"].update(verify_data)
-                    result["message"]["status"] = "پرداخت موفقیت آمیز بود و اعتبارسنجی" \
-                                                  " با موفقیت انجام شد" \
-                                                  " اما با خطای مانگو مواجه هستیم"
-                else:
-                    result = check_verify_res
+            verify_log = {"verify_log": verify_result}
+            del result.get("message")["url"], result.get("message")["bank_data"]
+            verify_result["message"] = {**verify_log, **result.get("message")}
+            result = verify_result
+            check_verify_res = rpc.publish(
+                message=
+                bank_controller.check_verify(
+                    data=result.get("message", {}).get("verify_log"),
+                    token=result.get("message", {}).get("token"),
+                    bank_name=result.get("message", {}).get("bank_name")
+                ),
+                headers={"payment": True}
+            ).get("payment", {})
+            if not check_verify_res.get("message", {}):
+                verify_data = check_verify_res.get("data")
+                result["message"].update(verify_data)
+                result["message"]["status"] = "پرداخت موفقیت آمیز بود و اعتبارسنجی" \
+                                              " با موفقیت انجام شد" \
+                                              " اما با خطای مانگو مواجه هستیم"
+            else:
+                result = check_verify_res
         if result.get("message", {}).get("is_paid") and result.get("success"):
             kowsar_result = rpc.publish(
                 message=
