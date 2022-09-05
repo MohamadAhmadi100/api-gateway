@@ -352,6 +352,15 @@ def update_product_price(item: UpdatePrice, response: Response) -> dict:
             },
             headers={'product': True}
         )
+        rpc.publish(
+            message={
+                "dealership": {
+                    "action": "update_product",
+                    "body": item.__dict__
+                }
+            },
+            headers={'dealership': True}
+        )
         pricing_result = pricing_result.get("product", {})
         if pricing_result.get("success"):
             response.status_code = pricing_result.get("status_code", 200)
