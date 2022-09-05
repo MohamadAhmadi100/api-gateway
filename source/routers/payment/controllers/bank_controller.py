@@ -101,10 +101,11 @@ async def set_callback(request: Request, response: Response):
                 bank_name=result.get("message", {}).get("bank_name")
             )
             verify_log = {"verify_log": verify_result}
+
             del result.get("message")["url"], result.get("message")["bank_data"]
             verify_result["message"] = {**verify_log, **result.get("message")}
             result = verify_result
-            print(result)
+            return result
         #     check_verify_res = rpc.publish(
         #         message=
         #         bank_controller.check_verify(
