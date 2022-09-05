@@ -170,7 +170,6 @@ async def set_callback(request: Request, response: Response):
             return RedirectResponse(
                 f"https://aasood.com/payment-result/{result}/{service_data.get('service_id')}")
 
-set_callback(500)
 
 @router.post("/closed_tabs", include_in_schema=False)
 def closing_tab_handling(data: list = Body(...)):
