@@ -53,7 +53,7 @@ def soap_request(method: str, data: dict):
         logging.exception("Mellat time out gateway {}".format(data))
         return {"response": False, "error": "Mellat connection error gateway {}".format(data)}
     except Exception as e:
-        return {"response": False, "error": f"wtf{e}"}
+        return {"response": False, "error": f"error: {e}"}
     else:
         return {"response": True, "message": response}
 
