@@ -467,7 +467,7 @@ class CustomerRegister(BaseModel):
 
     @validator("customer_ofogh_code")
     def validate_customer_ofogh_code(cls, customer_ofogh_code):
-        pattern = r"^[0-9]{2,32}$"
+        pattern = r"^[0-9۰-۹]{2,32}$"
         match = re.fullmatch(pattern, customer_ofogh_code)
         if not match:
             raise HTTPException(status_code=422, detail={"message": "لطفا کد افق خود را به درستی وارد کنید"})
