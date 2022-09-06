@@ -90,6 +90,7 @@ def register(
         "customer_city_id": value.customer_city_id,
         "customer_state_name": value.customer_province,
         "customer_state_id": value.customer_province_id,
+        "customer_ofogh_code": value.customer_ofogh_code,
         "customer_postal_code": customer_postal_code,
         "customer_type": customer_type
     }
