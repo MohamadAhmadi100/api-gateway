@@ -136,7 +136,7 @@ async def set_callback(request: Request, response: Response):
             kowsar_status_result = rpc.publish(
                 message=
                 bank_controller.change_kowsar_status(
-                    kowsar_status=kowsar_result,
+                    kowsar_status=kowsar_result.get("message"),
                     payment_id=result.get("message", {}).get("payment_id")
                 ),
                 headers={"payment": True}
