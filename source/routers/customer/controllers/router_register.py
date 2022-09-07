@@ -41,7 +41,10 @@ def register(
         customer_national_id = unidecode(value.customer_national_id)
         customer_postal_code = unidecode(value.customer_postal_code)
         customer_tel = unidecode(value.customer_telephone)
-        customer_ofogh_code = unidecode(value.customer_ofogh_code)
+        if value.customer_ofogh_code:
+            customer_ofogh_code = unidecode(value.customer_ofogh_code)
+        else:
+            customer_ofogh_code = None
     except Exception as exc:
         raise HTTPException(status_code=422, detail={"error": "لطفا مقادیر عددی را به درستی وارد کنید"}) from exc
 
