@@ -30,14 +30,14 @@ app = FastAPI(title="API Gateway",
               description="Backend for frontend aka. API Gateway!",
               version="0.0.1")
 # app.middleware()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["*"]
-)
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+#     expose_headers=["*"]
+# )
 
 # ----------------------------------------- Mount all services here -------------------------------------------------- #
 
