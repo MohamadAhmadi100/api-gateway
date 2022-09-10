@@ -34,6 +34,7 @@ def get_payment(
         date_sort: DateSort = Query(default=DateSort.DESC),
         status: Optional[List[str]] = Query(None),
         kowsar_status: Optional[list] = Query(None),
+        reference_id: Optional[str] = Query(None),
         search: Optional[str] = Query(None)
 ):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
@@ -57,7 +58,7 @@ def get_payment(
                                     detail={"error": customer_result.get("error", "Something went wrong")})
             search = {"customer_id": customer_result.get("message")}
         else:
-            if len(search) == 6:
+            if search and len(search) == 6:
                 search = {"payment_id": search}
             else:
                 search = {"service_id": search}
@@ -73,6 +74,7 @@ def get_payment(
                     "send_status": status,
                     "date_sort": date_sort.value,
                     "kowsar_status": kowsar_status,
+                    "reference_id": reference_id,
                     **search
                 }
             ),
