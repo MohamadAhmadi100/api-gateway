@@ -34,15 +34,6 @@ app = FastAPI(title="API Gateway",
               redoc_url="/redoc/" if settings.DEBUG_MODE else None
               )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["*"]
-)
-
 # ----------------------------------------- Mount all services here -------------------------------------------------- #
 
 app.mount("/cart/api/v1", cart_app)
