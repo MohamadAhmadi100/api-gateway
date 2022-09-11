@@ -3,41 +3,45 @@ import source.services.invoker
 import logging
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.staticfiles import StaticFiles
-from source.routers.uis.app import app as uis_app
+
 from config import settings
+from source.routers.address.app import app as address_app
+from source.routers.attribute.app import app as attribute_app
 from source.routers.cart.app import app as cart_app
+from source.routers.coupon.app import app as coupon_app
+from source.routers.credit.app import app as credit_app
+from source.routers.customer.app import app as customer_app
+from source.routers.dealership.app import app as dealership
+from source.routers.gallery.app import app as gallery_app
+from source.routers.kosar.app import app as kosar_app
+from source.routers.mobile_app.app import app as mobile_app
+from source.routers.order.app import app as order_app
+from source.routers.payment.app import app as payment_app
 from source.routers.pricing.app import app as pricing_app
 from source.routers.product.app import app as product_app
 from source.routers.quantity.app import app as quantity_app
-from source.routers.customer.app import app as customer_app
-from source.routers.wallet.app import app as wallet_app
-from source.routers.attribute.app import app as attribute_app
-from source.routers.payment.app import app as payment_app
-from source.routers.coupon.app import app as coupon_app
-from source.routers.gallery.app import app as gallery_app
-from source.routers.address.app import app as address_app
 from source.routers.shipment.app import app as shipment_app
-from source.routers.order.app import app as order_app
-from source.routers.mobile_app.app import app as mobile_app
-from source.routers.dealership.app import app as dealership
-from source.routers.credit.app import app as credit_app
-from source.routers.kosar.app import app as kosar_app
+from source.routers.uis.app import app as uis_app
+from source.routers.wallet.app import app as wallet_app
 
 app = FastAPI(title="API Gateway",
               description="Backend for frontend aka. API Gateway!",
-              version="0.0.1")
-# app.middleware()
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["*"],
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-#     expose_headers=["*"]
-# )
+              version="0.0.1",
+              docs_url="/docs/" if settings.DEBUG_MODE else None,
+              redoc_url="/redoc/" if settings.DEBUG_MODE else None
+              )
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"]
+)
 
 # ----------------------------------------- Mount all services here -------------------------------------------------- #
 
@@ -106,7 +110,9 @@ def shutdown_event() -> None:
 
 @app.get("/")
 def main():
-    return [{"path": f"https://devapi.aasood.com{route.path}/docs/"} for route in app.routes][4:-1]
+    if settings.DEBUG_MODE:
+        return [{"path": f"https://devapi.aasood.com{route.path}/docs/"} for route in app.routes][4:-1]
+    raise HTTPException(status_code=404, detail="Not Found")
 
 
 if __name__ == "__main__":

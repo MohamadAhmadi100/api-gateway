@@ -1,6 +1,7 @@
 from fastapi import FastAPI, responses
 from starlette.exceptions import HTTPException as starletteHTTPException
 
+from source.config import settings
 from source.routers.attribute.controllers.assignee_controller import router as assignee_router
 from source.routers.attribute.controllers.attribute_controller import router as attribute_router
 
@@ -19,7 +20,8 @@ app = FastAPI(title="Custom Attribute",
               description="A microservice to create custom attribute for other microservices!",
               version="0.1.0",
               openapi_tags=TAGS_META,
-              docs_url="/docs")
+              docs_url="/docs/" if settings.DEBUG_MODE else None,
+              redoc_url="/redoc/" if settings.DEBUG_MODE else None)
 
 app.include_router(assignee_router)
 app.include_router(attribute_router)
