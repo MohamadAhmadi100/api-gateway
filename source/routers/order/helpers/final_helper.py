@@ -47,6 +47,25 @@ def handle_order_bank_callback(result, response):
                     ).get("wallet", {})
 
             if result['is_paid']:
+                # send sms
+                rpc.response_len_setter(response_len=1)
+                rpc.publish(
+                    message={
+                        "order": {
+                            "action": "send_place_order_sms",
+                            "body": {
+                                "phone_number": order_get_response['order_object']['customer']['mobile'],
+                                "first_name":
+                                    order_get_response['order_object']['customer']['fullName'].split(" ")[0],
+                                "last_name":
+                                    order_get_response['order_object']['customer']['fullName'].split(" ")[1],
+                                "order_number": order_get_response['order_object']['orderNumber']
+                            }
+                        }
+                    },
+                    headers={'order': True}
+                )
+
                 rpc.response_len_setter(response_len=2)
                 car_order_result = rpc.publish(
                     message={
