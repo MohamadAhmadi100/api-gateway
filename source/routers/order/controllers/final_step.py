@@ -7,7 +7,7 @@ from source.routers.cart.app import get_cart
 from source.routers.customer.helpers.profile_view import get_profile_info
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.order.helpers.check_out import check_price_qty
-from source.routers.order.helpers.final_helper import place_order, handle_order_bank_callback, reserve_order_items, \
+from source.routers.order.helpers.final_helper import place_order, reserve_order_items, \
     delete_order_reserving_fail, add_final_flag_to_cart
 from source.routers.order.helpers.payment_helper import wallet_final_consume
 from source.routers.order.helpers.shipment_helper import check_shipment_per_stock
@@ -25,7 +25,6 @@ def final_order(
         response: Response,
         auth_header=Depends(auth_handler.check_current_user_tokens)
 ) -> dict:
-
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         cart = get_cart(response=response, auth_header=auth_header)
         check_shipment_result = check_shipment_per_stock(cart)
@@ -93,6 +92,23 @@ def final_order(
                             ).get("product")
                             return {"success": False, "paymentResult": payment_result.get("error")}
                     else:
+                        rpc.response_len_setter(response_len=1)
+                        rpc.publish(
+                            message={
+                                "order": {
+                                    "action": "send_place_order_sms",
+                                    "body": {
+                                        "phone_number": place_order_result['order_object']['customer']['mobile'],
+                                        "first_name":
+                                            place_order_result['order_object']['customer']['fullName'].split(" ")[0],
+                                        "last_name":
+                                            place_order_result['order_object']['customer']['fullName'].split(" ")[1],
+                                        "order_number": place_order_result['order_object']['orderNumber']
+                                    }
+                                }
+                            },
+                            headers={'order': True}
+                        )
                         rpc.response_len_setter(response_len=1)
                         rpc.publish(
                             message={
