@@ -40,8 +40,11 @@ def get_url(data: payment.SendData, response: Response):
         )
         payment_result = payment_result.get("payment", {})
         if not payment_result.get("success"):
-            raise HTTPException(status_code=payment_result.get("status_code", 500),
-                                detail={"error": payment_result.get("error", "Something went wrong")})
+            return {
+                "error": payment_result.get("error", "Something went wrong"),
+                "success": False,
+                "status_code": payment_result.get("status_code", 500)
+            }
 
         token_result = payment_modules.request_bank_handler(
             api=payment_result.get("message", {}).get("url"),
@@ -59,8 +62,11 @@ def get_url(data: payment.SendData, response: Response):
         )
         url_result = url_result.get("payment", {})
         if not url_result.get("success"):
-            raise HTTPException(status_code=url_result.get("status_code", 500),
-                                detail={"error": url_result.get("error", "Something went wrong")})
+            return {
+                "error": url_result.get("error", "Something went wrong"),
+                "success": False,
+                "status_code": url_result.get("status_code", 500)
+            }
 
         uis_result = rpc.publish(
             message=
@@ -94,28 +100,25 @@ async def set_callback(request: Request, response: Response):
                 data=result.get("message", {}).get("bank_data"),
                 bank_name=result.get("message", {}).get("bank_name")
             )
-            if verify_result.get("response"):
-                verify_log = {"verify_log": verify_result.get("message")}
-                del result.get("message")["url"], result.get("message")["bank_data"]
-                verify_result["message"] = {**verify_log, **result.get("message")}
-                result = verify_result
-                check_verify_res = rpc.publish(
-                    message=
-                    bank_controller.check_verify(
-                        data=result.get("message", {}).get("verify_log"),
-                        token=result.get("message", {}).get("token"),
-                        bank_name=result.get("message", {}).get("bank_name")
-                    ),
-                    headers={"payment": True}
-                ).get("payment", {})
-                if not check_verify_res.get("message", {}):
-                    verify_data = check_verify_res.get("data")
-                    result["message"].update(verify_data)
-                    result["message"]["status"] = "پرداخت موفقیت آمیز بود و اعتبارسنجی" \
-                                                  " با موفقیت انجام شد" \
-                                                  " اما با خطای مانگو مواجه هستیم"
-                else:
-                    result = check_verify_res
+            del result.get("message")["url"], result.get("message")["bank_data"]
+            result["message"].update(**{"verify_log": verify_result})
+            check_verify_res = rpc.publish(
+                message=
+                bank_controller.check_verify(
+                    data=result.get("message", {}).get("verify_log"),
+                    token=result.get("message", {}).get("token"),
+                    bank_name=result.get("message", {}).get("bank_name")
+                ),
+                headers={"payment": True}
+            ).get("payment", {})
+            if not check_verify_res.get("message", {}):
+                verify_data = check_verify_res.get("data")
+                result["message"].update(verify_data)
+                result["message"]["status"] = "پرداخت موفقیت آمیز بود و اعتبارسنجی" \
+                                              " با موفقیت انجام شد" \
+                                              " اما با خطای مانگو مواجه هستیم"
+            else:
+                result = check_verify_res
         if result.get("message", {}).get("is_paid") and result.get("success"):
             kowsar_result = rpc.publish(
                 message=
@@ -133,7 +136,7 @@ async def set_callback(request: Request, response: Response):
             kowsar_status_result = rpc.publish(
                 message=
                 bank_controller.change_kowsar_status(
-                    kowsar_status=kowsar_result,
+                    kowsar_status=kowsar_result.get("message"),
                     payment_id=result.get("message", {}).get("payment_id")
                 ),
                 headers={"payment": True}
@@ -200,7 +203,6 @@ def closing_tab_handling(data: list = Body(...)):
 
 @router.post("/cancel_pending")
 def cancel_pending_payment(
-        response: Response,
         service_id: str = Query(..., alias="serviceId")
 ):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:

@@ -53,14 +53,14 @@ def soap_request(method: str, data: dict):
         logging.exception("Mellat time out gateway {}".format(data))
         return {"response": False, "error": "Mellat connection error gateway {}".format(data)}
     except Exception as e:
-        return {"response": False, "error": f"wtf{e}"}
+        return {"response": False, "error": f"error: {e}"}
     else:
         return {"response": True, "message": response}
 
 
 def post_request(api: str, data: dict) -> dict:
     try:
-        post_response = requests.post(api, json=data, timeout=5, allow_redirects=True)
+        post_response = requests.post(api, json=data, timeout=10, allow_redirects=True)
     except requests.Timeout as e:
         logging.exception("bank time out gateway {}".format(e))
         return {"response": False, "error": "bank time out gateway {}".format(e)}

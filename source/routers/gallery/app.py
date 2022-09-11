@@ -1,6 +1,7 @@
 from fastapi import FastAPI, responses
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from source.config import settings
 from source.routers.gallery.controllers.directories_controller import router as directories_controller
 from source.routers.gallery.controllers.file_type_controller import router as file_type_controller
 from source.routers.gallery.controllers.files_controller import router as files_controller
@@ -24,8 +25,8 @@ app = FastAPI(
     title="Gallery API",
     description="This is Gallery MicroService for managing uploads",
     version="0.1.0",
-    docs_url="/docs/",
-    redoc_url="/redoc/",
+    docs_url="/docs/" if settings.DEBUG_MODE else None,
+    redoc_url="/redoc/" if settings.DEBUG_MODE else None,
     openapi_tags=TAGS
 )
 

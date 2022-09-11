@@ -19,7 +19,8 @@ app = FastAPI(
     description="This is Shipment gateway MicroService",
     version="0.1.0",
     openapi_tags=TAGS,
-    redoc_url="/api/v1/redoc/",
+    docs_url="/docs/" if settings.DEBUG_MODE else None,
+    redoc_url="/redoc/" if settings.DEBUG_MODE else None,
     debug=settings.DEBUG_MODE
 )
 

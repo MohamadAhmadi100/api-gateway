@@ -121,7 +121,6 @@ def create_system_code(
                     "body": {
                         "system_code": item.system_code,
                         "storage_ids": item.storage_ids,
-                        "parent_system_code": item.parent_system_code,
                         "guaranty": item.guaranty
                     }
                 }
@@ -352,6 +351,15 @@ def update_product_price(item: UpdatePrice, response: Response) -> dict:
                 }
             },
             headers={'product': True}
+        )
+        rpc.publish(
+            message={
+                "dealership": {
+                    "action": "update_product",
+                    "body": item.__dict__
+                }
+            },
+            headers={'dealership': True}
         )
         pricing_result = pricing_result.get("product", {})
         if pricing_result.get("success"):

@@ -321,6 +321,19 @@ class CustomerRegister(BaseModel):
         regexPattern="",
         isRquired=False,
     )
+    customer_ofogh_code: Optional[str] = Field(
+        alias="customerOfoghCode",
+        description="",
+        title="کد افق",
+        name="customerOfoghCode",
+        placeholder="",
+        minLength=2,
+        maxLength=16,
+        dataType="string",
+        type="text",
+        regexPattern=r"^[0-9]{2,32}$",
+        isRquired=False,
+    )
 
     @validator("customer_password")
     def validate_password(cls, verify_password):
@@ -451,3 +464,11 @@ class CustomerRegister(BaseModel):
         if not match:
             raise HTTPException(status_code=422, detail={"error": "شماره تماس وارد شده معتبر نیست."})
         return tel
+
+    @validator("customer_ofogh_code")
+    def validate_customer_ofogh_code(cls, customer_ofogh_code):
+        pattern = r"^[0-9۰-۹]{2,32}$"
+        match = re.fullmatch(pattern, customer_ofogh_code)
+        if not match:
+            raise HTTPException(status_code=422, detail={"message": "لطفا کد افق خود را به درستی وارد کنید"})
+        return customer_ofogh_code
