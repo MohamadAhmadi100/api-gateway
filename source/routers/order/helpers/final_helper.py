@@ -94,6 +94,22 @@ def handle_order_bank_callback(result, response):
                 rpc.publish(
                     message={
                         "order": {
+                            "action": "send_cancel_order_sms",
+                            "body": {
+                                "phone_number": order_get_response['order_object']['customer']['mobile'],
+                                "first_name":
+                                    order_get_response['order_object']['customer']['fullName'].split(" ")[0],
+                                "last_name":
+                                    order_get_response['order_object']['customer']['fullName'].split(" ")[1],
+                            }
+                        }
+                    },
+                    headers={'order': True}
+                )
+                rpc.response_len_setter(response_len=1)
+                rpc.publish(
+                    message={
+                        "order": {
                             "action": "order_bank_callback_cancel",
                             "body": {
                                 "payment_data": result

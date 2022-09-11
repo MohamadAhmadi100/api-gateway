@@ -1,10 +1,5 @@
-from typing import Union
-
 from fastapi import APIRouter
-from fastapi import HTTPException
-from fastapi import Query
 from fastapi import Response, Depends
-from starlette.exceptions import HTTPException
 
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
@@ -55,6 +50,21 @@ def cancel_order(response: Response,
                 headers={'order': True}
             ).get("order")
             if order_result.get("success"):
+                rpc.response_len_setter(response_len=1)
+                rpc.publish(
+                    message={
+                        "order": {
+                            "action": "send_cancel_order_sms",
+                            "body": {
+                                "phone_number": order_object['customer']['mobile'],
+                                "first_name":
+                                    order_object['customer']['fullName'].split(" ")[0],
+                                "last_name":
+                                    order_object['customer']['fullName'].split(" ")[1],
+                            }
+                        }
+                    },
+                    headers={'order': True})
                 if order_result['wallet_charge'] == 0:
                     return {"success": True, "message": "سفارش با موفقیت لغو شد"}
                 else:
@@ -63,7 +73,8 @@ def cancel_order(response: Response,
                         response.status_code = order_result.get("status_code")
                         return {"success": True, "message": order_result.get("message")}
                     else:
-                        return {"success": True, "message": "سفارش با موفقیت لغو شد ولی کیف پول شما شارژ نشد. با ادمین تماس بگیرید"}
+                        return {"success": True,
+                                "message": "سفارش با موفقیت لغو شد ولی کیف پول شما شارژ نشد. با ادمین تماس بگیرید"}
 
             else:
                 response.status_code = 400
@@ -109,7 +120,8 @@ def edit_order_items(response: Response,
                 return {"succeess": True, "message": "سفارش با موفقیت ویرایش شد"}
             else:
                 response.status_code = 400
-                return {"succeess": True, "message": "سفارش با موفقیت ویرایش شد ولی کیف پول شارژ نشد. با ادمین تماس بگیرید"}
+                return {"succeess": True,
+                        "message": "سفارش با موفقیت ویرایش شد ولی کیف پول شارژ نشد. با ادمین تماس بگیرید"}
         elif not order.get("success"):
             response.status_code = 400
             return {"succeess": False, "message": "سفارش با مشکل موجه شد"}
