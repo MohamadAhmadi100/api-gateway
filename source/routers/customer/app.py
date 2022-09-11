@@ -15,8 +15,8 @@ app = FastAPI(
     version="0.1.0",
     title="Customer API",
     description="This is Customer gateway MicroService",
-    docs_url="/docs/",
-    redoc_url="/redoc/",
+    docs_url="/docs/" if settings.DEBUG_MODE else None,
+    redoc_url="/redoc/" if settings.DEBUG_MODE else None,
     debug=settings.DEBUG_MODE
 )
 
