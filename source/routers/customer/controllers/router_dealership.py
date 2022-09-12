@@ -12,8 +12,8 @@ from source.routers.customer.validators import validation_dealership
 from source.message_broker.rabbit_server import RabbitRPC
 
 router_dealership = APIRouter(
-    prefix="/register",
-    tags=["register"]
+    prefix="/dealership",
+    tags=["dealership"]
 )
 
 auth_handler = AuthHandler()

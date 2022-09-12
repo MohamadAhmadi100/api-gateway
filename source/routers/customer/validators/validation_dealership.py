@@ -9,7 +9,8 @@ from pydantic import validator
 
 class CustomerType(str, Enum):
     B2B = "B2B"
-    B2C = "B2c"
+    B2C = "B2C"
+    B2B2C = "B2B2C"
 
 
 class CustomerRegister(BaseModel):
@@ -207,7 +208,6 @@ class CustomerRegister(BaseModel):
         isRquired=True,
         regexPattern=r"^[0-9۰-۹]{11}$"
     )
-
     customer_type: Optional[CustomerType] = Field(
         alias="customerType",
         description="",
