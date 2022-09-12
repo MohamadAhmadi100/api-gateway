@@ -93,7 +93,7 @@ def register(
     # )
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
-        customer_result = rpc.publish(
+        first_customer_result = rpc.publish(
             message={
                 "customer": {
                     "action": "register_dealership",
@@ -105,10 +105,10 @@ def register(
             },
             headers={'customer': True}
         ).get("customer", {})
-    if not customer_result.get("success"):
+    if not first_customer_result.get("success"):
         raise HTTPException(
-            status_code=customer_result.get("status_code", 500),
-            detail={"error": customer_result.get("error", "Something went wrong")}
+            status_code=first_customer_result.get("status_code", 500),
+            detail={"error": first_customer_result.get("error", "Something went wrong")}
         )
     logging.basicConfig(
         level=logging.INFO,
@@ -119,7 +119,7 @@ def register(
                        backupCount=8),
         ]
     )
-    customer_id = customer_result.get("message").get("data").get("customerID")
+    customer_id = first_customer_result.get("message").get("data").get("customerID")
     # address_result = new_rpc.publish(
     #     message=[
     #         address_funcs.insert_address(data=address, customerId=str(customer_id))]
@@ -143,7 +143,7 @@ def register(
             status_code=317,
             detail={"message": "برای ثبت آدرس دوباره تلاش کنید"}
         )
-    kosar_data = customer_result.get("kosarData")
+    kosar_data = first_customer_result.get("kosarData")
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         result = rpc.publish(
@@ -192,4 +192,4 @@ def register(
     response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
     response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
     response.status_code = customer_result.get("status_code", 200)
-    return customer_result.get("message")
+    return first_customer_result.get("message")
