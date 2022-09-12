@@ -74,7 +74,7 @@ def register(
         "unit": value.customer_unit,
         "tel": customer_tel,
         "postal_code": customer_postal_code,
-        "fullAddress": f"{value.customer_address_province}, {value.customer_address_city}, {value.customer_street}, {value.customer_alley}, پلاک: {value.customer_plaque}, ,واحد: {value.customer_unit}"
+        "fullAddress": f"{value.customer_province}, {value.customer_city}, {value.customer_street}, {value.customer_alley}, پلاک: {value.customer_plaque}, ,واحد: {value.customer_unit}"
     }
     data = {
         "customer_phone_number": customer_phone_number,
