@@ -71,16 +71,16 @@ def wallet_final_consume(palceorder_result, cart, auth_header, response):
         "balance": "consume",
         "type": "order"
     }
-    allowed_types = ["pos", "pending_accounting", "deposit"]
-
-    if palceorder_result['totalPrice'] == 0 or palceorder_result['type'] in allowed_types:
+    allowed_storage = ["pos", "pending_accounting"]
+    if palceorder_result['totalPrice'] == 0 or palceorder_result['type'] in allowed_storage:
         data_reserve_wallet['status'] = "success"
         wallet_response = complete_order_wallet(order_data=data_reserve_wallet, response=response,
                                                 auth_header=auth_header)
         if not wallet_response.get("success"):
             raise HTTPException(status_code=wallet_response.get("status_code", 500),
                                 detail={"error": "wallet not response"})
-    else:
+
+    elif palceorder_result['totalPrice'] > 0:
         wallet_response = reserve_wallet(data=data_reserve_wallet, response=response,
                                          auth_header=auth_header)
         if not wallet_response.get("success"):
