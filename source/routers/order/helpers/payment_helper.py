@@ -71,7 +71,7 @@ def wallet_final_consume(palceorder_result, cart, auth_header, response):
         "balance": "consume",
         "type": "order"
     }
-    allowed_types = ["pos", "deposit"]
+    allowed_types = ["pos", "pending_accounting", "deposit"]
 
     if palceorder_result['totalPrice'] == 0 or palceorder_result['type'] in allowed_types:
         data_reserve_wallet['status'] = "success"
