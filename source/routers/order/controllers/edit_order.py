@@ -68,13 +68,39 @@ def cancel_order(response: Response,
                 if order_result['wallet_charge'] == 0:
                     return {"success": True, "message": "سفارش با موفقیت لغو شد"}
                 else:
-                    wallet_result = charge_wallet_edit_order(data.orderNumber, user, order_result['wallet_charge'])
-                    if wallet_result:
-                        response.status_code = order_result.get("status_code")
-                        return {"success": True, "message": order_result.get("message")}
+                    if order_object['status'] == "pending_payment":
+                        data_reserve_wallet = {
+                            "amount": order_object['payment'].get('paymentMethod')[0].get("walletConsume"),
+                            "order_number": order_object['orderNumber'],
+                            "action_type": "auto",
+                            "balance": "charge", "type": "order", 'status': "failed",
+                            "customer_id": order_object['customer'].get("id")}
+                        rpc.response_len_setter(response_len=1)
+                        wallet_result = rpc.publish(
+                            message={
+                                "wallet": {
+                                    "action": "result_checkout",
+                                    "body": {
+                                        "data": data_reserve_wallet
+                                    }
+                                }
+                            },
+                            headers={'wallet': True}
+                        ).get("wallet", {})
+                        if wallet_result.get("success"):
+                            response.status_code = order_result.get("status_code")
+                            return {"success": True, "message": order_result.get("message")}
+                        else:
+                            return {"success": True,
+                                    "message": "سفارش با موفقیت لغو شد ولی کیف پول شما شارژ نشد. با ادمین تماس بگیرید"}
                     else:
-                        return {"success": True,
-                                "message": "سفارش با موفقیت لغو شد ولی کیف پول شما شارژ نشد. با ادمین تماس بگیرید"}
+                        wallet_result = charge_wallet_edit_order(data.orderNumber, user, order_result['wallet_charge'])
+                        if wallet_result:
+                            response.status_code = order_result.get("status_code")
+                            return {"success": True, "message": order_result.get("message")}
+                        else:
+                            return {"success": True,
+                                    "message": "سفارش با موفقیت لغو شد ولی کیف پول شما شارژ نشد. با ادمین تماس بگیرید"}
 
             else:
                 response.status_code = 400
