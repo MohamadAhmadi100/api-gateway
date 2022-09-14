@@ -969,8 +969,11 @@ def get_csv(
 @router.get("/price_list/", tags=['Product'])
 def price_list(
         response: Response,
-        customer_type: str = Query("B2B"), storage_id: str = Query(None), sub_category: str = Query(None),
-        brand: str = Query(None), model: str = Query(None),
+        customer_type: str = Query("B2B"),
+        storage_id: str = Query(None),
+        sub_category: str = Query(None),
+        brand: str = Query(None),
+        model: str = Query(None),
         access: Optional[str] = Header(None),
         refresh: Optional[str] = Header(None),
 ):
@@ -980,9 +983,9 @@ def price_list(
         customer_type = user_data.get("customer_type", ["B2B"])[0]
         allowed_storages = get_allowed_storages(user_data.get("user_id"))
         if not storage_id:
-            storage_id = '1' if not allowed_storages != ['7'] else '7'
+            storage_id = '1' if not allowed_storages == ['7'] else '7'
 
-    storage_id = '1' if not storage_id and not (access or refresh) else storage_id
+    storage_id = '1' if not storage_id else storage_id
 
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
