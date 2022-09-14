@@ -72,7 +72,7 @@ def wallet_final_consume(palceorder_result, cart, auth_header, response):
         "type": "order"
     }
     allowed_storage = ["pos", "pending_accounting"]
-    if palceorder_result['totalPrice'] == 0 or palceorder_result['type'] in allowed_storage:
+    if palceorder_result['totalPrice'] == 0 or palceorder_result['Type'] in allowed_storage:
         data_reserve_wallet['status'] = "success"
         wallet_response = complete_order_wallet(order_data=data_reserve_wallet, response=response,
                                                 auth_header=auth_header)

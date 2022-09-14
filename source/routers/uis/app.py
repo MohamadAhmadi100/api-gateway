@@ -63,7 +63,8 @@ def create_link(data: Uis, response: Response):
                         "service_data": service_data,
                         "link": link_result.get("message"),
                         "user_list": data.user_list,
-                        "method_list": data.send_method_list
+                        "method_list": data.send_method_list,
+                        "customer_id": data.customer_id
                     }
                 }
             },
