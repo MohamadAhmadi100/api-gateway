@@ -497,6 +497,7 @@ def get_product_list_back_office(
         available: Optional[bool] = Query(None),
         page: Optional[int] = Query(1),
         per_page: Optional[int] = Query(15),
+        system_code: Optional[str] = Query(None),
         lang: Optional[str] = Query("fa_ir")
 ):
     """
@@ -526,6 +527,7 @@ def get_product_list_back_office(
                         "available": available,
                         "page": page,
                         "per_page": per_page,
+                        "system_code": system_code,
                         "lang": lang
                     }
                 }
