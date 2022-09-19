@@ -5,7 +5,7 @@ from source.routers.dealership.controllers.registration_goods_request import rou
 from source.routers.dealership.controllers.get_warehouse import router as get_api
 from source.routers.dealership.controllers.add_imei import router as add_imei
 from source.routers.dealership.controllers.get_dealership import router as get_inventory
-
+from source.routers.dealership.controllers.registration_sell_request import router as sell
 
 
 TAGS = [
@@ -34,3 +34,4 @@ app.include_router(post_api)
 app.include_router(get_api)
 app.include_router(add_imei)
 app.include_router(get_inventory)
+app.include_router(sell)

@@ -48,4 +48,19 @@ def charge_wallet(
                 data=send_data,
                 response=response
             )
+            if payment_result.get("success"):
+                return payment_result
+            rpc.publish(
+                message={
+                    "wallet": {
+                        "action": "cancel_charge_wallet",
+                        "body": {
+                            "transaction_id": transaction.get("transactionId")
+                        }
+                    },
+                },
+                headers={'wallet': True}
+            )
             return payment_result
+
+

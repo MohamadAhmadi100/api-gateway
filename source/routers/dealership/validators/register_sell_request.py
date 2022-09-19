@@ -1,29 +1,31 @@
 from pydantic import BaseModel, Field
-from typing import List, Union, Optional
+from typing import List, Union, Dict
 
-
+class Customer(BaseModel):
+    user_id: str = Field(alias="customerId")
+    phone_number: str = Field(alias="customerPhoneNumber")
 
 class Product(BaseModel):
-    parent_system_code: str = Field(alias="parentSystemCode")
-    system_code: str = Field(alias="systemCode")
-    brand: str
+    status : str = Field(default="initial")
+    systemCode: str = Field(alias="systemCode")
+    storageId: str = Field(alias="storageId")
+    price: int
+    totalPrice: int
+    count: int
     model: str
     name: str
-    color: str
-    guarantee: str
-    price: int
-    imei: str
+    brand: dict
+    color: dict
+    guarantee: dict
+    seller: dict
+    category: dict
+    imeis: List[str]
 
 
 class SellRequest(BaseModel):
-    first_name: str = Field(alias="firstName")
-    last_name: str = Field(alias="lastName")
-    customer_code: str = Field(alias="customerCode")
-    phone_number: str = Field(alias="phoneNumber")
-    postal_code: str = Field(alias="postalCode")
-    insurance_request: str = Field(alias="insuranceRequest")
-    address: str = Field(alias="address")
-    products: Union[List[Product], list] = Field(alias="products")
+    customer: Union[Customer]
+    products: Union[List[Product], list]
+
 
 
 

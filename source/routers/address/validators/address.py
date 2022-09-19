@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, validator
 
 
 class Address(BaseModel):
-    customer_name: str = Field(alias="customerName")
+    # customer_name: str = Field(alias="customerName")
     state_name: str = Field(alias="stateName")
     state_id: str = Field(alias="stateId")
     city_id: str = Field(alias="cityId")
@@ -19,13 +19,13 @@ class Address(BaseModel):
     postal_code: str = Field(alias="postalCode")
     is_default: bool = Field(alias="isDefault")
 
-    @validator("customer_name")
-    def validate_customer_name(cls, customer_name):
-        pattern = r"[ ]{0,1}[\u0600-\u06FF]{2,32}$"
-        match = re.findall(pattern, customer_name)
-        if not match:
-            raise HTTPException(status_code=422, detail={"error": "نام وارد شده معتبر نیست"})
-        return customer_name
+    # @validator("customer_name")
+    # def validate_customer_name(cls, customer_name):
+    #     pattern = r"[ ]{0,1}[\u0600-\u06FF]{2,32}$"
+    #     match = re.findall(pattern, customer_name)
+    #     if not match:
+    #         raise HTTPException(status_code=422, detail={"error": "نام وارد شده معتبر نیست"})
+    #     return customer_name
 
     @validator("state_name")
     def validate_customer_state_name(cls, state_name):
