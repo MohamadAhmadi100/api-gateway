@@ -5,9 +5,10 @@ from starlette.exceptions import HTTPException
 
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.cart.app import get_cart
+from source.routers.customer.helpers.profile_view import get_profile_info
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.order.helpers.payment_helper import get_remaining_wallet, informal_to_cart
-from source.routers.order.helpers.shipment_helper import check_shipment_per_stock, shipment_detail, is_pos_allowed
+from source.routers.order.helpers.shipment_helper import check_shipment_per_stock, is_pos_allowed
 from source.routers.order.validators.order import wallet, payment, informal
 
 payment_step_order = APIRouter()
@@ -23,7 +24,7 @@ def get_formal_payment(response: Response, auth_header=Depends(auth_handler.chec
     user, token = auth_header
     try:
         cart = get_cart(response=response, auth_header=auth_header)
-
+        customer = get_profile_info(auth_header[0])
         # check if customer select all the shipment methods per stock
         check_shipment_result = check_shipment_per_stock(cart)
         if len(cart['shipment']) != len(check_shipment_result):
@@ -31,22 +32,23 @@ def get_formal_payment(response: Response, auth_header=Depends(auth_handler.chec
 
         wallet_amount = get_remaining_wallet(user)
 
-        # if cart['totalPrice'] > 1000:
-        #     payment_method = [
-        #         {"methodName": "deposit", "methodLabe": "واریز به حساب"}]
-
         if cart['totalPrice'] == 0:
             payment_method = []
+        elif cart['totalPrice'] > 100000000:
+            payment_method = [{"methodName": "cheque", "methodLabe": "پرداخت با چک"},
+                              {"methodName": "deposit", "methodLabe": "واریز به حساب"}]
         else:
-
             payment_method = [
                 {"methodName": "aiBanking", "methodLabe": "پرداخت انلاین"},
                 {"methodName": "deposit", "methodLabe": "واریز به حساب"}]
+
+            # pardakht dar mahal
             allowed_pos = is_pos_allowed(cart)
             if allowed_pos:
                 payment_method.append({"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"})
-        # pardakht dar mahal
-
+            if customer.get('customerActiveCredit'):
+                payment_method.append({"methodName": "credit", "methodLabe": "پرداخت اعتباری",
+                                       "message": customer.get('customerCreditAmount')})
 
         response_result = {
             "walletAmount": wallet_amount,
