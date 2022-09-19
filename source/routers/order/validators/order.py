@@ -19,7 +19,7 @@ class payment(BaseModel):
 
     @validator("payment_method")
     def payment_method_validator(cls, value):
-        allowed_values = ['cashondelivery', 'aiBanking', 'deposit']
+        allowed_values = ['cashondelivery', 'aiBanking', 'deposit', 'cheque', 'credit']
         if not isinstance(value, str):
             raise HTTPException(status_code=400, detail="payment method must be a string")
         if value not in allowed_values:
