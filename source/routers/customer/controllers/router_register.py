@@ -48,7 +48,7 @@ def register(
         if value.customer_alley:
             customer_alley = unidecode(value.customer_alley)
         else:
-            customer_alley = None
+            customer_alley = ""
     except Exception as exc:
         raise HTTPException(status_code=422, detail={"error": "لطفا مقادیر عددی را به درستی وارد کنید"}) from exc
 
