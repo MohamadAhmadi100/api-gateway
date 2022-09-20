@@ -45,6 +45,10 @@ def register(
             customer_ofogh_code = unidecode(value.customer_ofogh_code)
         else:
             customer_ofogh_code = None
+        if value.customer_alley:
+            customer_alley = unidecode(value.customer_alley)
+        else:
+            customer_alley = None
     except Exception as exc:
         raise HTTPException(status_code=422, detail={"error": "لطفا مقادیر عددی را به درستی وارد کنید"}) from exc
 
@@ -56,7 +60,7 @@ def register(
         "city_name": value.customer_address_city,
         "region_code": value.customer_region_code,
         "street": value.customer_street,
-        "alley": value.customer_alley,
+        "alley": customer_alley,
         "plaque": value.customer_plaque,
         "unit": value.customer_unit,
         "tel": customer_tel,
@@ -71,7 +75,7 @@ def register(
         "city_name": value.customer_city,
         "region_code": value.customer_region_code,
         "street": value.customer_street,
-        "alley": value.customer_alley,
+        "alley": customer_alley,
         "plaque": value.customer_plaque,
         "unit": value.customer_unit,
         "tel": customer_tel,
