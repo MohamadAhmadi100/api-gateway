@@ -4,7 +4,6 @@ import logging
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 from starlette.staticfiles import StaticFiles
 
 from config import settings
@@ -20,9 +19,7 @@ from source.routers.kosar.app import app as kosar_app
 from source.routers.mobile_app.app import app as mobile_app
 from source.routers.order.app import app as order_app
 from source.routers.payment.app import app as payment_app
-from source.routers.pricing.app import app as pricing_app
 from source.routers.product.app import app as product_app
-from source.routers.quantity.app import app as quantity_app
 from source.routers.shipment.app import app as shipment_app
 from source.routers.uis.app import app as uis_app
 from source.routers.wallet.app import app as wallet_app
@@ -37,10 +34,6 @@ app = FastAPI(title="API Gateway",
 # ----------------------------------------- Mount all services here -------------------------------------------------- #
 
 app.mount("/cart/api/v1", cart_app)
-
-app.mount("/pricing/api/v1", pricing_app)
-
-app.mount("/quantity/api/v1", quantity_app)
 
 app.mount("/product/api/v1", product_app)
 
