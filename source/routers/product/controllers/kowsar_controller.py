@@ -105,7 +105,7 @@ def get_kowsar_items(
 @router.get("/kowsar/systemCode/{systemCode}/", tags=["Kowsar"])
 def get_kowsar_system_code(
         response: Response,
-        system_code: str = Path(..., min_length=2, max_length=16, alias='systemCode')
+        system_code: str = Path(..., min_length=2, max_length=22, alias='systemCode')
 ):
     """
     Get children of kowsar system_code
