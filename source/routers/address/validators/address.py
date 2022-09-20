@@ -2,6 +2,7 @@ import re
 
 from fastapi import HTTPException
 from pydantic import BaseModel, Field, validator
+from typing import Optional
 
 
 class Address(BaseModel):
@@ -12,7 +13,7 @@ class Address(BaseModel):
     city_name: str = Field(alias="cityName")
     region_code: str = Field(alias="regionCode")
     street: str = Field(alias="street")
-    alley: str = Field(alias="alley")
+    alley: str = Field(alias="alley", default='')
     plaque: str = Field(alias="plaque")
     unit: str = Field(alias="unit")
     tel: str = Field(alias="tel")
@@ -53,7 +54,7 @@ class Address(BaseModel):
 
     @validator("city_name")
     def validate_customer_city_name(cls, city_name):
-        pattern = r"[ ]{0,1}[\u0600-\u06FF]{2,32}$"
+        pattern = r"[ ]{0,1}[\u0600-\u06FF]{0,32}$"
         match = re.findall(pattern, city_name)
         if not match:
             raise HTTPException(status_code=422, detail={"error": "نام شهر معتبر نیست."})
@@ -69,11 +70,14 @@ class Address(BaseModel):
 
     @validator("alley")
     def validate_alley(cls, alley):
-        pattern = r"[ ]{0,1}[\u0600-\u06FF]{2,32}$"
-        match = re.findall(pattern, alley)
-        if not match:
-            raise HTTPException(status_code=422, detail={"error": "نام کوچه معتبر نیست."})
-        return alley
+        if len(alley):
+            pattern = r"[ ]{0,1}[\u0600-\u06FF]{2,32}$"
+            match = re.findall(pattern, alley)
+            if not match:
+                raise HTTPException(status_code=422, detail={"error": "نام کوچه معتبر نیست."})
+            return alley
+        else:
+            return alley
 
     @validator("plaque")
     def validate_plaque(cls, plaque):
