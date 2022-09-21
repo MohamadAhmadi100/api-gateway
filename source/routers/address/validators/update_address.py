@@ -62,11 +62,14 @@ class UpdateAddress(BaseModel):
 
     @validator("alley")
     def validate_alley(cls, alley):
-        pattern = r"[ ]{0,1}[\u0600-\u06FF]{2,32}$"
-        match = re.findall(pattern, alley)
-        if not match:
-            raise HTTPException(status_code=422, detail={"error": "نام کوچه معتبر نیست."})
-        return alley
+        if len(alley):
+            pattern = r"[ ]{0,1}[\u0600-\u06FF]{2,32}$"
+            match = re.findall(pattern, alley)
+            if not match:
+                raise HTTPException(status_code=422, detail={"error": "نام کوچه معتبر نیست."})
+            return alley
+        else:
+            return alley
 
     @validator("plaque")
     def validate_plaque(cls, plaque):

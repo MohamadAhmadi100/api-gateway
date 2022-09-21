@@ -69,6 +69,17 @@ def check_closing_tabs():
         }
 
 
+def create_url_again(service_id):
+    return {
+            "payment": {
+                "action": "create_url_again",
+                "body": {
+                    "service_id": service_id,
+                }
+            }
+        }
+
+
 def cancel_pending_payment(service_id):
     return {
             "payment": {

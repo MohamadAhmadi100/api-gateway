@@ -112,7 +112,7 @@ class CustomerRegister(BaseModel):
         maxLength=32,
         dataType="string",
         type="text",
-        regexPatternr=r"^[\u0600-\u06FF ]{2,32}$",
+        regexPattern=r"^[\u0600-\u06FF ]{2,32}$",
         isRquired=True,
     )
     customer_province_id: str = Field(
@@ -162,7 +162,7 @@ class CustomerRegister(BaseModel):
         maxLength=32,
         dataType="string",
         type="text",
-        regexPatternr=r"^[\u0600-\u06FF ]{2,32}$",
+        regexPattern=r"^[\u0600-\u06FF ]{2,32}$",
         isRquired=True,
     )
     customer_address_province_id: Optional[str] = Field(
@@ -245,7 +245,7 @@ class CustomerRegister(BaseModel):
         isRquired=True,
         regexPattern=r"[ ]{0,1}[\u0600-\u06FF0-9]{4,32}$"
     )
-    customer_alley: str = Field(
+    customer_alley: Optional[str] = Field(
         alias="customerAlley",
         title="کوچه",
         name="customerAlley",
@@ -255,7 +255,7 @@ class CustomerRegister(BaseModel):
         maxLength=32,
         dataType="string",
         type="str",
-        isRquired=True,
+        isRquired=False,
         regexPattern=r"[ ]{0,1}[\u0600-\u06FF0-9]{1,32}$"
     )
     customer_plaque: str = Field(
