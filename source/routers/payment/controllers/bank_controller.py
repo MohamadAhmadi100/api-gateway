@@ -3,6 +3,8 @@ import logging
 import random
 from fastapi.responses import RedirectResponse
 from fastapi import HTTPException, Response, APIRouter, Request, Body, Query
+
+from source.helpers.case_converter import convert_case
 # from source.helpers.rabbit_config import new_rpc
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.order.helpers.final_helper import handle_order_bank_callback
@@ -235,3 +237,21 @@ def cancel_pending_payment(
                 response=Response
             )
         return "completed"
+
+
+@router.get("/re_redirect")
+def get_the_url_again(
+        response: Response,
+        service_id: str = Query(..., alias="serviceId"),
+):
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        url_result = rpc.publish(
+            message=bank_controller.create_url_again(service_id=service_id),
+            headers={"payment": True}
+        ).get("payment", {})
+        if not url_result.get("success"):
+            raise HTTPException(status_code=url_result.get("status_code", 500),
+                                detail={"error": url_result.get("error", "Something went wrong")})
+        response.status_code = url_result.get("status_code")
+        return convert_case(url_result.get("message"), "camel")

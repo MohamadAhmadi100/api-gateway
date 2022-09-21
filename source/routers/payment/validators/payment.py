@@ -2,7 +2,7 @@ from pydantic import BaseModel, validator, Field
 
 
 class SendData(BaseModel):
-    amount: int = Field(..., alias="amount", )
+    amount: int = Field(..., alias="amount")
     customer_id: int = Field(..., alias="customerId")
     service_name: str = Field(..., alias="serviceName")
     service_id: str = Field(..., alias="serviceId")
