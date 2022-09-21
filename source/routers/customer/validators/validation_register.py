@@ -112,7 +112,7 @@ class CustomerRegister(BaseModel):
         maxLength=32,
         dataType="string",
         type="text",
-        regexPatternr=r"^[\u0600-\u06FF ]{2,32}$",
+        regexPattern=r"^[\u0600-\u06FF ]{2,32}$",
         isRquired=True,
     )
     customer_province_id: str = Field(
@@ -162,7 +162,7 @@ class CustomerRegister(BaseModel):
         maxLength=32,
         dataType="string",
         type="text",
-        regexPatternr=r"^[\u0600-\u06FF ]{2,32}$",
+        regexPattern=r"^[\u0600-\u06FF ]{2,32}$",
         isRquired=True,
     )
     customer_address_province_id: Optional[str] = Field(
