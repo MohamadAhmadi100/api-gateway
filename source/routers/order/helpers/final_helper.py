@@ -17,7 +17,8 @@ def handle_order_bank_callback(result, response):
         ).get("order")
         if order_get_response['order_object']['status'] == "pending_payment":
             if order_get_response.get("order_object") is not None:
-                wallet_amount = order_get_response['order_object']['payment'].get('paymentMethod')[0].get("walletConsume")
+                wallet_amount = order_get_response['order_object']['payment'].get('paymentMethod')[0].get(
+                    "walletConsume")
                 # consume wallet
                 if wallet_amount is not None:
                     if result.get("is_paid"):
@@ -101,6 +102,7 @@ def handle_order_bank_callback(result, response):
                                     order_get_response['order_object']['customer']['fullName'].split(" ")[0],
                                 "last_name":
                                     order_get_response['order_object']['customer']['fullName'].split(" ")[1],
+                                "order_number": order_get_response['order_object']['orderNumber']
                             }
                         }
                     },
@@ -146,7 +148,11 @@ def handle_order_bank_callback(result, response):
                 response.status_code = 200
                 return {"result": False, "service_id": result.get("service_id")}
         else:
-            return {"result": False, "service_id": result.get("service_id")}
+            if order_get_response['order_object']['status'] != "cancel":
+                return {"result": True, "service_id": result.get("service_id")}
+            else:
+                return {"result": False, "service_id": result.get("service_id")}
+
 
 def reserve_order_items(order_object):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
