@@ -113,7 +113,7 @@ class KowsarCustomCategory(BaseModel):
                                        alias="customName")
     visible_in_site: bool = Field(..., title="نمایش در سایت", isRequired=True, alias="visibleInSite")
 
-    image: Optional[str] = Field(..., title="تصویر محصول", maxLength=256, minLength=3, placeholder="تصویر محصول",
+    image: Optional[str] = Field(None, title="تصویر محصول", maxLength=256, minLength=3, placeholder="تصویر محصول",
                                  isRequired=False)
 
     @validator('visible_in_site')

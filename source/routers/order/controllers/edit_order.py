@@ -30,7 +30,8 @@ def cancel_order(response: Response,
             },
             headers={'order': True}
         ).get("order")
-        allowed_statuses = ["processing", "pending_payment", "pending_accounting", "pos"]
+        allowed_statuses = ["processing", "pending_payment", "pending_accounting", "pos", "pending_cheque",
+                            "pending_credit"]
         order_object = get_order_result.get("order_object")
         if order_object['status'] not in allowed_statuses:
             response.status_code = 400
@@ -61,6 +62,7 @@ def cancel_order(response: Response,
                                     order_object['customer']['fullName'].split(" ")[0],
                                 "last_name":
                                     order_object['customer']['fullName'].split(" ")[1],
+                                "order_number": order_object['orderNumber']
                             }
                         }
                     },
