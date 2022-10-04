@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import List, Union, Dict
 
 class Customer(BaseModel):
-    user_id: str = Field(alias="customerId")
+    user_id: int = Field(alias="customerId")
     phone_number: str = Field(alias="customerPhoneNumber")
 
 class Product(BaseModel):

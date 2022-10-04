@@ -16,65 +16,103 @@ def dealership_bank_callback(payment_detail):
             },
             headers={'order': True}
         ).get("order")
-        if get_order_response['order_object']['status'] == "dealership_initial":
-            rpc.response_len_setter(response_len=1)
-            if payment_detail.get("is_paid"):
-                message = {
-                    "order": {
-                        "action": "complete_dealership_order_payment",
-                        "body": {
-                            "payment_data": payment_detail
-                        }
-                    }
-                }
-            if not payment_detail.get("is_paid"):
-                message = {
-                    "order": {
-                        "action": "order_bank_callback_cancel",
-                        "body": {
-                            "payment_data": payment_detail
-                        }
-                    }
-                }
-            order_response = rpc.publish(
-                message=message,
-                headers={'order': True}
-            ).get("order")
-            if order_response.get("success"):
+        if get_order_response.get("success"):
+            if get_order_response['order_object']['status'] == "dealership_initial":
                 rpc.response_len_setter(response_len=1)
-                final_order= rpc.publish(
-                    message={
+                if payment_detail.get("is_paid"):
+                    message = {
                         "order": {
-                            "action": "get_one_order",
+                            "action": "complete_dealership_order_payment",
                             "body": {
-                                "order_id": payment_detail.get("service_id")
+                                "payment_data": payment_detail
                             }
                         }
-                    },
+                    }
+                if not payment_detail.get("is_paid"):
+                    message = {
+                        "order": {
+                            "action": "order_bank_callback_cancel",
+                            "body": {
+                                "payment_data": payment_detail
+                            }
+                        }
+                    }
+                order_response = rpc.publish(
+                    message=message,
                     headers={'order': True}
                 ).get("order")
-                if get_order_response.get("success"):
+                if order_response.get("success"):
                     rpc.response_len_setter(response_len=1)
-                    dealership_response = rpc.publish(
+                    final_order= rpc.publish(
                         message={
-                            "dealership": {
-                                "action": "insert_order_for_end_user",
+                            "order": {
+                                "action": "get_one_order",
                                 "body": {
-                                    "order_detail": get_order_response.get("order_object"),
-                                    "is_paid": payment_detail.get("is_paid")
+                                    "order_id": payment_detail.get("service_id")
                                 }
                             }
                         },
-                        headers={'dealership': True}
-                    ).get("dealership", {})
+                        headers={'order': True}
+                    ).get("order")
+                    if final_order.get("success"):
+                        rpc.response_len_setter(response_len=1)
+                        if final_order['order_object']['status'] == "complete_dealership":
+                            reduce_inventory = rpc.publish(
+                                message={
+                                    "dealership": {
+                                        "action": "reduce_inventory",
+                                        "body": {
+                                            "order_detail": get_order_response.get("order_object"),
+                                            # "payment_detail": payment_detail
+                                        }
+                                    }
+                                },
+                                headers={'dealership': True}
+                            ).get("dealership", {})
+                            if reduce_inventory.get("success"):
+                                rpc.response_len_setter(response_len=1)
+                                dealership_response = rpc.publish(
+                                    message={
+                                        "dealership": {
+                                            "action": "insert_order_for_end_user",
+                                            "body": {
+                                                "order_detail": get_order_response.get("order_object"),
+                                                "is_paid": payment_detail.get("is_paid")
+                                            }
+                                        }
+                                    },
+                                    headers={'dealership': True}
+                                ).get("dealership", {})
+                                return dealership_response
+                            return reduce_inventory
+                        if final_order['order_object']['status'] == "cancel":
+                            rpc.response_len_setter(response_len=1)
+                            dealership_final_response = rpc.publish(
+                                message={
+                                    "dealership": {
+                                        "action": "insert_order_for_end_user",
+                                        "body": {
+                                            "order_detail": get_order_response.get("order_object"),
+                                            "payment_detail": payment_detail
+                                        }
+                                    }
+                                },
+                                headers={'dealership': True}
+                            ).get("dealership", {})
+                            if dealership_final_response.get("success"):
+                                return dealership_final_response
+                            return dealership_final_response
+            return {"success": False, "message": "سفارش ثبت نشده است"}
+        return get_order_response
+
 
 
 
 print(dealership_bank_callback({
     "payment_id" : 303965,
-    "service_id" : "300002",
-    "customer_id" : 9649,
-    "amount" : 237580000,
+    "service_id" : "300101",
+    "customer_id" : 20025,
+    "amount" : 618000,
     "bank_name" : "mellat",
     "bank_code" : "1011125",
     "is_paid" : True,

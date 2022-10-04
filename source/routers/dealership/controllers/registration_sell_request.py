@@ -17,6 +17,7 @@ def sell_request(data: SellRequest,
                  response: Response,
                  auth_header=Depends(auth_handler.check_current_user_tokens)):
     user, token = auth_header
+    a = get_profile_info(data.dict().get("customer"))
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         order_response = rpc.publish(
@@ -28,7 +29,7 @@ def sell_request(data: SellRequest,
                             "dealershipId": user.get("user_id"),
                             "dealershipPhoneNumber": user.get("phone_number")
                         },
-                        "customer_detail": (get_profile_info(data.dict().get("customer"))).get("message"),
+                        "customer_detail": get_profile_info(data.dict().get("customer")),
                         "products": data.dict().get("products")
                     }
                 }
@@ -62,3 +63,44 @@ def sell_request(data: SellRequest,
             )
             return uis_response
         return order_response
+# {
+#   "customer": {
+#     "customerId": "20025",
+#     "customerPhoneNumber": "09355055825"
+#   },
+#   "products": [
+#     {
+#       "status": "initial",
+#       "systemCode": "2000010010001001001001001",
+#       "storageId": "1",
+#       "price": 618000,
+#       "totalPrice": 618000,
+#       "count": 1,
+#       "model": "A01 Core",
+#       "name": "Mobile Samsung A01 Core (1GB 16GB 4G) Vietnam",
+#       "brand": {
+#         "value": "Samsung",
+#         "label": "Samsung"
+#     },
+#       "color": {
+#         "value": "white",
+#         "label": "white"
+#     },
+#       "guarantee": {
+#         "value": "Aawaat",
+#         "label": "Aawaat"
+#     },
+#       "seller": {
+#         "value": "ASD",
+#         "label": "ASD"
+#     },
+#       "category": {
+#         "value": "ASD",
+#         "label": "موبایل"
+#     },
+#       "imeis": [
+#         "111"
+#       ]
+#     }
+#   ]
+# }
