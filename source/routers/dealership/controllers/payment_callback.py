@@ -2,7 +2,7 @@ from source.message_broker.rabbit_server import RabbitRPC
 
 
 
-def dealership_bank_callback(payment_detail):
+def dealership_bank_callback(result, response):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         get_order_response = rpc.publish(
@@ -10,7 +10,7 @@ def dealership_bank_callback(payment_detail):
                 "order": {
                     "action": "get_one_order",
                     "body": {
-                        "order_id": payment_detail.get("service_id")
+                        "order_id": result.get("service_id")
                     }
                 }
             },
@@ -19,21 +19,21 @@ def dealership_bank_callback(payment_detail):
         if get_order_response.get("success"):
             if get_order_response['order_object']['status'] == "dealership_initial":
                 rpc.response_len_setter(response_len=1)
-                if payment_detail.get("is_paid"):
+                if result.get("is_paid"):
                     message = {
                         "order": {
                             "action": "complete_dealership_order_payment",
                             "body": {
-                                "payment_data": payment_detail
+                                "payment_data": result
                             }
                         }
                     }
-                if not payment_detail.get("is_paid"):
+                if not result.get("is_paid"):
                     message = {
                         "order": {
                             "action": "order_bank_callback_cancel",
                             "body": {
-                                "payment_data": payment_detail
+                                "payment_data": result
                             }
                         }
                     }
@@ -48,7 +48,7 @@ def dealership_bank_callback(payment_detail):
                             "order": {
                                 "action": "get_one_order",
                                 "body": {
-                                    "order_id": payment_detail.get("service_id")
+                                    "order_id": result.get("service_id")
                                 }
                             }
                         },
@@ -77,7 +77,7 @@ def dealership_bank_callback(payment_detail):
                                             "action": "insert_order_for_end_user",
                                             "body": {
                                                 "order_detail": get_order_response.get("order_object"),
-                                                "is_paid": payment_detail.get("is_paid")
+                                                "payment_detail": result
                                             }
                                         }
                                     },
@@ -93,13 +93,14 @@ def dealership_bank_callback(payment_detail):
                                         "action": "insert_order_for_end_user",
                                         "body": {
                                             "order_detail": get_order_response.get("order_object"),
-                                            "payment_detail": payment_detail
+                                            "payment_detail": result
                                         }
                                     }
                                 },
                                 headers={'dealership': True}
                             ).get("dealership", {})
                             if dealership_final_response.get("success"):
+                                response.status_code = 500
                                 return dealership_final_response
                             return dealership_final_response
             return {"success": False, "message": "سفارش ثبت نشده است"}
@@ -108,35 +109,35 @@ def dealership_bank_callback(payment_detail):
 
 
 
-print(dealership_bank_callback({
-    "payment_id" : 303965,
-    "service_id" : "300101",
-    "customer_id" : 20025,
-    "amount" : 618000,
-    "bank_name" : "mellat",
-    "bank_code" : "1011125",
-    "is_paid" : True,
-    "start_payment" : 1663136268.27697,
-    "start_payment_jalali" : "1401-06-23 10:47:48",
-    "service" : "order",
-    "kowsar_status" : "successful",
-    "return_bank" : True,
-    "send_status" : "successful",
-    "status" : "واریز با موفقیت انجام شد",
-    "token" : "3247184508A5211A",
-    "end_payment" : 1663136310.24705,
-    "end_payment_jalali" : "1401-06-23 10:48:30",
-    "payment_log" : {
-        "RefId" : "3247184508A5211A",
-        "ResCode" : "0",
-        "SaleOrderId" : "303965",
-        "SaleReferenceId" : "222800917074",
-        "CardHolderInfo" : "12ECB0F339C5528069DD48C8421CC66B1988551BDD9E14574A948FEBC514D516",
-        "CardHolderPan" : "585983****2397",
-        "FinalAmount" : "237580000"
-    },
-    "verify_log" : {
-        "ResCode" : "0"
-    },
-    "settle_log" : "0"
-}))
+# print(dealership_bank_callback({
+#     "payment_id" : 303965,
+#     "service_id" : "300101",
+#     "customer_id" : 20025,
+#     "amount" : 618000,
+#     "bank_name" : "mellat",
+#     "bank_code" : "1011125",
+#     "is_paid" : True,
+#     "start_payment" : 1663136268.27697,
+#     "start_payment_jalali" : "1401-06-23 10:47:48",
+#     "service" : "order",
+#     "kowsar_status" : "successful",
+#     "return_bank" : True,
+#     "send_status" : "successful",
+#     "status" : "واریز با موفقیت انجام شد",
+#     "token" : "3247184508A5211A",
+#     "end_payment" : 1663136310.24705,
+#     "end_payment_jalali" : "1401-06-23 10:48:30",
+#     "payment_log" : {
+#         "RefId" : "3247184508A5211A",
+#         "ResCode" : "0",
+#         "SaleOrderId" : "303965",
+#         "SaleReferenceId" : "222800917074",
+#         "CardHolderInfo" : "12ECB0F339C5528069DD48C8421CC66B1988551BDD9E14574A948FEBC514D516",
+#         "CardHolderPan" : "585983****2397",
+#         "FinalAmount" : "237580000"
+#     },
+#     "verify_log" : {
+#         "ResCode" : "0"
+#     },
+#     "settle_log" : "0"
+# }))

@@ -3,6 +3,7 @@ from typing import Optional, List
 from fastapi import HTTPException, Response, Query, APIRouter
 from source.helpers.case_converter import convert_case
 from source.message_broker.rabbit_server import RabbitRPC
+from source.routers.dealership.controllers.payment_callback import dealership_bank_callback
 from source.routers.order.helpers.final_helper import handle_order_bank_callback
 import requests
 from source.routers.wallet.wallet_modules.wallet_callback import callback_payment
@@ -15,7 +16,8 @@ import source.services.customer.router_back_office as customer_controller
 
 callback_service_handler = {
     "wallet": callback_payment,
-    "order": handle_order_bank_callback
+    "order": handle_order_bank_callback,
+    "dealership": dealership_bank_callback
 }
 
 router = APIRouter()
