@@ -141,7 +141,7 @@ def register(
     if not address_result.get("success"):
         raise HTTPException(
             status_code=317,
-            detail={"message": address_result.get("error")}
+            detail={"error": address_result.get("error")}
         )
     kosar_data = first_customer_result.get("kosarData")
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
