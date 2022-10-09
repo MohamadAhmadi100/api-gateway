@@ -7,6 +7,7 @@ from fastapi import HTTPException, Response, APIRouter, Request, Body, Query
 from source.helpers.case_converter import convert_case
 # from source.helpers.rabbit_config import new_rpc
 from source.message_broker.rabbit_server import RabbitRPC
+from source.routers.dealership.controllers.payment_callback import dealership_bank_callback
 from source.routers.order.helpers.final_helper import handle_order_bank_callback
 import requests
 from source.routers.payment.modules import payment_modules
@@ -18,7 +19,8 @@ import source.services.kosar.payment_controller as kosar_controller
 
 callback_service_handler = {
     "wallet": callback_payment,
-    "order": handle_order_bank_callback
+    "order": handle_order_bank_callback,
+    "dealership": dealership_bank_callback
 }
 
 BANK_NAMES = ["mellat", "saman"]

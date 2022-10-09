@@ -47,7 +47,7 @@ def register(
         raise HTTPException(status_code=422, detail={"error": "لطفا مقادیر عددی را به درستی وارد کنید"}) from exc
 
     address = {
-        "customer_name": f"{value.customer_first_name} {value.customer_last_name}",
+        # "customer_name": f"{value.customer_first_name} {value.customer_last_name}",
         "state_name": value.customer_province,
         "state_id": value.customer_province_id,
         "city_id": value.customer_city_id,
@@ -141,7 +141,7 @@ def register(
     if not address_result.get("success"):
         raise HTTPException(
             status_code=317,
-            detail={"message": "برای ثبت آدرس دوباره تلاش کنید"}
+            detail={"error": address_result.get("error")}
         )
     kosar_data = first_customer_result.get("kosarData")
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
