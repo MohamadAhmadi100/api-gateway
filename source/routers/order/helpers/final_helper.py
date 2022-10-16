@@ -212,6 +212,18 @@ def place_order(auth_header, cart, customer):
         result['cart'] = cart
         result['user_info'] = user
         result['customer'] = customer
+        rpc.response_len_setter(response_len=1)
+        warehouse_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "all_warehouses",
+                    "body": {
+                    }
+                }
+            },
+            headers={"product": True}
+        ).get("product")['warehouses']
+        result['warehouse_details'] = warehouse_result
 
         rpc.response_len_setter(response_len=1)
         result_to_order = rpc.publish(

@@ -7,12 +7,25 @@ def ship_address_object(user, cart):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         result = []
         rpc.response_len_setter(response_len=1)
+        warehouse_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "all_warehouses",
+                    "body": {
+                    }
+                }
+            },
+            headers={"product": True}
+        ).get("product")['warehouses']
+
+        rpc.response_len_setter(response_len=1)
         storage_result = rpc.publish(
             message={
                 "order": {
                     "action": "shipment_storage_detail",
                     "body": {
                         "cart_data": cart,
+                        'warehouse_details': warehouse_result
                     }
                 }
             },
@@ -125,12 +138,25 @@ def shipment_detail(auth_header, response):
 def check_shipment_per_stock(cart):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
+        warehouse_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "all_warehouses",
+                    "body": {
+                    }
+                }
+            },
+            headers={"product": True}
+        ).get("product")['warehouses']
+
+        rpc.response_len_setter(response_len=1)
         storage_result = rpc.publish(
             message={
                 "order": {
                     "action": "shipment_storage_detail",
                     "body": {
                         "cart_data": cart,
+                        'warehouse_details': warehouse_result
                     }
                 }
             },
