@@ -100,15 +100,14 @@ def dealership_bank_callback(result, response):
                                 headers={'dealership': True}
                             ).get("dealership", {})
                             if dealership_final_response.get("success"):
-                                response.status_code = 500
                                 return dealership_final_response
                             return dealership_final_response
             return {"success": False, "message": "سفارش ثبت نشده است"}
         return get_order_response
 
-
-
-
+#
+#
+#
 # print(dealership_bank_callback({
 #     "payment_id" : 303965,
 #     "service_id" : "300101",
@@ -140,4 +139,4 @@ def dealership_bank_callback(result, response):
 #         "ResCode" : "0"
 #     },
 #     "settle_log" : "0"
-# }))
+# }, 200))
