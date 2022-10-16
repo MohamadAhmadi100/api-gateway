@@ -3,7 +3,7 @@ from fastapi import HTTPException, APIRouter, Response, Path
 from source.helpers.case_converter import convert_case
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
-from source.routers.product.validators.kowsar import KowsarGroup, KowsarPart
+from source.routers.product.validators.kowsar import KowsarGroup, KowsarPart, KowsarRedo
 
 router = APIRouter()
 
@@ -118,6 +118,57 @@ def get_kowsar_system_code(
                     "action": "get_kowsar_system_code",
                     "body": {
                         "system_code": system_code
+                    }
+                }
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(product_result.get("message"), 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
+
+
+@router.get("/kowsar/logs/", tags=['Kowsar'])
+def get_kowsar_logs(response: Response):
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_kowsar_logs",
+                    "body": {}
+                }
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(product_result.get("message"), 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
+
+
+@router.post("/kowsar/redo/", tags=["Kowsar"])
+def kowsar_redo(
+        response: Response,
+        item: KowsarRedo
+):
+    """
+    Create kowsar system code
+    """
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "kowsar_redo",
+                    "body": {
+                        "func_name": item.func_name,
+                        "request": item.request
                     }
                 }
             },
