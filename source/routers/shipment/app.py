@@ -7,6 +7,7 @@ from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.shipment.validators.shipment import Shipment
 from source.routers.shipment.validators.shipment_per_stock import PerStock
 from source.routers.customer.module.auth import AuthHandler
+from source.routers.shipment.validators.mahex_weekly_limit import WeekDays
 
 TAGS = [
     {
@@ -126,29 +127,26 @@ def shipment_per_stock(
                                 detail={"error": cart_response.get("error", "Shipment service Internal error")})
 
 
-@app.post("/test_wallet", tags=["test"])
-def test(response: Response, auth_header=Depends(auth_handler.check_current_user_tokens)):
-    user, token_dict = auth_header
+
+
+@app.put("/mahex_weekly_limit", tags=["change mahex weekly limit for free price"])
+def change_limit(data: WeekDays, response: Response):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
-        cart_response = rpc.publish(
+        shipment_response = rpc.publish(
             message={
-                "cart": {
-                    "action": "add_payment_to_cart",
+                "shipment": {
+                    "action": "change_mahex_limit",
                     "body": {
-                        "user_id": user.get("user_id"),
-                        "payment_details": {
-                            "amount": 1425635,
-                            "transactionId": "354137853"
-                        }
+                        "week_data": data.json()
                     }
                 }
             },
-            headers={'cart': True}
-        ).get("cart", {})
+            headers={'shipment': True}
+        ).get("shipment", {})
 
-        if cart_response.get("success"):
-            response.status_code = cart_response.get("status_code", 200)
-            return cart_response
-        raise HTTPException(status_code=cart_response.get("status_code", 500),
-                            detail={"error": cart_response.get("error", "Shipment service Internal error")})
+        if shipment_response.get("success"):
+            response.status_code = shipment_response.get("status_code", 200)
+            return shipment_response
+        raise HTTPException(status_code=shipment_response.get("status_code", 500),
+                            detail={"error": shipment_response.get("error", "Shipment service Internal error")})

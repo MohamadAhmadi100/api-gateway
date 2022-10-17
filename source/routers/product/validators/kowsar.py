@@ -116,3 +116,8 @@ class KowsarConfig(BaseModel):
         if not isinstance(v, str):
             raise ValueError('name must be an instance of str')
         return v
+
+
+class KowsarRedo(BaseModel):
+    func_name: str
+    request: dict
