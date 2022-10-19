@@ -60,3 +60,26 @@ def initial(
         return get_initial
 
 
+@router.get("/get_sell_forms", tags=["get all sell forms that are added by dealership"])
+def get_sell_forms(
+    auth_header=Depends(auth_handler.check_current_user_tokens)
+):
+    user, token = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        response= rpc.publish(
+            message={
+                "dealership": {
+                    "action": "get_sell_forms",
+                    "body": {
+                        "dealership_id": str(user.get("user_id"))
+                    }
+                }
+            },
+            headers={'dealership': True}
+        ).get("dealership", {})
+        if response.get("success"):
+            return response
+        return response
+
+
