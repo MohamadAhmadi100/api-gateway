@@ -17,7 +17,6 @@ def sell_request(data: SellRequest,
                  response: Response,
                  auth_header=Depends(auth_handler.check_current_user_tokens)):
     user, token = auth_header
-    a = get_profile_info(data.dict().get("customer"))
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         order_response = rpc.publish(
