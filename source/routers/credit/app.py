@@ -2,7 +2,7 @@ from fastapi import FastAPI, responses
 from starlette.exceptions import HTTPException as starletteHTTPException
 
 from source.config import settings
-from source.routers.credit.dealership.dealership_router import credit
+from source.routers.credit.controllers.credit_router import credit
 from source.routers.customer.module.auth import AuthHandler
 
 TAGS = [
