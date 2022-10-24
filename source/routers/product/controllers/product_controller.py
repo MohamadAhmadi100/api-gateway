@@ -630,7 +630,7 @@ def price_list_tehran(
         product_result = rpc.publish(
             message={
                 "product": {
-                    "action": "price_list_all",
+                    "action": "price_list_tehran",
                     "body": {
                         "customer_type": customer_type,
                         "sub_category": sub_category,
