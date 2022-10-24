@@ -615,6 +615,42 @@ def price_list(
                             detail={"error": product_result.get("error", "Something went wrong")})
 
 
+@router.get("/price_list_tehran/", tags=['Product'])
+def price_list_tehran(
+        response: Response,
+        customer_type: str = Query("B2B"),
+        sub_category: str = Query(None),
+        brand: str = Query(None),
+        model: str = Query(None),
+):
+    allowed_storages = ['1', '7']
+
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "price_list_all",
+                    "body": {
+                        "customer_type": customer_type,
+                        "sub_category": sub_category,
+                        "brand": brand,
+                        "model": model,
+                        "allowed_storages": allowed_storages
+                    }
+                }
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            message_product = product_result.get("message", {})
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(message_product, 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
+
+
 @router.get("/price_list_all/", tags=['Product'])
 def price_list_all(
         response: Response,
