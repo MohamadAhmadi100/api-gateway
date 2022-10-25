@@ -49,6 +49,9 @@ def ship_address_object(user, cart):
             if address_result.get('result') is None:
                 return {"success": False, "message": "لطفا ادرس پیشفرض را انتخاب کنید"}
             stocks = []
+            total_item = 0
+            for total_count in cart['products']:
+                total_item += total_count['count']
             for items in result[0]:
                 stocks.append({
                     "stockName": items['warehouse_label'],
@@ -57,7 +60,7 @@ def ship_address_object(user, cart):
                     "destination": address.get('cityId'),
                     "weight": 0,
                     "totalPrice": cart['totalPrice'],
-                    "totalItem": 0
+                    "totalItem": total_item
                 })
             return_result = {
                 "customerId": user[0].get("user_id"),
