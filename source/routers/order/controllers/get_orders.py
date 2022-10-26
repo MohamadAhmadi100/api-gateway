@@ -68,11 +68,9 @@ def get_one_orders(response: Response,
                             detail={"error": order_response.get("error", "Order service Internal error")})
 
 
-
-
 @get_order.get("/get_customer_gift/", tags=["Order Report"])
 def get_customer_gift(response: Response,
-                   auth_header=Depends(auth_handler.check_current_user_tokens)):
+                      auth_header=Depends(auth_handler.check_current_user_tokens)):
     user, token_dict = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
@@ -92,5 +90,3 @@ def get_customer_gift(response: Response,
             return order_response
         raise HTTPException(status_code=order_response.get("status_code", 500),
                             detail={"error": order_response.get("error", "Order service Internal error")})
-
-
