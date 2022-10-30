@@ -409,14 +409,14 @@ def get_product_list_by_system_code(
     Get product list by brand
     """
     customer_type = "B2B"
-    allowed_storages = storages if storages else ['1', '11']
+    allowed_storages = []
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", ["B2B"])[0]
-        user_allowed_storages = get_allowed_storages(user_data.get("user_id"))
-        allowed_storages = [storage for storage in storages if
-                            storage in user_allowed_storages] if storages else user_allowed_storages
-        if not allowed_storages:
+        allowed_storages = get_allowed_storages(user_data.get("user_id"))
+        user_allowed_storages = [storage for storage in storages if
+                                 storage in allowed_storages] if storages else allowed_storages
+        if not user_allowed_storages:
             raise HTTPException(status_code=404, detail={"error": "No products found"})
 
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
@@ -429,6 +429,7 @@ def get_product_list_by_system_code(
                         "system_code": system_code,
                         "page": page,
                         "per_page": per_page,
+                        "storages": storages,
                         "user_allowed_storages": allowed_storages,
                         "customer_type": customer_type
                     }
@@ -458,7 +459,7 @@ def get_product_page(
     Get product page
     """
     customer_type = "B2B"
-    allowed_storages = ['1', '11']
+    allowed_storages = []
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", ["B2B"])[0]
@@ -497,14 +498,14 @@ def get_product_by_name(name: str,
                         refresh: Optional[str] = Header(None)
                         ):
     customer_type = "B2B"
-    allowed_storages = storages if storages else ['1', '11']
+    allowed_storages = []
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", ["B2B"])[0]
-        user_allowed_storages = get_allowed_storages(user_data.get("user_id"))
-        allowed_storages = [storage for storage in storages if
-                            storage in user_allowed_storages] if storages else user_allowed_storages
-        if not allowed_storages:
+        allowed_storages = get_allowed_storages(user_data.get("user_id"))
+        user_allowed_storages = [storage for storage in storages if
+                                 storage in allowed_storages] if storages else allowed_storages
+        if not user_allowed_storages:
             raise HTTPException(status_code=404, detail={"error": "No products found"})
 
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
@@ -515,6 +516,7 @@ def get_product_by_name(name: str,
                     "action": "get_product_by_name",
                     "body": {
                         "name": name,
+                        "storages": storages,
                         "user_allowed_storages": allowed_storages,
                         "customer_type": customer_type,
                     }
@@ -541,7 +543,7 @@ def get_category_list(
     Get category list
     """
     customer_type = "B2B"
-    allowed_storages = ['1', '11']
+    allowed_storages = []
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", ["B2B"])[0]
@@ -582,7 +584,7 @@ def price_list(
         access: Optional[str] = Header(None),
         refresh: Optional[str] = Header(None),
 ):
-    allowed_storages = ['1', '11']
+    allowed_storages = []
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", ["B2B"])[0]
@@ -661,7 +663,7 @@ def price_list_all(
         access: Optional[str] = Header(None),
         refresh: Optional[str] = Header(None),
 ):
-    allowed_storages = ['1', '11']
+    allowed_storages = []
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", ["B2B"])[0]
