@@ -24,7 +24,7 @@ def get_allowed_storages(customer_id):
         if not (default_address := next((addr for addr in address.get("result", {}) if addr.get('isDefault')), None)):
             return []
         if default_address.get('cityId') == "1874":
-            return ['7', '11']
+            return ['7', '11', '1']
         msm_warehouses = rpc.publish(
             message={
                 "address": {
