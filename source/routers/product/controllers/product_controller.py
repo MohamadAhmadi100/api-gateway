@@ -413,6 +413,7 @@ def get_product_list_by_system_code(
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", ["B2B"])[0]
+        customer_type = customer_type if not customer_type == "B2B2C" else "B2B"
         allowed_storages = get_allowed_storages(user_data.get("user_id"))
         user_allowed_storages = [storage for storage in storages if
                                  storage in allowed_storages] if storages else allowed_storages
