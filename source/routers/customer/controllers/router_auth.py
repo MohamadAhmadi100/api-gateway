@@ -93,6 +93,7 @@ def verify_otp_code(value: validation_auth.CustomerVerifyOTP, response: Response
     #     message=[
     #         ra.verify_otp_code(customer_phone_number=value.customer_phone_number, customer_code=value.customer_code)]
     # )
+    customer_type = [value.customer_type] if value.customer_type else ["B2B"]
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         customer_result = rpc.publish(
@@ -101,7 +102,8 @@ def verify_otp_code(value: validation_auth.CustomerVerifyOTP, response: Response
                     "action": "verify_otp_code",
                     "body": {
                         "customer_phone_number": value.customer_phone_number,
-                        "customer_code": value.customer_code
+                        "customer_code": value.customer_code,
+                        "customer_type": customer_type
                     }
                 }
             },
@@ -144,6 +146,7 @@ def checking_login_otp_code(
     #         ra.checking_login_otp_code(customer_phone_number=value.customer_phone_number,
     #                                    customer_code=value.customer_code)]
     # )
+    customer_type = [value.customer_type] if value.customer_type else ["B2B"]
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         customer_result = rpc.publish(
@@ -152,7 +155,8 @@ def checking_login_otp_code(
                     "action": "checking_login_otp_code",
                     "body": {
                         "customer_phone_number": value.customer_phone_number,
-                        "customer_code": value.customer_code
+                        "customer_code": value.customer_code,
+                        "customer_type": customer_type
                     }
                 }
             },
@@ -191,6 +195,7 @@ def checking_login_password(
     #         ra.checking_login_password(customer_phone_number=value.customer_phone_number,
     #                                    customer_password=value.customer_password)]
     # )
+    customer_type = [value.customer_type] if value.customer_type else ["B2B"]
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         customer_result = rpc.publish(
@@ -199,7 +204,8 @@ def checking_login_password(
                     "action": "checking_login_password",
                     "body": {
                         "customer_phone_number": value.customer_phone_number,
-                        "customer_password": value.customer_password
+                        "customer_password": value.customer_password,
+                        "customer_type": customer_type
                     }
                 }
             },

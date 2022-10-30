@@ -9,7 +9,7 @@ from pydantic import validator
 
 class CustomerType(str, Enum):
     B2B = "B2B"
-    B2C = "B2c"
+    B2C = "B2C"
 
 
 class CustomerRegister(BaseModel):
