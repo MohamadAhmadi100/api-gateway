@@ -190,11 +190,6 @@ def checking_login_password(
         value: validation_auth.CustomerVerifyPassword,
         response: Response,
 ):
-    # customer_result = new_rpc.publish(
-    #     message=[
-    #         ra.checking_login_password(customer_phone_number=value.customer_phone_number,
-    #                                    customer_password=value.customer_password)]
-    # )
     customer_type = [value.customer_type] if value.customer_type else ["B2B"]
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
