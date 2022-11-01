@@ -1,7 +1,14 @@
 import re
+from enum import Enum
+from typing import Optional
 
 from fastapi import HTTPException
 from pydantic import BaseModel, validator, Field
+
+
+class CustomerType(str, Enum):
+    B2B = "B2B"
+    B2C = "B2C"
 
 
 class CustomerAuth(BaseModel):
@@ -46,6 +53,18 @@ class CustomerVerifyOTP(CustomerAuth):
         isRequired=True,
         regexPattern="^[0-9]{4}$",
     )
+    customer_type: Optional[CustomerType] = Field(
+        alias="customerType",
+        description="",
+        title="نوع مشتری",
+        name="customerType",
+        minLength=1,
+        maxLength=4,
+        dataType="string",
+        type="hidden",
+        regexPattern="",
+        isRquired=False,
+    )
 
     @validator("customer_code")
     def validate_otp(cls, code):
@@ -69,6 +88,18 @@ class CustomerVerifyPassword(CustomerAuth):
         type="password",
         isRquired=True,
         regexPattern="^([a-zA-Z0-9'!#$%&'*+/=?^_`{|}~.-]{6,32})",
+    )
+    customer_type: Optional[CustomerType] = Field(
+        alias="customerType",
+        description="",
+        title="نوع مشتری",
+        name="customerType",
+        minLength=1,
+        maxLength=4,
+        dataType="string",
+        type="hidden",
+        regexPattern="",
+        isRquired=False,
     )
 
     @validator("customer_password")

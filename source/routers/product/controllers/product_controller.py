@@ -402,13 +402,13 @@ def get_product_list_by_system_code(
         page: int = Query(1, alias='page'),
         per_page: int = Query(10, alias='perPage'),
         storages: List[str] = Query([], alias='storages'),
+        customer_type: str = Query("B2B", alias="customerType"),
         access: Optional[str] = Header(None),
         refresh: Optional[str] = Header(None)
 ):
     """
     Get product list by brand
     """
-    customer_type = "B2B"
     allowed_storages = []
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
@@ -452,6 +452,7 @@ def get_product_list_by_system_code(
 def get_product_page(
         response: Response,
         system_code: str = Path(..., alias='systemCode', max_length=16, min_length=16),
+        customer_type: str = Query("B2B", alias="customerType"),
         lang: Optional[str] = Path("fa_ir", min_length=2, max_length=8),
         access: Optional[str] = Header(None),
         refresh: Optional[str] = Header(None)
@@ -459,7 +460,6 @@ def get_product_page(
     """
     Get product page
     """
-    customer_type = "B2B"
     allowed_storages = []
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
@@ -495,10 +495,10 @@ def get_product_page(
 def get_product_by_name(name: str,
                         response: Response,
                         storages: List[str] = Query([], alias='storages'),
+                        customer_type: str = Query("B2B", alias="customerType"),
                         access: Optional[str] = Header(None),
                         refresh: Optional[str] = Header(None)
                         ):
-    customer_type = "B2B"
     allowed_storages = []
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
@@ -537,13 +537,13 @@ def get_product_by_name(name: str,
 @router.get("/get_category_list", tags=["Product"])
 def get_category_list(
         response: Response,
+        customer_type: str = Query("B2B", alias="customerType"),
         access: Optional[str] = Header(None),
         refresh: Optional[str] = Header(None)
 ):
     """
     Get category list
     """
-    customer_type = "B2B"
     allowed_storages = []
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
