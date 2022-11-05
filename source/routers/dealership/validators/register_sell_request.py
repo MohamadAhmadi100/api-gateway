@@ -25,7 +25,7 @@ class Product(BaseModel):
 class SellRequest(BaseModel):
     customer: Union[Customer]
     products: Union[List[Product], list]
-
+    device_type: str = Field(alias="deviceType")
 
 
 
