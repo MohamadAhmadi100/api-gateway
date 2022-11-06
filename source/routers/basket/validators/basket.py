@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List
+from typing import List, Optional
 
 from fastapi import HTTPException
 from pydantic import BaseModel, validator, Field
@@ -67,6 +67,11 @@ class Product(BaseModel):
         return value
 
 
+class Action(str, Enum):
+    add = "add"
+    edit = "edit"
+
+
 class AddToCart(BaseCart):
     basket_id: int = Field(
         title="شناسه سبد",
@@ -77,9 +82,11 @@ class AddToCart(BaseCart):
         type="Id",
         isRequired=True
     )
+    action: Action
+    index: Optional[int] = 0
     mandatory_products: List[Product]
     selective_products: List[Product]
-    optional_products: List[Product]
+    optional_products: Optional[List[Product]]
 
     # class Config:
     #     schema_extra = {
