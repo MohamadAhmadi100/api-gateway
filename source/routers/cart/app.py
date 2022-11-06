@@ -238,7 +238,10 @@ def get_cart(response: Response,
 
                 if product.get("price"):
                     base_price += product.get("price") * product.get("count")
-
+            if cart_result.get("message").get("baskets") and type(cart_result.get("message").get("baskets")) == list:
+                for basket in cart_result.get("message").get("baskets"):
+                    for product in basket:
+                        base_price += product.get("price") * product.get("count")
             cart_result["message"]["base_price"] = base_price
 
             total_price = base_price

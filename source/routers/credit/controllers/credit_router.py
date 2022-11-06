@@ -1,6 +1,7 @@
-from fastapi import APIRouter
-from fastapi import Response, Depends
+from starlette.exceptions import HTTPException
 
+from fastapi import APIRouter, Response, Depends, Query
+from typing import Union
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.credit.validators.credit_validator import AddCredit, AcceptCredit, RequestsDetail
 from source.routers.customer.helpers.profile_view import get_profile_info
@@ -8,8 +9,6 @@ from source.routers.customer.module.auth import AuthHandler
 
 credit = APIRouter()
 auth_handler = AuthHandler()
-
-
 
 
 ############################# Customer Side ###########################################
@@ -84,7 +83,7 @@ def get_remaining_credit(response: Response,
             credit_response = rpc.publish(
                 message={
                     "credit": {
-                        "action": "get_credit",
+                        "action": "get_remaining_credit",
                         "body": {
                             "customer_id": user.get("user_id"),
                             "products_value": dealership_response.get("message")
@@ -99,10 +98,53 @@ def get_remaining_credit(response: Response,
         return dealership_response
 
 
+@credit.get("/get_credit_return_list", tags=["customer_side"])
+def get_credit_return_list(
+                           page: Union[int, None] = Query(default=1),
+                           perPage: Union[int, None] = Query(default=15),
+                           auth_header=Depends(auth_handler.check_current_user_tokens)
+                           ):
+    user, auth = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        order_response = rpc.publish(
+            message={
+                "order": {
+                    "action": "get_customer_ecommerce",
+                    "body": {
+                        "customerId": user.get("user_id"),
+                        "page": page,
+                        "perPage": perPage,
+                        "status": "complete_dealership",
+                    }
+                }
+            },
+            headers={'order': True}
+        ).get("order", {})
+        print(order_response)
+        if order_response.get("success"):
+            rpc.response_len_setter(response_len=1)
+            dealership_response = rpc.publish(
+                message={
+                    "dealership": {
+                        "action": "calculate_credit_per_product",
+                        "body": {
+                            "orders": order_response.get("message"),
+                        }
+                    }
+                },
+                headers={'dealership': True}
+            ).get("dealership", {})
+            if dealership_response.get("success"):
+                return dealership_response
+            return dealership_response
+        return order_response
+
+
 
 @credit.post("/get_credit_requests", tags=["customer_side"])
 def get_credit_requests(response: Response, data: RequestsDetail,
-                              auth_header=Depends(auth_handler.check_current_user_tokens)):
+                        auth_header=Depends(auth_handler.check_current_user_tokens)):
     user, auth = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
@@ -132,11 +174,6 @@ def get_credit_requests(response: Response, data: RequestsDetail,
         return credit_response
 
 
-
-
-
-
-
 ############################# Back office ###########################################
 @credit.post("/accept_credit", tags=["back office"])
 def accept_dealership_credit(response: Response, data: AcceptCredit,
@@ -150,12 +187,6 @@ def accept_dealership_credit(response: Response, data: AcceptCredit,
                     "action": "accept_request_dealership_credit",
                     "body": {
                         "referral_number": dict_data.get("referral_number"),
-                        "date_from": dict_data.get("date_from"),
-                        "date_to": dict_data.get("date_to"),
-                        "page": dict_data.get("page"),
-                        "per_page": dict_data.get("per_page"),
-                        "accepted": dict_data.get("accepted"),
-                        "search_box": dict_data.get("search_box"),
                     }
                 }
             },
@@ -163,4 +194,3 @@ def accept_dealership_credit(response: Response, data: AcceptCredit,
         ).get("credit", {})
         response.status_code = 200
         return order_response
-
