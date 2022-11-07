@@ -1,5 +1,3 @@
-from fastapi.responses import RedirectResponse
-
 from source.message_broker.rabbit_server import RabbitRPC
 
 
@@ -90,8 +88,7 @@ def handle_order_bank_callback(result, response):
                 )
 
                 # response.status_code = 200
-                return RedirectResponse(
-                    f"https://aasood.com/payment-result/{result}/{result.get('service_id')}")
+                return {"result": True, "service_id": result.get("service_id")}
 
             else:
                 rpc.response_len_setter(response_len=1)
@@ -149,8 +146,7 @@ def handle_order_bank_callback(result, response):
                     headers={"cart": True}
                 )
                 response.status_code = 200
-                return RedirectResponse(
-                    f"https://aasood.com/payment-result/{result}/{result.get('service_id')}")
+                return {"result": False, "service_id": result.get("service_id")}
         else:
             if order_get_response['order_object']['status'] != "cancel":
                 return {"result": True, "service_id": result.get("service_id")}
