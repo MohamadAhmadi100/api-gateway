@@ -146,8 +146,11 @@ def add_or_edit_cart(response: Response,
     body = {
         "user_id": user_data.get('user_id'),
         "basket_id": product_data.get("basketId"),
-        "basket_data": product_data.get("mandatoryProducts") + product_data.get(
-            "selectiveProducts") + product_data.get("optionalProducts", []),
+        "basket_data": {
+            "mandatory_products": product_data.get("mandatoryProducts"),
+            "selective_products": product_data.get("selectiveProducts"),
+            "optional_products": product_data.get("optionalProducts")
+        },
         "action": data.action,
         "list_index": data.index
     }
