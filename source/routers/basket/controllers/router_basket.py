@@ -96,10 +96,10 @@ def get_baskets(
 
 
 @router_basket.put("/cart")
-def add_to_cart(response: Response,
-                data: AddToCart,
-                auth_header=Depends(auth_handler.check_current_user_tokens)
-                ):
+def add_or_edit_cart(response: Response,
+                     data: AddToCart,
+                     auth_header=Depends(auth_handler.check_current_user_tokens)
+                     ):
     user_data, header = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
@@ -146,10 +146,14 @@ def add_to_cart(response: Response,
     body = {
         "user_id": user_data.get('user_id'),
         "basket_id": product_data.get("basketId"),
-        "basket_data": product_data.get("mandatoryProducts") + product_data.get(
-            "selectiveProducts") + product_data.get("optionalProducts")
+        "basket_data": {
+            "mandatory_products": product_data.get("mandatoryProducts"),
+            "selective_products": product_data.get("selectiveProducts"),
+            "optional_products": product_data.get("optionalProducts")
+        },
+        "action": data.action,
+        "list_index": data.index
     }
-    print(body)
     # todo: checking whole sales and per day with order service
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
@@ -163,7 +167,6 @@ def add_to_cart(response: Response,
             headers={'cart': True}
         )
     cart_result = cart_result.get("cart", {})
-    print(cart_result)
     sub_dict = {
         "user_id": user_data.get('user_id'),
         "customer_type": user_data.get('customer_type'),
@@ -174,7 +177,7 @@ def add_to_cart(response: Response,
     response.headers["refresh_token"] = auth_handler.encode_access_token(sub_dict)
     response.status_code = basket_result.get("status_code", 200)
     if not cart_result.get("success"):
-        raise HTTPException(status_code=product_result.get("status_code", 500),
-                            detail={"error": product_result.get("error", "Something went wrong")})
+        raise HTTPException(status_code=cart_result.get("status_code", 500),
+                            detail={"error": cart_result.get("error", "Something went wrong")})
     response.status_code = cart_result.get("status_code", 200)
     return {"message": cart_result.get("message")}

@@ -238,10 +238,19 @@ def get_cart(response: Response,
 
                 if product.get("price"):
                     base_price += product.get("price") * product.get("count")
-            if cart_result.get("message").get("baskets") and type(cart_result.get("message").get("baskets")) == list:
-                for basket in cart_result.get("message").get("baskets"):
-                    for product in basket:
-                        base_price += product.get("price") * product.get("count")
+            baskets = cart_result.get("message").get("baskets")
+            if baskets and type(baskets) == dict:
+                for key, basket in baskets.items():
+                    for item in basket:
+                        if type(item.get("mandatory_products")) == list and len(item.get("mandatory_products")):
+                            for product in item.get("mandatory_products"):
+                                base_price += product.get("price") * product.get("count")
+                        if type(item.get("selective_products")) == list and len(item.get("selective_products")):
+                            for product in item.get("selective_products"):
+                                base_price += product.get("price") * product.get("count")
+                        if type(item.get("optional_products")) == list and len(item.get("optional_products")):
+                            for product in item.get("optional_products"):
+                                base_price += product.get("price") * product.get("count")
             cart_result["message"]["base_price"] = base_price
 
             total_price = base_price

@@ -33,38 +33,49 @@ def dealership_bank_callback(result, response):
                         headers={'order': True}
                     ).get("order")
                     if order_response.get("success"):
+                        rpc.response_len_setter(response_len=1)
+                    if order_response['order_object']['status'] == "complete_dealership":
+                        reduce_inventory = rpc.publish(
+                            message={
+                                "dealership": {
+                                    "action": "reduce_inventory",
+                                    "body": {
+                                        "order_detail": get_order_response.get("order_object"),
+                                    }
+                                }
+                            },
+                            headers={'dealership': True}
+                        ).get("dealership", {})
+                        rpc.response_len_setter(response_len=1)
+                        price_response = rpc.publish(
+                            message={
+                                "dealership": {
+                                    "action": "products_b2b_price",
+                                    "body": {
+                                        "order": get_order_response.get("order_object"),
+                                    }
+                                }
+                            },
+                            headers={'dealership': True}
+                        ).get("dealership", {})
+                        print(price_response)
+                        if reduce_inventory.get("success"):
                             rpc.response_len_setter(response_len=1)
-                        # if order_response['order_object']['status'] == "complete_dealership":
-                            reduce_inventory = rpc.publish(
+                            credit_response = rpc.publish(
                                 message={
-                                    "dealership": {
-                                        "action": "reduce_inventory",
+                                    "credit": {
+                                        "action": "insert_accounting_record",
                                         "body": {
-                                            "order_detail": get_order_response.get("order_object"),
-                                            # "payment_detail": payment_detail
+                                            "order_detail": price_response.get("message"),
                                         }
                                     }
                                 },
-                                headers={'dealership': True}
-                            ).get("dealership", {})
-                            if reduce_inventory.get("success"):
-                                rpc.response_len_setter(response_len=1)
-                                dealership_response = rpc.publish(
-                                    message={
-                                        "dealership": {
-                                            "action": "insert_order_for_end_user",
-                                            "body": {
-                                                "order_detail": get_order_response.get("order_object"),
-                                                "payment_detail": result
-                                            }
-                                        }
-                                    },
-                                    headers={'dealership': True}
-                                ).get("dealership", {})
-                                return RedirectResponse(
-                    f"https://aasood.com/payment-result/order/{result.get('service_id')}/")
+                                headers={'credit': True}
+                            ).get("credit", {})
                             return RedirectResponse(
-                                f"https://aasood.com/payment-result/order/{result.get('service_id')}/")
+                f"https://aasood.com/payment-result/order/{result.get('service_id')}/")
+                        return RedirectResponse(
+                            f"https://aasood.com/payment-result/order/{result.get('service_id')}/")
                 if not result.get("is_paid"):
                     message = {
                         "order": {
@@ -100,15 +111,15 @@ def dealership_bank_callback(result, response):
                     return RedirectResponse(
                         f"https://aasood.com/payment-result/order/{result.get('service_id')}/")
             # return {"success": False, "message": "سفارش ثبت نشده است"}
-            return RedirectResponse(
-                f"https://aasood.com/payment-result/order/{result.get('service_id')}/")
+            # return RedirectResponse(
+            #     f"https://aasood.com/payment-result/order/{result.get('service_id')}/")
         # return get_order_response
         return RedirectResponse(
             f"https://aasood.com/payment-result/order/{result.get('service_id')}/")
 
 
 
-#
+
 # print(dealership_bank_callback({
 #     "payment_id" : 303965,
 #     "service_id" : 300010443,
