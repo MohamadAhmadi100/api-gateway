@@ -24,7 +24,6 @@ rpc = RabbitRPC(exchange_name='headers_exchange', timeout=1000)
 @final_step_order.put("/final/", tags=["final steps and create order"])
 def final_order(
         response: Response,
-        data: final,
         auth_header=Depends(auth_handler.check_current_user_tokens)
 ) -> dict:
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
@@ -42,7 +41,7 @@ def final_order(
         if check_out.get("success"):
             # create order if all data completed
             customer = get_profile_info(auth_header[0])
-            place_order_result = place_order(auth_header, cart, customer, data.device_type)
+            place_order_result = place_order(auth_header, cart, customer)
             if place_order_result.get("success"):
                 result_reserve = reserve_order_items(place_order_result.get("order_object"))
                 if result_reserve.get("success"):
