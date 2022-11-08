@@ -51,6 +51,7 @@ def request_dealership_credit(response: Response, data: AddCredit,
                         "customer_telephone": customer['customerPhoneNumber'],
                         "amount": data.amount,
                         "payment_type": data.payment_type,
+                        "description": data.description
                     }
                 }
             },
@@ -121,7 +122,6 @@ def get_credit_return_list(
             },
             headers={'order': True}
         ).get("order", {})
-        print(order_response)
         if order_response.get("success"):
             rpc.response_len_setter(response_len=1)
             dealership_response = rpc.publish(

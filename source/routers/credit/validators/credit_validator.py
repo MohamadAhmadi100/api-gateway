@@ -5,6 +5,7 @@ from typing import Optional, Union
 class AddCredit(BaseModel):
     amount: int = Field(..., alias="amount")
     payment_type: str = Field(..., alias="paymentType")
+    description: str = Field(...)
 
     @validator('payment_type')
     def validate_payment_type(cls, payment_type):
