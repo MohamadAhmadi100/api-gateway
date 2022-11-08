@@ -1,5 +1,4 @@
 from starlette.exceptions import HTTPException
-
 from fastapi import APIRouter, Response, Depends, Query
 from typing import Union
 from source.message_broker.rabbit_server import RabbitRPC
@@ -238,4 +237,33 @@ def get_accounting_records(response: Response, data: AccountingRecords,
         if credit_response.get("success"):
             response.status_code = 200
             return credit_response
+        return credit_response
+
+
+
+@credit.put("/change_payment_status", tags=["Accounting"])
+def change_payment_status_per_system_code(response: Response,
+                                          order_number: str = Query(..., alias="orderNumber"),
+                                          system_code: str = Query(..., alias="systemCode"),
+                              # auth_header=Depends(auth_handler.check_current_user_tokens)
+                                          ):
+    # user, auth = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        credit_response = rpc.publish(
+            message={
+                "credit": {
+                    "action": "change_payment_status_per_system_code",
+                    "body": {
+                        "order_number": order_number,
+                        "system_code": system_code
+                    }
+                }
+            },
+            headers={'credit': True}
+        )
+        if credit_response.get("success"):
+            response.status_code = 200
+            return credit_response
+        response.status_code = 500
         return credit_response

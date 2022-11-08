@@ -9,7 +9,7 @@ class AddCredit(BaseModel):
 
     @validator('payment_type')
     def validate_payment_type(cls, payment_type):
-        if payment_type not in ['cheque', 'online_payment']:
+        if payment_type not in ['cheque', 'online_payment', 'banknotes']:
             raise HTTPException(status_code=422, detail={"error": "نوع متد پرداخت معتبر نیست"})
         return payment_type
 
