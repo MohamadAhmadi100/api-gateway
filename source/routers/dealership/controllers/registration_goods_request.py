@@ -82,41 +82,41 @@ def create_request(data: RequestGoods,
                             headers={'product': True}
                         ).get("product", {})
                         if product_response.get("success"):
+                            # rpc.response_len_setter(response_len=1)
+                            # reduce_credit = rpc.publish(
+                            #     message={
+                            #         "credit": {
+                            #             "action": "consume_remaining_credit",
+                            #             "body": {
+                            #                 "referral_number": referral_response.get("message"),
+                            #                 "amount": compare_digits_response.get("total_price"),
+                            #                 "customer_id": user.get("user_id"),
+                            #                 "total_items": compare_digits_response.get("total_item")
+                            #             }
+                            #         }
+                            #     },
+                            #     headers={'credit': True}
+                            # ).get("credit", {})
+                            # if reduce_credit.get("success"):
                             rpc.response_len_setter(response_len=1)
-                            reduce_credit = rpc.publish(
+                            insert_response = rpc.publish(
                                 message={
-                                    "credit": {
-                                        "action": "consume_remaining_credit",
+                                    "dealership": {
+                                        "action": "insert_goods_request",
                                         "body": {
                                             "referral_number": referral_response.get("message"),
-                                            "amount": compare_digits_response.get("total_price"),
-                                            "customer_id": user.get("user_id"),
-                                            "total_items": compare_digits_response.get("total_item")
+                                            "customer_id": str(user.get("user_id")),
+                                            "total_price": compare_digits_response.get("total_price"),
+                                            "data": data.dict()
                                         }
                                     }
                                 },
-                                headers={'credit': True}
-                            ).get("credit", {})
-                            if reduce_credit.get("success"):
-                                rpc.response_len_setter(response_len=1)
-                                insert_response = rpc.publish(
-                                    message={
-                                        "dealership": {
-                                            "action": "insert_goods_request",
-                                            "body": {
-                                                "referral_number": referral_response.get("message"),
-                                                "customer_id": str(user.get("user_id")),
-                                                "total_price": compare_digits_response.get("total_price"),
-                                                "data": data.dict()
-                                            }
-                                        }
-                                    },
-                                    headers={'dealership': True}
-                                ).get("dealership", {})
-                                if insert_response.get("success"):
-                                    return insert_response
+                                headers={'dealership': True}
+                            ).get("dealership", {})
+                            if insert_response.get("success"):
                                 return insert_response
-                            return reduce_credit
+                            return insert_response
+                            # return reduce_credit
                         return product_response
                     return referral_response
                 return compare_digits_response

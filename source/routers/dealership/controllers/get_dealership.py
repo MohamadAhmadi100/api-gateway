@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Query
-from typing import Optional, Union
+from typing import Optional
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.dealership.validators.get_sell_forms import SellForms
@@ -43,7 +43,7 @@ def initial(
     user, token = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
-        get_initial= rpc.publish(
+        get_initial = rpc.publish(
             message={
                 "dealership": {
                     "action": "get_initial",
@@ -91,5 +91,4 @@ def get_sell_forms(
         if response.get("success"):
             return response
         return response
-
 
