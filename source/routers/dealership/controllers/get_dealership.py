@@ -73,7 +73,7 @@ def get_sell_forms(
                 "order": {
                     "action": "get_orders_list_dealership",
                     "body": {
-                        "dealership_id": str(user.get("user_id")),
+                        "dealership_id": user.get("user_id"),
                         "customer_id": parameters.get("customer_id"),
                         "page": parameters.get("page"),
                         "per_page": parameters.get("per_page"),
