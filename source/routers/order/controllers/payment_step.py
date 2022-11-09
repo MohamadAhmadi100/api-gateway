@@ -41,9 +41,7 @@ def get_formal_payment(response: Response, auth_header=Depends(auth_handler.chec
             payment_method = [
                 {"methodName": "aiBanking", "methodLabe": "پرداخت انلاین"},
                 {"methodName": "deposit", "methodLabe": "واریز به حساب"}]
-            if cart['totalPrice'] > 50000000:
-                index = payment_method.index({"methodName": "aiBanking", "methodLabe": "پرداخت انلاین"})
-                payment_method.pop(index)
+
             # pardakht dar mahal
         allowed_pos = is_pos_allowed(cart)
         if allowed_pos:
