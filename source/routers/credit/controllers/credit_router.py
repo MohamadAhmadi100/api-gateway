@@ -1,10 +1,9 @@
-from starlette.exceptions import HTTPException
 from fastapi import APIRouter, Response, Depends, Query
-from typing import Union
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.credit.validators.credit_validator import AddCredit, AcceptCredit, RequestsDetail, AccountingRecords
 from source.routers.customer.helpers.profile_view import get_profile_info
 from source.routers.customer.module.auth import AuthHandler
+from source.routers.dealership.validators.get_sell_forms import SellForms
 
 credit = APIRouter()
 auth_handler = AuthHandler()
@@ -100,22 +99,28 @@ def get_remaining_credit(response: Response,
 
 @credit.get("/get_credit_return_list", tags=["customer_side"])
 def get_credit_return_list(
-                           page: Union[int, None] = Query(default=1),
-                           perPage: Union[int, None] = Query(default=15),
+                           parameters: SellForms,
                            auth_header=Depends(auth_handler.check_current_user_tokens)
                            ):
     user, auth = auth_header
+    parameters = parameters.dict()
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         order_response = rpc.publish(
             message={
                 "order": {
-                    "action": "get_customer_ecommerce",
+                    "action": "get_orders_list_dealership",
                     "body": {
-                        "customerId": user.get("user_id"),
-                        "page": page,
-                        "perPage": perPage,
-                        "status": "complete_dealership",
+                        "dealership_id": str(user.get("user_id")),
+                        "customer_id": parameters.get("customer_id"),
+                        "page": parameters.get("page"),
+                        "per_page": parameters.get("per_page"),
+                        "order_number": parameters.get("order_number"),
+                        "payment_status": parameters.get("payment_status"),
+                        "customer_name": parameters.get("customer_name"),
+                        "date_from": parameters.get("date_from"),
+                        "date_to": parameters.get("date_to"),
+                        "status": parameters.get("status"),
                     }
                 }
             },
