@@ -206,7 +206,7 @@ def delete_order_reserving_fail(order_object):
         return order_response
 
 
-def place_order(auth_header, cart, customer):
+def place_order(auth_header, cart, customer, device_type):
     user, token_dict = auth_header
     # check if all will have response(timeout)
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
@@ -214,6 +214,7 @@ def place_order(auth_header, cart, customer):
         result['cart'] = cart
         result['user_info'] = user
         result['customer'] = customer
+        result['device_type'] = device_type
         rpc.response_len_setter(response_len=1)
         warehouse_result = rpc.publish(
             message={
