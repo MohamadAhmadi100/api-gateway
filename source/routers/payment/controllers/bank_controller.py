@@ -161,7 +161,7 @@ async def set_callback(request: Request, response: Response):
                 "status_code": data.status_code
             }
         else:
-            service_data = callback_service_handler.get(
+            return callback_service_handler.get(
                 service_name
             )(
                 result=result.get("message", {}),
