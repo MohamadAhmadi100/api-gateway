@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import HTTPException
 from pydantic import BaseModel, Field, validator
 
@@ -52,3 +54,12 @@ class edit_order_validator(BaseModel):
                 if k not in allowed_keys:
                     raise HTTPException(status_code=400, detail=f"edit list must be one of {allowed_keys}")
         return value
+
+
+class final(BaseModel):
+    device_type: Optional[str] = Field(
+        alias="deviceType",
+        type="text",
+        default="web",
+        isRquired=False,
+    )

@@ -30,7 +30,7 @@ router = APIRouter()
 
 @router.post("/send_data")
 def get_url(data: payment.SendData, response: Response):
-    bank_name = random.choice(BANK_NAMES)
+    bank_name = "saman" if data.amount > 1_000_000_000 else random.choice(BANK_NAMES)
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         payment_result = rpc.publish(
@@ -257,3 +257,33 @@ def get_the_url_again(
                                 detail={"error": url_result.get("error", "Something went wrong")})
         response.status_code = url_result.get("status_code")
         return convert_case(url_result.get("message"), "camel")
+
+
+@router.get("/payment_result")
+def get_bank_result(
+        response: Response,
+        service_name: str = Query(..., alias="serviceName"),
+        service_id: str = Query(..., alias="serviceId")
+):
+    service_handlers = {
+        "order": "response_order_call_back",
+        "wallet": "get_transaction_by_service_id"
+    }
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        payment_result = rpc.publish(
+            message={
+                service_name: {
+                    "action": service_handlers.get(service_name),
+                    "body": {
+                        "service_id": service_id,
+                    }
+                }
+            },
+            headers={service_name: True}
+        )
+        if not payment_result.get("success"):
+            raise HTTPException(status_code=payment_result.get("status_code", 500),
+                                detail={"error": payment_result.get("error", "Something went wrong")})
+        response.status_code = payment_result.get("status_code")
+        return {"payment": payment_result.get("payment"), "message": payment_result.get("message")}

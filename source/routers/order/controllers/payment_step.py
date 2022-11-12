@@ -41,16 +41,14 @@ def get_formal_payment(response: Response, auth_header=Depends(auth_handler.chec
             payment_method = [
                 {"methodName": "aiBanking", "methodLabe": "پرداخت انلاین"},
                 {"methodName": "deposit", "methodLabe": "واریز به حساب"}]
-            if cart['totalPrice'] > 50000000:
-                index = payment_method.index({"methodName": "aiBanking", "methodLabe": "پرداخت انلاین"})
-                payment_method.pop(index)
+
             # pardakht dar mahal
-            allowed_pos = is_pos_allowed(cart)
-            if allowed_pos:
-                payment_method.append({"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"})
-            if customer.get('customerActiveCredit'):
-                payment_method.append({"methodName": "credit", "methodLabe": "پرداخت اعتباری",
-                                       "message": customer.get('customerCreditAmount')})
+        allowed_pos = is_pos_allowed(cart)
+        if allowed_pos:
+            payment_method.append({"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"})
+        if customer.get('customerActiveCredit'):
+            payment_method.append({"methodName": "credit", "methodLabe": "پرداخت اعتباری",
+                                   "message": customer.get('customerCreditAmount')})
 
         response_result = {
             "walletAmount": wallet_amount,

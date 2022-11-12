@@ -19,49 +19,65 @@ def sell_request(data: SellRequest,
     user, token = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
-        order_response = rpc.publish(
+        dealership_response = rpc.publish(
             message={
-                "order": {
-                    "action": "place_order_delaership",
+                "dealership": {
+                    "action": "calculate_wage",
                     "body": {
-                        "dealership_detail": {
-                            "dealershipId": user.get("user_id"),
-                            "dealershipPhoneNumber": user.get("phone_number")
-                        },
-                        "customer_detail": get_profile_info(data.dict().get("customer")),
-                        "products": data.dict().get("products")
+                        "products": data.dict().get("products"),
                     }
                 }
             },
-            headers={'order': True}
-        ).get("order", {})
-        if order_response.get("success"):
-            print(order_response)
-            uis = Uis(
-                requestType="payment",
-                serviceData={"amount": order_response.get("bank_response").get("amount"),
-                             "customerId": order_response.get("bank_response").get("customerId"),
-                             "serviceName": order_response.get("bank_response").get("serviceName"),
-                             "serviceId": order_response.get("bank_response").get("serviceId"),
-                             },
-                userList=[
-                    {
-                        "phone_number": order_response.get("order_object").get("customer").get("mobile"),
-                        "full_name": order_response.get("order_object").get("customer").get("fullName")
+            headers={'dealership': True}
+        ).get("dealership", {})
+        if dealership_response.get("success"):
+            rpc.response_len_setter(response_len=1)
+            order_response = rpc.publish(
+                message={
+                    "order": {
+                        "action": "place_order_delaership",
+                        "body": {
+                            "dealership_detail": {
+                                "dealershipId": user.get("user_id"),
+                                "dealershipPhoneNumber": user.get("phone_number")
+                            },
+                            "customer_detail": get_profile_info(data.dict().get("customer")),
+                            "products": data.dict().get("products"),
+                            "device_type": data.dict().get("device_type"),
+                            "wage": dealership_response.get("wage")
+                        }
                     }
-                ],
-                sendMethodList=[
-                    "sms"
-                ],
-                customerId=order_response.get("bank_response").get("customerId")
-            )
-            uis = convert_case(uis, "snake")
-            uis_response = create_link(
-                data=uis,
-                response=response
-            )
-            return uis_response
-        return order_response
+                },
+                headers={'order': True}
+            ).get("order", {})
+            print(order_response)
+            if order_response.get("success"):
+                uis = Uis(
+                    requestType="payment",
+                    serviceData={"amount": order_response.get("bank_response").get("amount"),
+                                 "customerId": order_response.get("bank_response").get("customerId"),
+                                 "serviceName": order_response.get("bank_response").get("serviceName"),
+                                 "serviceId": order_response.get("bank_response").get("serviceId"),
+                                 },
+                    userList=[
+                        {
+                            "phone_number": order_response.get("order_object").get("customer").get("mobile"),
+                            "full_name": order_response.get("order_object").get("customer").get("fullName")
+                        }
+                    ],
+                    sendMethodList=[
+                        "sms"
+                    ],
+                    customerId=order_response.get("bank_response").get("customerId")
+                )
+                uis = convert_case(uis, "snake")
+                uis_response = create_link(
+                    data=uis,
+                    response=response
+                )
+                return uis_response
+            return order_response
+        return dealership_response
 # {
 #   "customer": {
 #     "customerId": "20025",
