@@ -1,3 +1,5 @@
+from starlette.responses import RedirectResponse
+
 from source.message_broker.rabbit_server import RabbitRPC
 from fastapi import HTTPException, Response
 
@@ -21,5 +23,5 @@ def callback_payment(result, response: Response):
         if not final_result.get("success"):
             raise HTTPException(status_code=final_result.get("status_code", 500),
                                 detail={"error": final_result.get("error", "Something went wrong")})
-        response.status_code = final_result.get("status_code", 200)
-        return final_result.get("message")
+        return RedirectResponse(
+            f"https://aasood.com/payment-result/wallet/{service_data.get('message', {}).get('service_id')}")
