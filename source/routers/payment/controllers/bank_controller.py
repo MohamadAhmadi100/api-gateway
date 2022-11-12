@@ -281,9 +281,12 @@ def get_bank_result(
                 }
             },
             headers={service_name: True}
-        )
+        ).get(service_name, {})
         if not payment_result.get("success"):
             raise HTTPException(status_code=payment_result.get("status_code", 500),
                                 detail={"error": payment_result.get("error", "Something went wrong")})
         response.status_code = payment_result.get("status_code")
-        return {"payment": payment_result.get("payment"), "message": payment_result.get("message")}
+        return {
+            "payment": payment_result.get("payment"),
+            "message": payment_result.get("message"),
+            "device_type": payment_result.get("device_type")}
