@@ -18,10 +18,6 @@ def callback_payment(result, response: Response):
                     }
             },
             headers={"wallet": True}
-        )
-        final_result = service_data.get("wallet", {})
-        if not final_result.get("success"):
-            raise HTTPException(status_code=final_result.get("status_code", 500),
-                                detail={"error": final_result.get("error", "Something went wrong")})
+        ).get("wallet", {})
         return RedirectResponse(
             f"https://aasood.com/payment-result/wallet/{service_data.get('message', {}).get('service_id')}")
