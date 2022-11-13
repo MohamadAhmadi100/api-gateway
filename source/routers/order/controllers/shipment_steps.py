@@ -54,7 +54,7 @@ def shipment_per_stock(
                 "shipment": {
                     "action": "get_selected_method",
                     "body": {
-                        "data": data.json()
+                        "data": data.dict()
                     }
                 }
             },
