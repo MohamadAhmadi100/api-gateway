@@ -47,7 +47,7 @@ def initial_shipment(data: Shipment, response: Response):
                 "shipment": {
                     "action": "get_shipment_details",
                     "body": {
-                        "data": data.json()
+                        "data": data.dict()
                     }
                 }
             },
@@ -84,7 +84,7 @@ def shipment_per_stock(
                         "body": {
                             "data": {
                                 "customer_phone_number": user.get("phone_number"),
-                                "delivery": json.dumps(delivery),
+                                    "delivery": json.dumps(delivery),
                             }
                         }
                     }
@@ -97,7 +97,7 @@ def shipment_per_stock(
                 "shipment": {
                     "action": "get_selected_method",
                     "body": {
-                        "data": data.json()
+                        "data": data.dict()
                     }
                 }
             },
