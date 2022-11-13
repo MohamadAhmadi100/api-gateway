@@ -49,9 +49,17 @@ def ship_address_object(user, cart):
             if address_result.get('result') is None:
                 return {"success": False, "message": "لطفا ادرس پیشفرض را انتخاب کنید"}
             stocks = []
-            total_item = 0
-            for total_count in cart['products']:
-                total_item += total_count['count']
+            cart_result = rpc.publish(
+                message={
+                    "cart": {
+                        "action": "calc_cart_count",
+                        "body": {
+                            "user_id": int(user[0].get("user_id"))
+                        }
+                    }},
+                headers={'cart': True}
+            ).get("cart")
+
             for items in result[0]:
                 stocks.append({
                     "stockName": items['warehouse_label'],
@@ -60,11 +68,12 @@ def ship_address_object(user, cart):
                     "destination": address.get('cityId'),
                     "weight": 0,
                     "totalPrice": cart['totalPrice'],
-                    "totalItem": total_item
+                    "totalItem": cart_result['total_count']
                 })
             return_result = {
                 "customerId": user[0].get("user_id"),
                 "stocks": stocks,
+                "customerType": user[0].get("customer_type")[0]
             }
             rpc.response_len_setter(response_len=1)
             shipment_response = rpc.publish(
@@ -72,7 +81,7 @@ def ship_address_object(user, cart):
                     "shipment": {
                         "action": "get_shipment_details",
                         "body": {
-                            "data": str(return_result)
+                            "data": return_result
                         }
                     }
                 },
@@ -87,7 +96,7 @@ def shipment_detail(auth_header, response):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
 
         cart = get_cart(response=response, auth_header=auth_header)
-        if cart['products']:
+        if cart['products'] or cart.get("baskets") is not None:
             ship_address_data = ship_address_object(auth_header, cart)
             if ship_address_data.get("success"):
                 customer = get_profile_info(auth_header[0])
