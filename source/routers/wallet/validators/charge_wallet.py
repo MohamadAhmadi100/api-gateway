@@ -6,7 +6,8 @@ from pydantic import BaseModel, Field, validator
 
 class DeviceType(str, Enum):
     web = "web"
-    app = "app"
+    android = "android"
+    ios = "ios"
 
 
 class Charge(BaseModel):
