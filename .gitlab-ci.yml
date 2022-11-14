@@ -100,3 +100,26 @@ master_deploy:
     - echo SECRET_KEY=$SECRET_KEY >> .env
 #    - docker login nexus.aasood.com -u registry -p $REGPASS
     - docker-compose -f docker-compose.yaml up -d --build --scale api=3
+masood_deploy:
+  stage: deploy
+  only:
+    - maaaasd
+  tags:
+    - api-gw
+  script:
+    - echo APP_NAME=$APP_NAME >> .env
+    - echo DEBUG_MODE=$DEBUG_MODE >> .env
+    - echo RABBITMQ_HOST=$RABBITMQ_HOST >> .env
+    - echo RABBITMQ_PORT=$RABBITMQ_PORT >> .env
+    - echo RABBITMQ_USER=$RABBITMQ_USER >> .env
+    - echo RABBITMQ_PASS=$RABBITMQ_PASS >> .env
+    - echo UVICORN_HOST=$UVICORN_HOST >> .env
+    - echo UVICORN_PORT=$UVICORN_PORT >> .env
+    - echo TOKEN=$TOKEN >> .env
+    - echo SENDER=$SENDER >> .env
+    - echo RECIPIENTS=$RECIPIENTS >> .env
+    - echo TEMPLATE=$TEMPLATE >> .env
+    - echo GALLERY_DIR=$GALLERY_DIR >> .env
+    - echo SECRET_KEY=$SECRET_KEY >> .env
+#    - docker login nexus.aasood.com -u registry -p $REGPASS
+    - docker-compose -f docker-compose.yaml up -d --build --scale api=6
