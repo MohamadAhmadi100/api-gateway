@@ -1,6 +1,6 @@
 
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 
 class Stock(BaseModel):
@@ -14,4 +14,5 @@ class Stock(BaseModel):
 
 class Shipment(BaseModel):
     customerId: int
+    customerType: Optional[str]
     stocks: List[Stock]
