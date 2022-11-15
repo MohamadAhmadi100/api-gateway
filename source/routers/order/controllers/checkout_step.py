@@ -14,7 +14,7 @@ auth_handler = AuthHandler()
 @first_step_order.get("/cart_detail/", tags=["get cart detail and checkout"])
 def get_cart_detail(response: Response, auth_header=Depends(auth_handler.check_current_user_tokens)) -> dict:
     cart = get_cart(response=response, auth_header=auth_header)
-    if not cart['products'] and not cart['baskets']:
+    if not cart['products'] and cart.get('baskets') is None:
         return {"success": True, "message": "سبد خرید خالی است"}
     check_out = check_price_qty(auth_header, cart, response)
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
