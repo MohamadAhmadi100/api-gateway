@@ -12,12 +12,12 @@ router = APIRouter()
 auth_handler = AuthHandler()
 
 
-@router.get("/get_league_table", tags=["Football"])
-def get_league_table(
+@router.get("/get_wcup_table", tags=["Football"])
+def get_world_cup_table(
         auth_header=Depends(auth_handler.check_current_user_tokens)
 ):
     """
-    Get league table
+    Get world cup table
     """
     user, token_dict = auth_header
 
@@ -26,7 +26,7 @@ def get_league_table(
         product_result = rpc.publish(
             message={
                 "mobile_app": {
-                    "action": "get_league_table",
+                    "action": "get_world_cup_league_table",
                     "body": {
                         "user_id": user.get("user_id")
                     }
@@ -41,8 +41,8 @@ def get_league_table(
                             detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@router.get("/update_weeks_list", tags=["Football"])
-def update_weeks_list():
+@router.get("/update_wcup_groups_list", tags=["Football"])
+def update_world_cup_groups_list():
     """
     Get weeks list
     """
@@ -51,7 +51,7 @@ def update_weeks_list():
         product_result = rpc.publish(
             message={
                 "mobile_app": {
-                    "action": "update_weeks_list",
+                    "action": "update_world_cup_groups_list",
                     "body": {}
                 }
             },
@@ -64,9 +64,11 @@ def update_weeks_list():
                             detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@router.get("/get_week_matches/", tags=["Football"])
-def get_week_matches(
-        week: Optional[int] = Query(None)
+@router.get("/get_wcup_group_matches/", tags=["Football"])
+def get_world_cup_group_matches(
+        group: Optional[str] = Query(
+            None, regexPattern=r"^([abcdefghABCDEFGH]{1})"
+        )
 ):
     """
     Get week matches
@@ -76,9 +78,9 @@ def get_week_matches(
         product_result = rpc.publish(
             message={
                 "mobile_app": {
-                    "action": "get_week_matches",
+                    "action": "get_world_cup_group_matches",
                     "body": {
-                        "week": week
+                        "group": group
                     }
                 }
             },
@@ -91,8 +93,8 @@ def get_week_matches(
                             detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@router.get("/get_favorite_teams/", tags=["FavoriteTeams"])
-def get_favorite_teams(auth_header=Depends(auth_handler.check_current_user_tokens)):
+@router.get("/get_wcup_favorite_teams/", tags=["FavoriteTeams"])
+def get_world_cup_favorite_teams(auth_header=Depends(auth_handler.check_current_user_tokens)):
     """
     Get favorite teams
     """
@@ -102,7 +104,7 @@ def get_favorite_teams(auth_header=Depends(auth_handler.check_current_user_token
         product_result = rpc.publish(
             message={
                 "mobile_app": {
-                    "action": "get_favorite_teams",
+                    "action": "get_world_cup_favorite_teams",
                     "body": {
                         "customer_id": user.get("user_id")
                     }
@@ -117,8 +119,8 @@ def get_favorite_teams(auth_header=Depends(auth_handler.check_current_user_token
                             detail={"error": product_result.get("error", "Something went wrong")})
 
 
-@router.get("/get_today_matches", tags=["Football"])
-def get_today_matches():
+@router.get("/get_today_wcup_matches", tags=["Football"])
+def get_today_world_cup_matches():
     """
     Get league table
     """
@@ -128,7 +130,7 @@ def get_today_matches():
         product_result = rpc.publish(
             message={
                 "mobile_app": {
-                    "action": "get_today_matches",
+                    "action": "get_today_world_cup_matches",
                     "body": {
                     }
                 }
