@@ -97,7 +97,7 @@ def get_remaining_credit(response: Response,
         return dealership_response
 
 
-@credit.get("/get_credit_return_list", tags=["customer_side"])
+@credit.post("/get_credit_return_list", tags=["customer_side"])
 def get_credit_return_list(
                            parameters: SellForms,
                            auth_header=Depends(auth_handler.check_current_user_tokens)
