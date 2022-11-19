@@ -65,7 +65,6 @@ def get_sell_forms(
     auth_header=Depends(auth_handler.check_current_user_tokens)
 ):
     parameters = parameters.dict()
-    print(parameters)
     user, token = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
