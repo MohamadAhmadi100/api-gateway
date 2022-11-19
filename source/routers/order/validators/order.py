@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Optional
 
 from fastapi import HTTPException
@@ -56,10 +57,16 @@ class edit_order_validator(BaseModel):
         return value
 
 
+class DeviceType(str, Enum):
+    web = "web"
+    android = "android"
+    ios = "ios"
+
+
 class final(BaseModel):
-    device_type: Optional[str] = Field(
-        alias="deviceType",
-        type="text",
+    device_type: Optional[DeviceType] = Field(
         default="web",
+        alias="deviceType",
         isRquired=False,
+        type="text"
     )
