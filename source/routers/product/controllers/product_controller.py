@@ -724,3 +724,30 @@ def get_csv(
             return Response(content=message_product.encode("utf-8-sig"), media_type="text/csv")
         raise HTTPException(status_code=product_result.get("status_code", 500),
                             detail={"error": product_result.get("error", "Something went wrong")})
+
+
+@router.get("/get_data_price_list_pic/", tags=['Product'])
+def get_data_price_list_pic(
+        response: Response,
+        customer_type: str = Query("B2B"),
+):
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_data_price_list_pic",
+                    "body": {
+                        "customer_type": customer_type,
+                    }
+                }
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            message_product = product_result.get("message", {})
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(message_product, 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
