@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Union, Optional
 
 class SellForms(BaseModel):
-    customer_id: Optional[int] = Field(alias="dealershipId")
+    customer_id: Optional[int] = Field(alias="customerId")
     page: Union[int, None] = Field(default=1)
     per_page: Union[int, None] = Field(default=1, alias="perPage")
     order_number: Optional[int] = Field(alias="orderNumber")
