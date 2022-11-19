@@ -59,7 +59,7 @@ def initial(
         return get_initial
 
 
-@router.get("/get_sell_forms", tags=["get all sell forms that are added by dealership"])
+@router.post("/get_sell_forms", tags=["get all sell forms that are added by dealership"])
 def get_sell_forms(
     parameters: SellForms,
     auth_header=Depends(auth_handler.check_current_user_tokens)
