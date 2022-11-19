@@ -127,19 +127,36 @@ def check_price_qty(auth_header, cart, response):
                                 "message": f"{checkout_data['name']} از سبد خرید به دلیل اتمام موجودی حذف شد",
                             })
         if cart_result.get('baskets'):
-            rpc.response_len_setter(response_len=1)
-            basket_checkout = rpc.publish(
-                message={
-                    "basket": {
-                        "action": "checkout_check_basket",
-                        "body": {
-                            "baskets": cart_result.get('baskets'),
+            if cart_result.get('baskets'):
+                rpc.response_len_setter(response_len=1)
+                basket_checkout = rpc.publish(
+                    message={
+                        "basket": {
+                            "action": "checkout_check_basket",
+                            "body": {
+                                "baskets": cart_result.get('baskets'),
+                            }
                         }
-                    }
-                },
-                headers={'basket': True}
-            )
-
+                    },
+                    headers={'basket': True}
+                ).get("basket")
+                if basket_checkout['failed']:
+                    rpc.response_len_setter(response_len=1)
+                    rpc.publish(
+                        message={
+                            "cart": {
+                                "action": "replace_basket_to_cart",
+                                "body": {
+                                    "user_id": auth_header[0].get("user_id"),
+                                    "baskets": basket_checkout.get("result"),
+                                }
+                            }
+                        },
+                        headers={'cart': True}
+                    ).get("cart")
+                    edited_result = edited_result + basket_checkout.get("failed")
+                else:
+                    pass
 
         if not edited_result:
             return {"success": True, "message": "checkout completed"}
