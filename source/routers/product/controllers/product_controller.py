@@ -751,3 +751,39 @@ def get_data_price_list_pic(
             return convert_case(message_product, 'camel')
         raise HTTPException(status_code=product_result.get("status_code", 500),
                             detail={"error": product_result.get("error", "Something went wrong")})
+
+
+@router.get("/get_mega_menu/", tags=['Product'])
+def get_mega_menu(
+        response: Response,
+        customer_type: str = Query("B2B"),
+        access: Optional[str] = Header(None),
+        refresh: Optional[str] = Header(None),
+):
+    allowed_storages = []
+    if access or refresh:
+        user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
+        customer_type = user_data.get("customer_type", ["B2B"])[0]
+        allowed_storages = get_allowed_storages(user_data.get("user_id"))
+
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_mega_menu",
+                    "body": {
+                        "customer_type": customer_type,
+                        "user_allowed_storages": allowed_storages
+                    }
+                }
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            message_product = product_result.get("message", {})
+            response.status_code = product_result.get("status_code", 200)
+            return convert_case(message_product, 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
