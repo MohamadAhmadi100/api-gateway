@@ -1,6 +1,6 @@
 
-from pydantic import BaseModel
-from typing import List, Optional
+from pydantic import BaseModel, Field
+from typing import List, Optional, Union
 
 
 class Stock(BaseModel):
@@ -8,6 +8,7 @@ class Stock(BaseModel):
     stockId: str
     origin: str
     destination: str
+    nbId: str | None = None
     weight: int
     totalPrice: int
     totalItem: int
