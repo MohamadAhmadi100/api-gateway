@@ -1,3 +1,5 @@
+from fastapi.responses import RedirectResponse
+
 from source.message_broker.rabbit_server import RabbitRPC
 
 
@@ -88,7 +90,8 @@ def handle_order_bank_callback(result, response):
                 )
 
                 # response.status_code = 200
-                return {"result": True, "service_id": result.get("service_id")}
+                return RedirectResponse(
+                    f"https://aasood.com/payment-result/order/{result.get('service_id')}")
 
             else:
                 rpc.response_len_setter(response_len=1)
@@ -146,12 +149,11 @@ def handle_order_bank_callback(result, response):
                     headers={"cart": True}
                 )
                 response.status_code = 200
-                return {"result": False, "service_id": result.get("service_id")}
+                return RedirectResponse(
+                    f"https://aasood.com/payment-result/order/{result.get('service_id')}")
         else:
-            if order_get_response['order_object']['status'] != "cancel":
-                return {"result": True, "service_id": result.get("service_id")}
-            else:
-                return {"result": False, "service_id": result.get("service_id")}
+            return RedirectResponse(
+                f"https://aasood.com/payment-result/order/{result.get('service_id')}")
 
 
 def reserve_order_items(order_object):
@@ -204,7 +206,7 @@ def delete_order_reserving_fail(order_object):
         return order_response
 
 
-def place_order(auth_header, cart, customer):
+def place_order(auth_header, cart, customer, device_type):
     user, token_dict = auth_header
     # check if all will have response(timeout)
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
@@ -212,6 +214,7 @@ def place_order(auth_header, cart, customer):
         result['cart'] = cart
         result['user_info'] = user
         result['customer'] = customer
+        result['device_type'] = device_type
         rpc.response_len_setter(response_len=1)
         warehouse_result = rpc.publish(
             message={

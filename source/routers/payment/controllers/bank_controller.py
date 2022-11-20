@@ -161,18 +161,18 @@ async def set_callback(request: Request, response: Response):
                 "status_code": data.status_code
             }
         else:
-            service_data = callback_service_handler.get(
+            return callback_service_handler.get(
                 service_name
             )(
                 result=result.get("message", {}),
                 response=response
             )
-            if service_name == "wallet":
-                result = 3 if service_data.get("result") else 4
-            elif service_name == "order":
-                result = 1 if service_data.get("result") else 2
-            return RedirectResponse(
-                f"https://aasood.com/payment-result/{result}/{service_data.get('service_id')}")
+            # if service_name == "wallet":
+            #     result = 3 if service_data.get("result") else 4
+            # elif service_name == "order":
+            #     result = 1 if service_data.get("result") else 2
+            # return RedirectResponse(
+            #     f"https://aasood.com/payment-result/{result}/{service_data.get('service_id')}")
 
 
 @router.post("/closed_tabs", include_in_schema=False)
@@ -281,9 +281,12 @@ def get_bank_result(
                 }
             },
             headers={service_name: True}
-        )
+        ).get(service_name, {})
         if not payment_result.get("success"):
             raise HTTPException(status_code=payment_result.get("status_code", 500),
                                 detail={"error": payment_result.get("error", "Something went wrong")})
         response.status_code = payment_result.get("status_code")
-        return {"payment": payment_result.get("payment"), "message": payment_result.get("message")}
+        return {
+            "payment": payment_result.get("payment"),
+            "message": payment_result.get("message"),
+            "device_type": payment_result.get("device_type")}

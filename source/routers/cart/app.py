@@ -301,6 +301,39 @@ def remove_product_from_cart(response: Response, auth_header=Depends(auth_handle
             return {"message": convert_case(cart_result.get("message"), "camel")}
 
 
+@app.delete("/cart/basket/{basketId}", status_code=200, tags=["Cart"])
+def basket_remove(
+        response: Response,
+        auth_header=Depends(auth_handler.check_current_user_tokens),
+        basket_id: str = Path(..., alias='basketId')
+) -> dict:
+    """
+    remove an item from cart
+    """
+    user, token_dict = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
+            message={
+                "cart": {
+                    "action": "basket_remove",
+                    "body": {
+                        "user_id": user.get("user_id"),
+                        "basket_id": basket_id,
+                    }
+                }
+            },
+            headers={'cart': True}
+        )
+        cart_result = result.get("cart", {})
+        if not cart_result.get("success"):
+            raise HTTPException(status_code=cart_result.get("status_code", 500),
+                                detail={"error": cart_result.get("error", "Something went wrong")})
+        else:
+            response.status_code = cart_result.get("status_code", 200)
+            return {"message": convert_case(cart_result.get("message"), "camel")}
+
+
 @app.put("/checkout/", tags=["Cart"])
 def checkout(response: Response, auth_header=Depends(auth_handler.check_current_user_tokens)) -> dict:
     # get user cart

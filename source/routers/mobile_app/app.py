@@ -2,6 +2,8 @@ from fastapi import FastAPI, responses
 from starlette.exceptions import HTTPException as starletteHTTPException
 from source.routers.mobile_app.controllers.app_controller import router as app_router
 from source.routers.mobile_app.controllers.football_controller import router as football_router
+from source.routers.mobile_app.controllers.user_controller import router as user_router
+from source.routers.mobile_app.controllers.world_cup_controller import router as wcup_router
 
 from source.config import settings
 
@@ -31,3 +33,5 @@ def validation_exception_handler(request, exc):
 
 app.include_router(app_router)
 app.include_router(football_router)
+app.include_router(user_router)
+app.include_router(wcup_router)

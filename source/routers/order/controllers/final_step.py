@@ -11,6 +11,7 @@ from source.routers.order.helpers.final_helper import place_order, reserve_order
     delete_order_reserving_fail, add_final_flag_to_cart
 from source.routers.order.helpers.payment_helper import wallet_final_consume
 from source.routers.order.helpers.shipment_helper import check_shipment_per_stock
+from source.routers.order.validators.order import final
 from source.routers.payment.controllers.bank_controller import get_url
 from source.routers.payment.validators.payment import SendData
 
@@ -23,6 +24,7 @@ rpc = RabbitRPC(exchange_name='headers_exchange', timeout=1000)
 @final_step_order.put("/final/", tags=["final steps and create order"])
 def final_order(
         response: Response,
+        data: final,
         auth_header=Depends(auth_handler.check_current_user_tokens)
 ) -> dict:
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
@@ -40,7 +42,7 @@ def final_order(
         if check_out.get("success"):
             # create order if all data completed
             customer = get_profile_info(auth_header[0])
-            place_order_result = place_order(auth_header, cart, customer)
+            place_order_result = place_order(auth_header, cart, customer, data.device_type)
             if place_order_result.get("success"):
                 result_reserve = reserve_order_items(place_order_result.get("order_object"))
                 if result_reserve.get("success"):

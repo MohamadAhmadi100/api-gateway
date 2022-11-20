@@ -78,44 +78,44 @@ def sell_request(data: SellRequest,
                 return uis_response
             return order_response
         return dealership_response
-{
-  "customer": {
-    "customerId": "20025",
-    "customerPhoneNumber": "09355055825"
-  },
-  "products": [
-    {
-      "status": "initial",
-      "systemCode": "2000010010001001001001001",
-      "storageId": "1",
-      "price": 618000,
-      "totalPrice": 618000,
-      "count": 1,
-      "model": "A01 Core",
-      "name": "Mobile Samsung A01 Core (1GB 16GB 4G) Vietnam",
-      "brand": {
-        "value": "Samsung",
-        "label": "Samsung"
-    },
-      "color": {
-        "value": "white",
-        "label": "white"
-    },
-      "guarantee": {
-        "value": "Aawaat",
-        "label": "Aawaat"
-    },
-      "seller": {
-        "value": "ASD",
-        "label": "ASD"
-    },
-      "category": {
-        "value": "ASD",
-        "label": "موبایل"
-    },
-      "imeis": [
-        "111"
-      ]
-    }
-  ]
-}
+# {
+#   "customer": {
+#     "customerId": "20025",
+#     "customerPhoneNumber": "09355055825"
+#   },
+#   "products": [
+#     {
+#       "status": "initial",
+#       "systemCode": "2000010010001001001001001",
+#       "storageId": "1",
+#       "price": 618000,
+#       "totalPrice": 618000,
+#       "count": 1,
+#       "model": "A01 Core",
+#       "name": "Mobile Samsung A01 Core (1GB 16GB 4G) Vietnam",
+#       "brand": {
+#         "value": "Samsung",
+#         "label": "Samsung"
+#     },
+#       "color": {
+#         "value": "white",
+#         "label": "white"
+#     },
+#       "guarantee": {
+#         "value": "Aawaat",
+#         "label": "Aawaat"
+#     },
+#       "seller": {
+#         "value": "ASD",
+#         "label": "ASD"
+#     },
+#       "category": {
+#         "value": "ASD",
+#         "label": "موبایل"
+#     },
+#       "imeis": [
+#         "111"
+#       ]
+#     }
+#   ]
+# }

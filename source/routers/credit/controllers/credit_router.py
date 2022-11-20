@@ -1,11 +1,9 @@
-from starlette.exceptions import HTTPException
-
 from fastapi import APIRouter, Response, Depends, Query
-from typing import Union
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.credit.validators.credit_validator import AddCredit, AcceptCredit, RequestsDetail, AccountingRecords
 from source.routers.customer.helpers.profile_view import get_profile_info
 from source.routers.customer.module.auth import AuthHandler
+from source.routers.dealership.validators.get_sell_forms import SellForms
 
 credit = APIRouter()
 auth_handler = AuthHandler()
@@ -99,24 +97,30 @@ def get_remaining_credit(response: Response,
         return dealership_response
 
 
-@credit.get("/get_credit_return_list", tags=["customer_side"])
+@credit.post("/get_credit_return_list", tags=["customer_side"])
 def get_credit_return_list(
-                           page: Union[int, None] = Query(default=1),
-                           perPage: Union[int, None] = Query(default=15),
+                           parameters: SellForms,
                            auth_header=Depends(auth_handler.check_current_user_tokens)
                            ):
     user, auth = auth_header
+    parameters = parameters.dict()
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         order_response = rpc.publish(
             message={
                 "order": {
-                    "action": "get_customer_ecommerce",
+                    "action": "get_orders_list_dealership",
                     "body": {
-                        "customerId": user.get("user_id"),
-                        "page": page,
-                        "perPage": perPage,
-                        "status": "complete_dealership",
+                        "dealership_id": user.get("user_id"),
+                        "customer_id": parameters.get("customer_id"),
+                        "page": parameters.get("page"),
+                        "per_page": parameters.get("per_page"),
+                        "order_number": parameters.get("order_number"),
+                        "payment_status": parameters.get("payment_status"),
+                        "customer_name": parameters.get("customer_name"),
+                        "date_from": parameters.get("date_from"),
+                        "date_to": parameters.get("date_to"),
+                        "status": parameters.get("status"),
                     }
                 }
             },
@@ -238,4 +242,33 @@ def get_accounting_records(response: Response, data: AccountingRecords,
         if credit_response.get("success"):
             response.status_code = 200
             return credit_response
+        return credit_response
+
+
+
+@credit.put("/change_payment_status", tags=["Accounting"])
+def change_payment_status_per_system_code(response: Response,
+                                          order_number: str = Query(..., alias="orderNumber"),
+                                          system_code: str = Query(..., alias="systemCode"),
+                              # auth_header=Depends(auth_handler.check_current_user_tokens)
+                                          ):
+    # user, auth = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        credit_response = rpc.publish(
+            message={
+                "credit": {
+                    "action": "change_payment_status_per_system_code",
+                    "body": {
+                        "order_number": order_number,
+                        "system_code": system_code
+                    }
+                }
+            },
+            headers={'credit': True}
+        )
+        if credit_response.get("success"):
+            response.status_code = 200
+            return credit_response
+        response.status_code = 500
         return credit_response
