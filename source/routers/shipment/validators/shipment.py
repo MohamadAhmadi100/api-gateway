@@ -8,7 +8,7 @@ class Stock(BaseModel):
     stockId: str
     origin: str
     destination: str
-    # nbId: str | None = None
+    nbId: Optional[str]
     weight: int
     totalPrice: int
     totalItem: int
