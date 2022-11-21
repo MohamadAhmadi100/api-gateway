@@ -15,7 +15,7 @@ class SendData(BaseModel):
 
     @validator("service_name")
     def check_service(cls, service):
-        services = ["wallet", "order", "offline", "controllers"]
+        services = ["wallet", "order", "offline", "dealership"]
         if service not in services:
             raise ValueError("service name doesn't exist")
         return service
