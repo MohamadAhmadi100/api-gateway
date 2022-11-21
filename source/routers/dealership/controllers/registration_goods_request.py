@@ -40,6 +40,7 @@ def create_request(data: RequestGoods,
                 headers={'credit': True}
             ).get("credit", {})
             if check_credit.get("success"):
+                print(check_credit)
                 rpc.response_len_setter(response_len=1)
                 dict_data = data.dict()
                 compare_digits_response = rpc.publish(
@@ -47,7 +48,7 @@ def create_request(data: RequestGoods,
                         "dealership": {
                             "action": "check_credit_state",
                             "body": {
-                                "credit": check_credit.get("remaining_amount"),
+                                "credit": check_credit.get("message").get("remainingCredit"),
                                 "products": dict_data.get("products")
                             }
                         }
@@ -66,22 +67,22 @@ def create_request(data: RequestGoods,
                         headers={'dealership': True}
                     ).get("dealership", {})
                     if referral_response.get("success"):
-                        rpc.response_len_setter(response_len=1)
-                        product_response = rpc.publish(
-                            message={
-                                "product": {
-                                    "action": "add_to_reserve_dealership",
-                                    "body": {
-                                        "referral_number": referral_response.get("message"),
-                                        "customer_id": user.get("user_id"),
-                                        "customer_type": user.get("customer_type"),
-                                        "data": data.dict(),
-                                    }
-                                }
-                            },
-                            headers={'product': True}
-                        ).get("product", {})
-                        if product_response.get("success"):
+                        # rpc.response_len_setter(response_len=1)
+                        # product_response = rpc.publish(
+                        #     message={
+                        #         "product": {
+                        #             "action": "add_to_reserve_dealership",
+                        #             "body": {
+                        #                 "referral_number": referral_response.get("message"),
+                        #                 "customer_id": user.get("user_id"),
+                        #                 "customer_type": user.get("customer_type"),
+                        #                 "data": data.dict(),
+                        #             }
+                        #         }
+                        #     },
+                        #     headers={'product': True}
+                        # ).get("product", {})
+                        # if product_response.get("success"):
                             # rpc.response_len_setter(response_len=1)
                             # reduce_credit = rpc.publish(
                             #     message={
@@ -117,7 +118,7 @@ def create_request(data: RequestGoods,
                                 return insert_response
                             return insert_response
                             # return reduce_credit
-                        return product_response
+                        # return product_response
                     return referral_response
                 return compare_digits_response
             return check_credit
