@@ -270,6 +270,9 @@ def get_bank_result(
         "order": "response_order_call_back",
         "wallet": "get_transaction_by_service_id"
     }
+    if service_name not in service_handlers.keys():
+        raise HTTPException(status_code=417,
+                            detail={"error": "نام سرویس انتخابی صحیح نمی باشد"})
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         payment_result = rpc.publish(
@@ -290,4 +293,5 @@ def get_bank_result(
         return {
             "payment": payment_result.get("payment"),
             "message": payment_result.get("message"),
-            "device_type": payment_result.get("device_type")}
+            "device_type": payment_result.get("device_type")
+        }
