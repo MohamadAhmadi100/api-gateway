@@ -75,7 +75,7 @@ def create_request(data: RequestGoods,
                                     "body": {
                                         "referral_number": referral_response.get("message"),
                                         "customer_id": user.get("user_id"),
-                                        "customer_type": user.get("customer_type")[0],
+                                        "customer_type": user.get("customer_type"),
                                         "data": data.dict(),
                                     }
                                 }
