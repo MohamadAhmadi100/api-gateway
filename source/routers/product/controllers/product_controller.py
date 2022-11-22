@@ -730,7 +730,8 @@ def get_csv(
 def get_data_price_list_pic(
         response: Response,
         customer_type: str = Query("B2B"),
-        type: str = Query(None)
+        page: int = Query(None),
+        per_page: int = Query(None)
 ):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
@@ -740,7 +741,8 @@ def get_data_price_list_pic(
                     "action": "get_data_price_list_pic",
                     "body": {
                         "customer_type": customer_type,
-                        "type": type
+                        "page": page,
+                        "per_page": per_page
                     }
                 }
             },
