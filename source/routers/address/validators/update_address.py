@@ -11,6 +11,8 @@ class UpdateAddress(BaseModel):
     city_id: Optional[str] = Field(alias="cityId")
     city_name: Optional[str] = Field(alias="cityName")
     region_code: Optional[str] = Field(alias="regionCode")
+    nb_name: Optional[str] = Field(alias="nbName")
+    nb_id: Optional["str"] = Field(alias="nbId")
     street: Optional[str] = Field(alias="street")
     alley: Optional[str] = Field(alias="alley")
     plaque: Optional[str] = Field(alias="plaque")
