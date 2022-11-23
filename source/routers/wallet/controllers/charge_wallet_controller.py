@@ -21,6 +21,7 @@ def charge_wallet(
                     "action": "create_transaction",
                     "body": {
                         "data": {
+                            "device_type": charge_data.device_type,
                             "customer_id": charge_data.customer_id,
                             "amount": charge_data.amount,
                             "payment_method": "online",
