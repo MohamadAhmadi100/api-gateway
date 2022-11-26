@@ -8,7 +8,7 @@ router = APIRouter()
 auth_handler = AuthHandler()
 
 
-@router.post("/create_request_goods", tags=["request for goods from dealership"])
+@router.post("/create_request_goods", tags=["register forms"])
 def create_request(data: RequestGoods,
                    auth_header=Depends(auth_handler.check_current_user_tokens)):
     user, token = auth_header

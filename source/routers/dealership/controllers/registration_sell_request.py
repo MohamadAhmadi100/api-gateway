@@ -12,7 +12,7 @@ router = APIRouter()
 auth_handler = AuthHandler()
 
 
-@router.post("/create_sell_request", tags=["Sell request for end user"])
+@router.post("/create_sell_request", tags=["register forms"])
 def sell_request(data: SellRequest,
                  response: Response,
                  auth_header=Depends(auth_handler.check_current_user_tokens)):

@@ -9,7 +9,7 @@ auth_handler = AuthHandler()
 
 
 
-@router.post("/add_imei", tags=["Add IMEI in warehouse"])
+@router.post("/add_imei", tags=["warehouse"])
 def add_imei(data: IMEI):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
