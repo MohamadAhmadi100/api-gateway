@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Response, Depends, Query
 from source.message_broker.rabbit_server import RabbitRPC
-from source.routers.credit.validators.credit_validator import AddCredit, AcceptCredit, RequestsDetail, AccountingRecords
+from source.routers.credit.validators.credit_validator import AddCredit, AcceptCredit, RequestsDetail, \
+    AccountingRecords, ChangePaymentStatus
 from source.routers.customer.helpers.profile_view import get_profile_info
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.dealership.validators.get_sell_forms import SellForms
@@ -99,9 +100,9 @@ def get_remaining_credit(response: Response,
 
 @credit.post("/get_credit_return_list", tags=["customer_side"])
 def get_credit_return_list(
-                           parameters: SellForms,
-                           auth_header=Depends(auth_handler.check_current_user_tokens)
-                           ):
+        parameters: SellForms,
+        auth_header=Depends(auth_handler.check_current_user_tokens)
+):
     user, auth = auth_header
     parameters = parameters.dict()
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
@@ -143,7 +144,6 @@ def get_credit_return_list(
                 return dealership_response
             return dealership_response
         return order_response
-
 
 
 @credit.post("/get_credit_requests", tags=["customer_side"])
@@ -200,14 +200,12 @@ def accept_dealership_credit(response: Response, data: AcceptCredit,
         return order_response
 
 
-
 ############################# Accounting ###########################################
-
 
 
 @credit.post("/get_accounting_records", tags=["Accounting"])
 def get_accounting_records(response: Response, data: AccountingRecords,
-                        # auth_header=Depends(auth_handler.check_current_user_tokens)
+                           # auth_header=Depends(auth_handler.check_current_user_tokens)
                            ):
     # user, auth = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
@@ -245,12 +243,10 @@ def get_accounting_records(response: Response, data: AccountingRecords,
         return credit_response
 
 
-
 @credit.put("/change_payment_status", tags=["Accounting"])
 def change_payment_status_per_system_code(response: Response,
-                                          order_number: str = Query(..., alias="orderNumber"),
-                                          system_code: str = Query(..., alias="systemCode"),
-                              # auth_header=Depends(auth_handler.check_current_user_tokens)
+                                          incoming_system_codes: ChangePaymentStatus
+                                          # auth_header=Depends(auth_handler.check_current_user_tokens)
                                           ):
     # user, auth = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
@@ -260,8 +256,7 @@ def change_payment_status_per_system_code(response: Response,
                 "credit": {
                     "action": "change_payment_status_per_system_code",
                     "body": {
-                        "order_number": order_number,
-                        "system_code": system_code
+                        "incoming_system_codes": incoming_system_codes.dict()
                     }
                 }
             },

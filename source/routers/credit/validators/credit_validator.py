@@ -1,6 +1,6 @@
 from fastapi import HTTPException, Query
 from pydantic import BaseModel, Field, validator
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 class AddCredit(BaseModel):
     amount: int = Field(..., alias="amount")
@@ -45,3 +45,13 @@ class AccountingRecords(BaseModel):
     count_to: Optional[str] = Field(..., alias="countTo")
     wage_from: Optional[str] = Field(..., alias="wageFrom")
     wage_to: Optional[str] = Field(..., alias="wageTo")
+
+
+
+class incomingSystemCodes(BaseModel):
+    order_number: str = Field(alias="orderNumber")
+    system_code: str = Field(alias="systemCode")
+
+
+class ChangePaymentStatus(BaseModel):
+    incoming_system_codes: List[incomingSystemCodes]
