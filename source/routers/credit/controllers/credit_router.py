@@ -103,6 +103,7 @@ def get_credit_return_list(
         parameters: SellForms,
         auth_header=Depends(auth_handler.check_current_user_tokens)
 ):
+
     user, auth = auth_header
     parameters = parameters.dict()
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
@@ -228,6 +229,7 @@ def get_accounting_records(response: Response, data: AccountingRecords,
         return credit_response
 
 
+
 @credit.put("/change_payment_status", tags=["Accounting"])
 def change_payment_status_per_system_code(response: Response,
                                           incoming_system_codes: ChangePaymentStatus
@@ -242,6 +244,7 @@ def change_payment_status_per_system_code(response: Response,
                     "action": "change_payment_status_per_system_code",
                     "body": {
                         "incoming_system_codes": incoming_system_codes.dict()
+
                     }
                 }
             },

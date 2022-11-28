@@ -96,7 +96,6 @@ def get_sell_forms(
 
 
 
-
 @router.post("/get_request_goods_forms", tags=["dealerships panel details (ecommerce)"])
 def get_request_goods_forms(
     parameters: GetRequestGood,
@@ -126,3 +125,4 @@ def get_request_goods_forms(
         if get_forms_response.get("success"):
             return get_forms_response
         return get_forms_response
+

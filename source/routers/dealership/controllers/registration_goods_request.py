@@ -41,6 +41,7 @@ def create_request(data: RequestGoods,
             ).get("credit", {})
             if check_credit.get("success"):
                 print(check_credit)
+
                 rpc.response_len_setter(response_len=1)
                 dict_data = data.dict()
                 compare_digits_response = rpc.publish(
@@ -76,6 +77,7 @@ def create_request(data: RequestGoods,
                                         "referral_number": referral_response.get("message"),
                                         "customer_id": user.get("user_id"),
                                         "customer_type": user.get("customer_type")[0],
+
                                         "data": data.dict(),
                                     }
                                 }
