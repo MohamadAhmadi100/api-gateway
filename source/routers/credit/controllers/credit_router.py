@@ -211,27 +211,12 @@ def get_accounting_records(response: Response, data: AccountingRecords,
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         # customer = get_profile_info(auth_header[0])
-        requests_details = data.dict()
         credit_response = rpc.publish(
             message={
                 "credit": {
                     "action": "get_accounting_records",
                     "body": {
-                        "dealership_name": requests_details.get("dealership_name"),
-                        "order_number": requests_details.get("order_number"),
-                        "date_from": requests_details.get("date_from"),
-                        "date_to": requests_details.get("date_to"),
-                        "page": requests_details.get("page"),
-                        "per_page": requests_details.get("per_page"),
-                        "payment_status": requests_details.get("payment_status"),
-                        "unit_price_from": requests_details.get("unit_price_from"),
-                        "unit_price_to": requests_details.get("unit_price_to"),
-                        "total_price_from": requests_details.get("total_price_from"),
-                        "total_price_to": requests_details.get("total_price_to"),
-                        "count_from": requests_details.get("unit_price_from"),
-                        "count_to": requests_details.get("count_to"),
-                        "wage_from": requests_details.get("wage_from"),
-                        "wage_to": requests_details.get("wage_to")
+                        "parameters": data.dict()
                     }
                 }
             },
