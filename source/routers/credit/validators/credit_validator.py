@@ -1,6 +1,6 @@
 from fastapi import HTTPException, Query
 from pydantic import BaseModel, Field, validator
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 class AddCredit(BaseModel):
     amount: int = Field(..., alias="amount")
@@ -30,18 +30,28 @@ class RequestsDetail(BaseModel):
 
 
 class AccountingRecords(BaseModel):
-    dealership_name: Optional[str] = Field(..., alias="dealershipName")
-    order_number: Optional[str] = Field(..., alias="orderNumber")
-    date_from: Optional[str] = Field(..., alias="dateFrom")
-    date_to: Optional[str] = Field(..., alias="dateTo")
+    dealership_name: Optional[str] = Field(alias="dealershipName")
+    order_number: Optional[str] = Field(alias="orderNumber")
+    date_from: Optional[str] = Field(alias="dateFrom")
+    date_to: Optional[str] = Field(alias="dateTo")
     page: Union[int, None] = Query(default=1, alias="page")
     per_page: Union[int, None] = Query(default=15, alias="perPage")
-    payment_status: Optional[bool] = Field(..., alias="paymentStatus")
-    unit_price_to: Optional[str] = Field(..., alias="unitPriceTo")
-    unit_price_from: Optional[str] = Field(..., alias="unitPriceFrom")
-    total_price_from: Optional[str] = Field(..., alias="totalPriceFrom")
-    total_price_to: Optional[str] = Field(..., alias="totalPriceTo")
-    count_from: Optional[str] = Field(..., alias="countFrom")
-    count_to: Optional[str] = Field(..., alias="countTo")
-    wage_from: Optional[str] = Field(..., alias="wageFrom")
-    wage_to: Optional[str] = Field(..., alias="wageTo")
+    payment_status: Optional[bool] = Field(alias="paymentStatus")
+    unit_price_to: Optional[str] = Field(alias="unitPriceTo")
+    unit_price_from: Optional[str] = Field(alias="unitPriceFrom")
+    total_price_from: Optional[str] = Field(alias="totalPriceFrom")
+    total_price_to: Optional[str] = Field(alias="totalPriceTo")
+    count_from: Optional[str] = Field(alias="countFrom")
+    count_to: Optional[str] = Field(alias="countTo")
+    wage_from: Optional[str] = Field(alias="wageFrom")
+    wage_to: Optional[str] = Field(alias="wageTo")
+
+
+
+class incomingSystemCodes(BaseModel):
+    order_number: str = Field(alias="orderNumber")
+    system_code: str = Field(alias="systemCode")
+
+
+class ChangePaymentStatus(BaseModel):
+    incoming_system_codes: List[incomingSystemCodes]

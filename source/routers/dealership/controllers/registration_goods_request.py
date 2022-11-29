@@ -8,7 +8,7 @@ router = APIRouter()
 auth_handler = AuthHandler()
 
 
-@router.post("/create_request_goods", tags=["request for goods from dealership"])
+@router.post("/create_request_goods", tags=["register forms"])
 def create_request(data: RequestGoods,
                    auth_header=Depends(auth_handler.check_current_user_tokens)):
     user, token = auth_header
@@ -40,6 +40,8 @@ def create_request(data: RequestGoods,
                 headers={'credit': True}
             ).get("credit", {})
             if check_credit.get("success"):
+                print(check_credit)
+
                 rpc.response_len_setter(response_len=1)
                 dict_data = data.dict()
                 compare_digits_response = rpc.publish(
@@ -47,7 +49,7 @@ def create_request(data: RequestGoods,
                         "dealership": {
                             "action": "check_credit_state",
                             "body": {
-                                "credit": check_credit.get("remaining_amount"),
+                                "credit": check_credit.get("message").get("remainingCredit"),
                                 "products": dict_data.get("products")
                             }
                         }
@@ -74,7 +76,8 @@ def create_request(data: RequestGoods,
                                     "body": {
                                         "referral_number": referral_response.get("message"),
                                         "customer_id": user.get("user_id"),
-                                        "customer_type": user.get("customer_type"),
+                                        "customer_type": user.get("customer_type")[0],
+
                                         "data": data.dict(),
                                     }
                                 }

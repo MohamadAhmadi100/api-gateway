@@ -30,13 +30,14 @@ router = APIRouter()
 
 @router.post("/send_data")
 def get_url(data: payment.SendData, response: Response):
-    bank_name = "saman" if data.amount > 1_000_000_000 else random.choice(BANK_NAMES)
+    data = dict(data)
+    bank_name = "saman" if data.get("amount") > 1_000_000_000 else random.choice(BANK_NAMES)
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         payment_result = rpc.publish(
             message=
             bank_controller.get_data(
-                data=dict(data),
+                data=data,
                 bank_name=bank_name
             )
             ,
@@ -269,6 +270,10 @@ def get_bank_result(
         "order": "response_order_call_back",
         "wallet": "get_transaction_by_service_id"
     }
+    if service_name not in service_handlers.keys():
+        raise HTTPException(status_code=417,
+                            detail={"error": "نام سرویس انتخابی صحیح نمی باشد"})
+
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         payment_result = rpc.publish(
@@ -289,4 +294,5 @@ def get_bank_result(
         return {
             "payment": payment_result.get("payment"),
             "message": payment_result.get("message"),
-            "device_type": payment_result.get("device_type")}
+            "device_type": payment_result.get("device_type")
+        }

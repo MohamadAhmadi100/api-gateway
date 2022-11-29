@@ -12,6 +12,8 @@ class Address(BaseModel):
     city_id: str = Field(alias="cityId")
     city_name: str = Field(alias="cityName")
     region_code: str = Field(alias="regionCode")
+    nb_name: Optional[str] = Field(alias="nbName")
+    nb_id: Optional["str"] = Field(alias="nbId")
     street: str = Field(alias="street")
     alley: str = Field(alias="alley", default='')
     plaque: str = Field(alias="plaque")

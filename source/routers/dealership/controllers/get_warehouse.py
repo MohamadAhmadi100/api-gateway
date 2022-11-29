@@ -9,7 +9,7 @@ router = APIRouter()
 auth_handler = AuthHandler()
 
 
-@router.get("/get_list", tags=["get list of requests for warehouse"])
+@router.get("/get_list", tags=["warehouse"])
 def warehouse_list(storageId: Union[str]):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
@@ -29,7 +29,7 @@ def warehouse_list(storageId: Union[str]):
         return get_list_response
 
 
-@router.get("/get_single_form", tags=["get single form of requests for warehouse"])
+@router.get("/get_single_form", tags=["warehouse"])
 def warehouse_single_form(referralNumber: Union[str]):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
