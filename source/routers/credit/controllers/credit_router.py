@@ -253,6 +253,5 @@ def change_payment_status_per_system_code(response: Response,
         if credit_response.get("success"):
             response.status_code = 200
             return credit_response
-        response.status_code = 500
         return credit_response
 
