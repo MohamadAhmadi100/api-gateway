@@ -131,3 +131,34 @@ def get_request_goods_forms(
 
 
 ############################# Back office ###########################################
+
+
+
+@router.post("/get_request_forms", tags=["back office"])
+def get_request_goods_forms(
+    parameters: GetRequestGood,
+    # auth_header=Depends(auth_handler.check_current_user_tokens)
+):
+    # user, token = auth_header
+    parameters = parameters.dict()
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        get_forms_response = rpc.publish(
+            message={
+                "dealership": {
+                    "action": "get_request_goods_forms",
+                    "body": {
+                        "page": parameters.get("page"),
+                        "per_page": parameters.get("per_page"),
+                        "referral_number": parameters.get("referral_number"),
+                        "date_from": parameters.get("date_from"),
+                        "date_to": parameters.get("date_to"),
+                        "status": parameters.get("status")
+                    }
+                }
+            },
+            headers={'dealership': True}
+        ).get("dealership", {})
+        if get_forms_response.get("success"):
+            return get_forms_response
+        return get_forms_response
