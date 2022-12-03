@@ -146,11 +146,12 @@ def get_request_goods_forms(
         get_forms_response = rpc.publish(
             message={
                 "dealership": {
-                    "action": "get_request_goods_forms",
+                    "action": "get_request_forms",
                     "body": {
                         "page": parameters.get("page"),
                         "per_page": parameters.get("per_page"),
                         "referral_number": parameters.get("referral_number"),
+                        "customer_name": parameters.get("customer_name"),
                         "date_from": parameters.get("date_from"),
                         "date_to": parameters.get("date_to"),
                         "status": parameters.get("status")
