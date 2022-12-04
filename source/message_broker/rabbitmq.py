@@ -1,12 +1,14 @@
 import datetime
 import json
 import logging
+import time
 import uuid
 
 import pika
-import time
+from fastapi import HTTPException
 
 from source.config import settings
+from source.helpers.saga_pattern import Saga
 
 
 class Singleton(type):
@@ -34,6 +36,7 @@ class RabbitRPC(metaclass=Singleton):
         self.corr_id = None
         self.response_len = 0
         self.timeout = timeout
+        self.saga = Saga()
         self.consume()
 
     def connect(self):
@@ -68,24 +71,64 @@ class RabbitRPC(metaclass=Singleton):
             body=json.dumps(message)
         )
 
-    def publish(self, message: list, extra_data: str = None):
+    def publish_pre_requisite(self, message: list, saga: bool):
         messages = dict()
         for i in message:
             messages.update(i)
-        # publish message with given message and headers
+        if saga:
+            self.saga.add(messages)
         self.response_len = len(messages)
-        logging.info(f"expected response num: {self.response_len}")
-        print(f"{datetime.datetime.now()} - expected response num {self.response_len}")
         self.corr_id = str(uuid.uuid4())
-        logging.info(f"first corr id: {self.corr_id}")
-        print(f"{datetime.datetime.now()} - first corr id : {self.corr_id}")
+        return messages
+
+    def publish_response_handler(self, messages: dict, saga: bool, compensate: bool = False):
+        if len(self.broker_response) < self.response_len:
+            bad_services = list(messages.keys() - self.broker_response.keys())
+            logging.info(f"Timeout waiting for response... services: {', '.join(bad_services)}")
+            if saga:
+                self.saga.remove(bad_services)
+                stack = self.saga.compensate()
+                for _ in range(len(stack)):
+                    item = stack.pop()
+                    self.publish(message=[item], compensate=True)
+                self.saga.finish()
+
+            self.broker_response.clear()
+            raise HTTPException(
+                status_code=500,
+                detail={"error": f"{', '.join(bad_services)} does not respond..."}
+            )
+        else:
+            result = list()
+            error_services = [i for i in messages.keys() if not self.broker_response.get(i).get("success")]
+            if len(error_services):
+                if saga:
+                    self.saga.remove(error_services)
+                    stack = self.saga.compensate()
+                    for _ in range(len(stack)):
+                        item = stack.pop()
+                        self.publish(message=[item], compensate=True)
+                    self.saga.finish()
+
+                status_code = self.broker_response.get(error_services[0]).get("status_code", 500)
+                error = self.broker_response.get(error_services[0]).get("error", "Something went wrong...")
+                self.broker_response.clear()
+                raise HTTPException(
+                    status_code=status_code,
+                    detail=error
+                )
+            for i in messages.keys():
+                result.append(self.broker_response.get(i, {}))
+            result = result[0] if len(result) == 1 else result
+            self.broker_response.clear()
+            return result
+
+    def publish(self, message: list, extra_data: str = None, saga: bool = False, compensate: bool = False):
+        messages = self.publish_pre_requisite(message, saga)
         try_count = 0
         while True:
             try_count += 1
             try:
-                logging.info(f"Publishing message: {messages}")
-                # print("publish initiated...")
-                print(f"{datetime.datetime.now()} - Publishing message: {messages}")
                 self.publish_channel.basic_publish(
                     exchange=self.exchange_name,
                     routing_key='',
@@ -98,12 +141,9 @@ class RabbitRPC(metaclass=Singleton):
                     ),
                     body=json.dumps(messages) if isinstance(messages, dict) else messages
                 )
-                print(f"{datetime.datetime.now()} - message sent...")
-                logging.info("Message sent...")
                 break
             except Exception as e:
                 logging.info(f"Error publishing to RabbitMQ... {e}")
-                print(f"{datetime.datetime.now()} - Error publishing message... {e}")
                 if try_count > 3:
                     raise e
                 self.publish_connection, self.publish_channel, self.callback_queue = self.connect()
@@ -115,30 +155,12 @@ class RabbitRPC(metaclass=Singleton):
                 self.publish_connection.process_data_events()
             except Exception as e:
                 logging.info(f"Error consuming from RabbitMQ... {e}")
-                print(f"{datetime.datetime.now()} - Error listening for response... {e}")
                 self.publish_connection, self.publish_channel, self.callback_queue = self.connect()
                 self.consume()
-        print(f"{datetime.datetime.now()} - "
-              f"actual response num: {len(self.broker_response)}"
-              f", expected response num: {self.response_len}")
-        logging.info(f"actual response num: {len(self.broker_response)}, expected response num: {self.response_len}")
+        return self.publish_response_handler(messages, saga, compensate)
 
-        if len(self.broker_response) < self.response_len:
-            print(f"{datetime.datetime.now()} - Couldn't get response from these services:")
-            bad_services = list(messages.keys() - self.broker_response.keys())
-            print(f"{datetime.datetime.now()} - bad_services")
-            logging.info(f"Timeout waiting for response... services: {bad_services}")
-            print(f"{datetime.datetime.now()} - Timeout waiting for response... services: {bad_services}")
-        result = list()
-        for i in messages.keys():
-            result.append(self.broker_response.get(i, {}))
-        result = result[0] if len(result) == 1 else result
-        logging.info(f"Final response is ...{result}")
-        print(f"{datetime.datetime.now()} - Final response is ...{result}")
-        logging.info(f"second corr id: {self.corr_id}")
-        print(f"{datetime.datetime.now()} - second corr id: {self.corr_id}")
-        self.broker_response.clear()
-        return result
+    def compensate_actions(self):
+        items = self.saga.startup_action()
 
     def on_response(self, channel, method, properties, body):
         if self.corr_id == properties.correlation_id:
@@ -161,3 +183,5 @@ class RabbitRPC(metaclass=Singleton):
                     raise e
                 self.publish_connection, self.publish_channel, self.callback_queue = self.connect()
 
+
+new_rpc = RabbitRPC(exchange_name='headers_exchange', timeout=10)
