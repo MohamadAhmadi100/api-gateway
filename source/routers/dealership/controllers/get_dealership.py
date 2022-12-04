@@ -4,6 +4,7 @@ from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.dealership.validators.get_request_goods_form import GetRequestGood
 from source.routers.dealership.validators.get_sell_forms import SellForms
+from source.routers.dealership.validators.register_request import SubmitRequestForms
 
 router = APIRouter()
 auth_handler = AuthHandler()
@@ -163,3 +164,66 @@ def get_request_goods_forms(
         if get_forms_response.get("success"):
             return get_forms_response
         return get_forms_response
+
+
+
+@router.post("/get_request_forms_pending", tags=["back office"])
+def get_request_goods_forms(
+    parameters: GetRequestGood,
+    # auth_header=Depends(auth_handler.check_current_user_tokens)
+):
+    # user, token = auth_header
+    parameters = parameters.dict()
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        get_forms_response = rpc.publish(
+            message={
+                "dealership": {
+                    "action": "get_request_forms",
+                    "body": {
+                        "page": parameters.get("page"),
+                        "per_page": parameters.get("per_page"),
+                        "referral_number": parameters.get("referral_number"),
+                        "customer_name": parameters.get("customer_name"),
+                        "date_from": parameters.get("date_from"),
+                        "date_to": parameters.get("date_to"),
+                        "status": "pending"
+                    }
+                }
+            },
+            headers={'dealership': True}
+        ).get("dealership", {})
+        if get_forms_response.get("success"):
+            return get_forms_response
+        return get_forms_response
+
+
+@router.put("/submit_request_forms", tags=["back office"])
+def submit_request_forms(
+    parameters: SubmitRequestForms,
+    # auth_header=Depends(auth_handler.check_current_user_tokens)
+):
+    # user, token = auth_header
+    parameters = parameters.dict()
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_response = rpc.publish(
+            message={
+                "product": {
+                    "action": "add_to_reserve_dealership",
+                    "body": {
+                        "referral_number": parameters.get("referral_number"),
+                        "customer_id": parameters.get("customer_id"),
+                        "customer_type": "B2B",
+                        "data": parameters.get("details"),
+                    }
+                }
+            },
+            headers={'product': True}
+        ).get("product", {})
+        return product_response
+
+
+
+
+
