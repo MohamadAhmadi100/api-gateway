@@ -3,6 +3,7 @@ from fastapi import responses
 from starlette.exceptions import HTTPException as starletteHTTPException
 from source.routers.kosar.controllers import customer_router
 from source.config import settings
+from starlette_prometheus import metrics, PrometheusMiddleware
 
 app = FastAPI(
     version="0.1.0",
@@ -15,6 +16,8 @@ app = FastAPI(
 
 # app.include_router(customer_router)
 
+app.add_middleware(PrometheusMiddleware)
+app.add_route('/metrics', metrics)
 
 @app.exception_handler(starletteHTTPException)
 def validation_exception_handler(request, exc):

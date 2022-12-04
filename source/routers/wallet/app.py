@@ -8,6 +8,7 @@ from starlette.exceptions import HTTPException as starletteHTTPException
 from source.config import settings
 from source.routers.wallet.controllers.other_controllers import router as other_router
 from source.routers.wallet.controllers.charge_wallet_controller import router as charge_router
+from starlette_prometheus import metrics, PrometheusMiddleware
 
 TAGS = [
     {
@@ -30,6 +31,8 @@ app = FastAPI(
 def validation_exception_handler(request, exc):
     return responses.JSONResponse(exc.detail, status_code=exc.status_code)
 
+app.add_middleware(PrometheusMiddleware)
+app.add_route('/metrics', metrics)
 
 app.include_router(charge_router)
 app.include_router(other_router)

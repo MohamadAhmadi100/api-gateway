@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Response, responses, Path, Body, Query
 from starlette.exceptions import HTTPException as starletteHTTPException
-
+from starlette_prometheus import metrics, PrometheusMiddleware
 from source.config import settings
 from source.helpers.case_converter import convert_case
 from source.message_broker.rabbit_server import RabbitRPC
@@ -24,6 +24,8 @@ app = FastAPI(
 
 app.include_router(router_coupon)
 
+app.add_middleware(PrometheusMiddleware)
+app.add_route('/metrics', metrics)
 
 # customize exception handler of fast api
 @app.exception_handler(starletteHTTPException)

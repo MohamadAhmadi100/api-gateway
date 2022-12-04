@@ -3,7 +3,7 @@ from typing import Optional
 import jdatetime
 from fastapi import FastAPI, HTTPException, Response, responses, Path, Depends, Query
 from starlette.exceptions import HTTPException as starletteHTTPException
-
+from starlette_prometheus import metrics, PrometheusMiddleware
 from source.config import settings
 from source.helpers.case_converter import convert_case
 from source.message_broker.rabbit_server import RabbitRPC
@@ -26,6 +26,9 @@ app = FastAPI(
     redoc_url="/redoc/" if settings.DEBUG_MODE else None,
     debug=settings.DEBUG_MODE
 )
+
+app.add_middleware(PrometheusMiddleware)
+app.add_route('/metrics', metrics)
 
 
 # customize exception handler of fast api

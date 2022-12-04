@@ -24,6 +24,8 @@ from source.routers.shipment.app import app as shipment_app
 from source.routers.uis.app import app as uis_app
 from source.routers.wallet.app import app as wallet_app
 from source.routers.basket.app import app as basket_app
+from starlette_prometheus import metrics, PrometheusMiddleware
+
 
 app = FastAPI(title="API Gateway",
               description="Backend for frontend aka. API Gateway!",
@@ -31,7 +33,8 @@ app = FastAPI(title="API Gateway",
               docs_url="/docs/" if settings.DEBUG_MODE else None,
               redoc_url="/redoc/" if settings.DEBUG_MODE else None
               )
-
+app.add_middleware(PrometheusMiddleware)
+app.add_route('/metrics', metrics)
 # ----------------------------------------- Mount all services here -------------------------------------------------- #
 
 app.mount("/cart/api/v1", cart_app)
