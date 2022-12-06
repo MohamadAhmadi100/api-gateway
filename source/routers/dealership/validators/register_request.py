@@ -40,6 +40,12 @@ class RequestGoods(BaseModel):
     storage_id: str = Field(alias="storageId")
 
 
+class SubmitRequestForms(BaseModel):
+    referral_number: str = Field(alias="referralNumber")
+    customer_id: str = Field(alias="customerId")
+    details: RequestGoods
+
+
 p = {
     "products": {
         "systemCode": "2000010010001001001001001",

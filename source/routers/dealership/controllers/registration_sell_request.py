@@ -54,7 +54,7 @@ def sell_request(data: SellRequest,
             if order_response.get("success"):
                 uis = Uis(
                     requestType="payment",
-                    serviceData={"amount": order_response.get("bank_response").get("amount"),
+                    serviceData={"amount": order_response.get("bank_response").get("amount") * 10,
                                  "customerId": order_response.get("bank_response").get("customerId"),
                                  "serviceName": order_response.get("bank_response").get("serviceName"),
                                  "serviceId": order_response.get("bank_response").get("serviceId"),

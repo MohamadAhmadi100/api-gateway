@@ -1,5 +1,5 @@
 import json
-
+from starlette_prometheus import metrics, PrometheusMiddleware
 from fastapi import FastAPI, HTTPException, Response, responses, Depends
 from source.config import settings
 from starlette.exceptions import HTTPException as starletteHTTPException
@@ -26,6 +26,9 @@ app = FastAPI(
 )
 
 auth_handler = AuthHandler()
+
+app.add_middleware(PrometheusMiddleware)
+app.add_route('/metrics', metrics)
 
 
 @app.exception_handler(starletteHTTPException)
@@ -63,9 +66,9 @@ def initial_shipment(data: Shipment, response: Response):
 
 @app.put("/get_shipment_per_stock", tags=["Get shipment details and insurance per stock"])
 def shipment_per_stock(
-    response: Response,
-    data: PerStock,
-    auth_header=Depends(auth_handler.check_current_user_tokens)
+        response: Response,
+        data: PerStock,
+        auth_header=Depends(auth_handler.check_current_user_tokens)
 ):
     user, token_dict = auth_header
     delivery = {
@@ -84,7 +87,7 @@ def shipment_per_stock(
                         "body": {
                             "data": {
                                 "customer_phone_number": user.get("phone_number"),
-                                    "delivery": json.dumps(delivery),
+                                "delivery": json.dumps(delivery),
                             }
                         }
                     }
@@ -125,8 +128,6 @@ def shipment_per_stock(
                 return cart_response
             raise HTTPException(status_code=cart_response.get("status_code", 500),
                                 detail={"error": cart_response.get("error", "Shipment service Internal error")})
-
-
 
 
 @app.put("/mahex_weekly_limit", tags=["change mahex weekly limit for free price"])

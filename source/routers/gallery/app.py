@@ -1,6 +1,6 @@
 from fastapi import FastAPI, responses
 from starlette.exceptions import HTTPException as StarletteHTTPException
-
+from starlette_prometheus import metrics, PrometheusMiddleware
 from source.config import settings
 from source.routers.gallery.controllers.directories_controller import router as directories_controller
 from source.routers.gallery.controllers.file_type_controller import router as file_type_controller
@@ -40,3 +40,6 @@ def validation_exception_handler(request, exc):
 app.include_router(files_controller, tags=['Files'])
 app.include_router(file_type_controller, tags=['File Types'])
 app.include_router(directories_controller, tags=['Directories'])
+
+app.add_middleware(PrometheusMiddleware)
+app.add_route('/metrics', metrics)

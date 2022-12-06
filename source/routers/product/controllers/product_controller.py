@@ -11,6 +11,7 @@ from source.routers.product.validators.price_models import Price
 from source.routers.product.validators.price_models import UpdatePrice
 from source.routers.product.validators.product import Product, AddAttributes, EditProduct
 from source.routers.product.validators.quantity_models import UpdateQuantity, Quantity
+from source.message_broker.rabbitmq import new_rpc
 
 router = APIRouter()
 
@@ -356,43 +357,39 @@ def get_product_list_back_office(
     """
     Get product list in  back office
     """
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        product_result = rpc.publish(
-            message={
-                "product": {
-                    "action": "get_product_list_back_office",
-                    "body": {
-                        "brands": brands,
-                        "warehouses": warehouses,
-                        "price_from": price_from,
-                        "price_to": price_to,
-                        "sellers": sellers,
-                        "colors": colors,
-                        "quantity_from": quantity_from,
-                        "quantity_to": quantity_to,
-                        "date_from": date_from,
-                        "date_to": date_to,
-                        "guarantees": guarantees,
-                        "steps": steps,
-                        "visible_in_site": visible_in_site,
-                        "approved": approved,
-                        "available": available,
-                        "page": page,
-                        "per_page": per_page,
-                        "system_code": system_code,
-                        "lang": lang
-                    }
+    product_result = new_rpc.publish(
+        message=[{
+            "product": {
+                "action": "get_product_list_back_office",
+                "body": {
+                    "brands": brands,
+                    "warehouses": warehouses,
+                    "price_from": price_from,
+                    "price_to": price_to,
+                    "sellers": sellers,
+                    "colors": colors,
+                    "quantity_from": quantity_from,
+                    "quantity_to": quantity_to,
+                    "date_from": date_from,
+                    "date_to": date_to,
+                    "guarantees": guarantees,
+                    "steps": steps,
+                    "visible_in_site": visible_in_site,
+                    "approved": approved,
+                    "available": available,
+                    "page": page,
+                    "per_page": per_page,
+                    "system_code": system_code,
+                    "lang": lang
                 }
-            },
-            headers={'product': True}
-        )
-        product_result = product_result.get("product", {})
-        if product_result.get("success"):
-            response.status_code = product_result.get("status_code", 200)
-            return convert_case(product_result.get("message"), 'camel')
-        raise HTTPException(status_code=product_result.get("status_code", 500),
-                            detail={"error": product_result.get("error", "Something went wrong")})
+            }
+        }]
+    )
+    if product_result.get("success"):
+        response.status_code = product_result.get("status_code", 200)
+        return convert_case(product_result.get("message"), 'camel')
+    raise HTTPException(status_code=product_result.get("status_code", 500),
+                        detail={"error": product_result.get("error", "Something went wrong")})
 
 
 @router.get("/get_product_list_by_system_code/{systemCode}/", tags=["Product"])

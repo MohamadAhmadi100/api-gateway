@@ -33,8 +33,8 @@ def dealership_bank_callback(result, response):
                         headers={'order': True}
                     ).get("order")
                     if order_response.get("success"):
-                        rpc.response_len_setter(response_len=1)
-                    if order_response['order_object']['status'] == "complete_dealership":
+                    #     rpc.response_len_setter(response_len=1)
+                    # if order_response['order_object']['status'] == "complete":
                         reduce_inventory = rpc.publish(
                             message={
                                 "dealership": {
@@ -73,7 +73,7 @@ def dealership_bank_callback(result, response):
                                 headers={'credit': True}
                             ).get("credit", {})
                             return RedirectResponse(
-                f"https://aasood.com/payment-result/order/{result.get('service_id')}/")
+                                f"https://aasood.com/payment-result/order/{result.get('service_id')}/")
                         return RedirectResponse(
                             f"https://aasood.com/payment-result/order/{result.get('service_id')}/")
                 if not result.get("is_paid"):
@@ -118,37 +118,17 @@ def dealership_bank_callback(result, response):
             f"https://aasood.com/payment-result/order/{result.get('service_id')}/")
 
 
-
-
-# print(dealership_bank_callback({
-#     "payment_id" : 303965,
-#     "service_id" : 300010443,
-#     "customer_id" : 20003,
-#     "amount" : 688000,
-#     "bank_name" : "mellat",
-#     "bank_code" : "1011125",
-#     "is_paid" : True,
-#     "start_payment" : 1663136268.27697,
-#     "start_payment_jalali" : "1401-06-23 10:47:48",
-#     "service" : "order",
-#     "kowsar_status" : "successful",
-#     "return_bank" : True,
-#     "send_status" : "successful",
-#     "status" : "واریز با موفقیت انجام شد",
-#     "token" : "3247184508A5211A",
-#     "end_payment" : 1663136310.24705,
-#     "end_payment_jalali" : "1401-06-23 10:48:30",
-#     "payment_log" : {
-#         "RefId" : "3247184508A5211A",
-#         "ResCode" : "0",
-#         "SaleOrderId" : "303965",
-#         "SaleReferenceId" : "222800917074",
-#         "CardHolderInfo" : "12ECB0F339C5528069DD48C8421CC66B1988551BDD9E14574A948FEBC514D516",
-#         "CardHolderPan" : "585983****2397",
-#         "FinalAmount" : "237580000"
-#     },
-#     "verify_log" : {
-#         "ResCode" : "0"
-#     },
-#     "settle_log" : "0"
-# }, 200))
+# dealership_bank_callback({"payment_id": 300022, "service_id": "300015359", "customer_id": 20008,
+#                           "amount": 11000, "bank_name": "mellat", "bank_code": "1011125", "is_paid": True,
+#                           "start_payment": 1660069859.52179,
+#                           "start_payment_jalali": "1401-05-18 23:00:59", "service": "order",
+#                           "kowsar_status": "successful", "return_bank": True,
+#                           "send_status": "successful", "status": "واریز با موفقیت انجام شد",
+#                           "token": "A8132D79D7416289",
+#                           "end_payment": 1660069958.45192, "end_payment_jalali": "1401-05-18 23:02:38",
+#                           "payment_log": {"RefId": "A8132D79D7416289", "ResCode": "0", "SaleOrderId": "300022",
+#                                           "SaleReferenceId": "220204666585",
+#                                           "CardHolderInfo": "F6247BFD28CE23C66AD1755DD026E11CC717A3016E0B17542E01928C609E1DAD",
+#                                           "CardHolderPan": "589463******4522", "FinalAmount": "290919000"},
+#                           "verify_log": {"ResCode": "0"},
+#                           "settle_log": "0", "payment_method": "online_gateway"}, 200)
