@@ -65,7 +65,9 @@ def register(
         "unit": value.customer_unit,
         "tel": customer_tel,
         "postal_code": customer_postal_code,
-        "is_default": True
+        "is_default": True,
+        "nb_name": value.nb_name,
+        "nb_id": value.nb_id
     }
     customer_address = {
         "customer_name": f"{value.customer_first_name} {value.customer_last_name}",

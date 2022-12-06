@@ -220,6 +220,8 @@ class CustomerRegister(BaseModel):
         regexPattern="",
         isRquired=False,
     )
+    nb_name: Optional[str] = Field(alias="nbName")
+    nb_id: Optional[str] = Field(alias="nbId")
 
     @validator("customer_phone_number")
     def validate_phone_num(cls, customer_phone_number):

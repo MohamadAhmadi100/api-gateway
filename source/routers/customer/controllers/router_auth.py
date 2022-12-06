@@ -279,6 +279,7 @@ def forget_password(
     #         ra.forget_password(customer_phone_number=user_info.get("phone_number"),
     #                            password=data.customer_password)]
     # )
+    print(user_info.get("phone_number"))
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         customer_result = rpc.publish(
