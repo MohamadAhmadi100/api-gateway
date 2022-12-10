@@ -4,7 +4,7 @@ from source.routers.mobile_app.controllers.app_controller import router as app_r
 from source.routers.mobile_app.controllers.football_controller import router as football_router
 from source.routers.mobile_app.controllers.user_controller import router as user_router
 from source.routers.mobile_app.controllers.world_cup_controller import router as wcup_router
-
+from starlette_prometheus import metrics, PrometheusMiddleware
 from source.config import settings
 
 TAGS = [
@@ -35,3 +35,6 @@ app.include_router(app_router)
 app.include_router(football_router)
 app.include_router(user_router)
 app.include_router(wcup_router)
+
+app.add_middleware(PrometheusMiddleware)
+app.add_route('/metrics', metrics)

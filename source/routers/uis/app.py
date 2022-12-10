@@ -5,6 +5,7 @@ from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.payment.controllers.bank_controller import get_url
 from source.routers.uis.validators.uis import Uis
 from source.helpers.case_converter import convert_case
+from starlette_prometheus import metrics, PrometheusMiddleware
 
 TAGS = [
     {
@@ -22,6 +23,8 @@ app = FastAPI(
     redoc_url="/redoc/" if settings.DEBUG_MODE else None,
     debug=settings.DEBUG_MODE
 )
+app.add_middleware(PrometheusMiddleware)
+app.add_route('/metrics', metrics)
 
 
 @app.exception_handler(starletteHTTPException)

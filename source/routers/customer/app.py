@@ -9,6 +9,7 @@ from source.routers.customer.controllers.router_auth import router_auth
 from source.routers.customer.controllers.router_dealership import router_dealership
 from source.routers.customer.controllers.router_register import router_register
 from source.routers.customer.controllers.router_profile import router_profile
+from source.routers.customer.controllers.router_rakiano import router_rakiano
 
 
 app = FastAPI(
@@ -27,6 +28,7 @@ app.include_router(router_auth)
 app.include_router(router_register)
 app.include_router(router_profile)
 app.include_router(router_dealership)
+app.include_router(router_rakiano)
 
 
 @app.exception_handler(starletteHTTPException)

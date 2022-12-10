@@ -10,7 +10,6 @@ from pydantic import validator
 class CustomerType(str, Enum):
     B2B = "B2B"
     B2C = "B2C"
-    B2B2C = "B2B2C"
 
 
 class CustomerRegister(BaseModel):
@@ -143,6 +142,32 @@ class CustomerRegister(BaseModel):
         isRquired=True,
     )
 
+    customer_password: str = Field(
+        title="رمز عبور",
+        alias="customerPassword",
+        name="customerPassword",
+        placeholder="qwer1234QWER",
+        description="رمز عبور حداقل باید دارای 6 کاراکتر باشد",
+        minLength=8,
+        maxLength=32,
+        dataType="string",
+        type="password",
+        isRquired=True,
+        regexPattern=r"^([a-zA-Z0-9'!#$%&'*+/=?^_`{|}~.-]{6,32})"
+    )
+    customer_verify_password: str = Field(
+        title="تکرار رمز عبور",
+        alias="customerVerifyPassword",
+        name="customerVerifyPassword",
+        placeholder="qwer1234QWER",
+        description="رمز عبور حداقل باید دارای 6 کاراکتر باشد",
+        minLength=8,
+        maxLength=32,
+        dataType="string",
+        type="password",
+        isRquired=True,
+        regexPattern=r"^([a-zA-Z0-9'!#$%&'*+/=?^_`{|}~.-]{6,32})"
+    )
     customer_street: str = Field(
         alias="customerStreet",
         title="خیابان",
@@ -156,7 +181,7 @@ class CustomerRegister(BaseModel):
         isRquired=True,
         regexPattern=r"[ ]{0,1}[\u0600-\u06FF0-9]{4,32}$"
     )
-    customer_alley: str = Field(
+    customer_alley: Optional[str] = Field(
         alias="customerAlley",
         title="کوچه",
         name="customerAlley",
@@ -166,7 +191,7 @@ class CustomerRegister(BaseModel):
         maxLength=32,
         dataType="string",
         type="str",
-        isRquired=True,
+        isRquired=False,
         regexPattern=r"[ ]{0,1}[\u0600-\u06FF0-9]{1,32}$"
     )
     customer_plaque: str = Field(
@@ -208,7 +233,8 @@ class CustomerRegister(BaseModel):
         isRquired=True,
         regexPattern=r"^[0-9۰-۹]{11}$"
     )
-    customer_type: Optional[CustomerType] = Field(
+
+    customer_type: CustomerType = Field(
         alias="customerType",
         description="",
         title="نوع مشتری",
@@ -218,10 +244,26 @@ class CustomerRegister(BaseModel):
         dataType="string",
         type="hidden",
         regexPattern="",
-        isRquired=False,
+        isRquired=True,
     )
-    nb_name: Optional[str] = Field(alias="nbName")
-    nb_id: Optional[str] = Field(alias="nbId")
+
+    @validator("customer_password")
+    def validate_password(cls, verify_password):
+        pattern = r"^([a-zA-Z0-9'!#$%&'*+/=?^_`{|}~.-]{6,32})"  # r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,32}$"
+        match = re.fullmatch(pattern, verify_password)
+        if not match:
+            raise HTTPException(status_code=422, detail={"error": "رمز عبور وارد شده صحیح نمی باشد"})
+        return verify_password
+
+    @validator("customer_verify_password")
+    def validate_verify_password(cls, verify_password, values, **kwargs):
+        pattern = r"^([a-zA-Z0-9'!#$%&'*+/=?^_`{|}~.-]{6,32})"  # r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,32}$"
+        match = re.fullmatch(pattern, verify_password)
+        if not match:
+            raise HTTPException(status_code=422, detail={"error": "تکرار رمز عبور وارد شده صحیح نمی باشد"})
+        if verify_password != values["customer_password"]:
+            raise HTTPException(status_code=422, detail={"error": "تکرار رمز غبور با رمز عبور اصلی مطابقت ندارد"})
+        return verify_password
 
     @validator("customer_phone_number")
     def validate_phone_num(cls, customer_phone_number):

@@ -1,6 +1,6 @@
 from fastapi import FastAPI, responses
 from starlette.exceptions import HTTPException as starletteHTTPException
-
+from starlette_prometheus import metrics, PrometheusMiddleware
 from source.config import settings
 from source.routers.credit.controllers.credit_router import credit
 from source.routers.customer.module.auth import AuthHandler
@@ -26,6 +26,8 @@ auth_handler = AuthHandler()
 
 app.include_router(credit)
 
+app.add_middleware(PrometheusMiddleware)
+app.add_route('/metrics', metrics)
 
 
 # customize exception handler of fast api

@@ -154,7 +154,27 @@ def add_or_edit_cart(response: Response,
         "action": data.action,
         "list_index": data.index
     }
-    # todo: checking whole sales and per day with order service
+    print(user_data.get("user_id"), product_data.get("basketId"))
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        order_result = rpc.publish(
+            message={
+                "order": {
+                    "action": "limit_basket_count",
+                    "body": {
+                        "user_id": user_data.get("user_id"),
+                        "basket_id": product_data.get("basketId"),
+                        "today": True
+                    }
+                }
+            },
+            headers={'order': True}
+        )
+    order_result = order_result.get("order", {})
+    print(order_result)
+    if not order_result.get("success"):
+        raise HTTPException(status_code=order_result.get("status_code", 500),
+                            detail={"error": order_result.get("error", "Something went wrong")})
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         cart_result = rpc.publish(

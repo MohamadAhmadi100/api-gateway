@@ -5,6 +5,7 @@ from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.address.validators.address import Address, AddressId
 from source.routers.address.validators.update_address import UpdateAddress
 from source.routers.customer.module.auth import AuthHandler
+from starlette_prometheus import metrics, PrometheusMiddleware
 
 TAGS = [
     {
@@ -23,6 +24,9 @@ app = FastAPI(
 )
 
 auth_handler = AuthHandler()
+
+app.add_middleware(PrometheusMiddleware)
+app.add_route('/metrics', metrics)
 
 
 @app.exception_handler(starletteHTTPException)
@@ -74,7 +78,6 @@ def cities(cityId: str, response: Response):
                             detail={"error": address_response.get("error", "Address service Internal error")})
 
 
-
 @app.get("/neighborhoods", tags=["City and States"])
 def states(response: Response):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
@@ -94,7 +97,6 @@ def states(response: Response):
             return address_response
         raise HTTPException(status_code=address_response.get("status_code", 500),
                             detail={"error": address_response.get("error", "Address service Internal error")})
-
 
 
 @app.post("/create", tags=["Address"])
@@ -185,7 +187,8 @@ def customer_addresses(response: Response,
 
 
 @app.delete("/delete_address", tags=["Address"])
-def delete_address(addressId: AddressId, response: Response, auth_header=Depends(auth_handler.check_current_user_tokens)):
+def delete_address(addressId: AddressId, response: Response,
+                   auth_header=Depends(auth_handler.check_current_user_tokens)):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         user, token_dict = auth_header
         rpc.response_len_setter(response_len=1)
@@ -207,7 +210,6 @@ def delete_address(addressId: AddressId, response: Response, auth_header=Depends
             return address_response
         raise HTTPException(status_code=address_response.get("status_code", 500),
                             detail={"error": address_response.get("error", "Address service Internal error")})
-
 
 
 @app.get("/default_address", tags=["Address"])
@@ -232,8 +234,6 @@ def customer_addresses(response: Response, auth_header=Depends(auth_handler.chec
             return address_response
         raise HTTPException(status_code=address_response.get("status_code", 500),
                             detail={"error": address_response.get("error", "Address service Internal error")})
-
-
 
 
 @app.get("/warehouses", tags=["get customer warehouses"])

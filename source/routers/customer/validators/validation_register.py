@@ -334,6 +334,8 @@ class CustomerRegister(BaseModel):
         regexPattern=r"^[0-9]{2,32}$",
         isRquired=False,
     )
+    nb_name: Optional[str] = Field(alias="nbName")
+    nb_id: Optional[str] = Field(alias="nbId")
 
     @validator("customer_password")
     def validate_password(cls, verify_password):

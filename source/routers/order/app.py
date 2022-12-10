@@ -1,6 +1,6 @@
 from fastapi import FastAPI, responses
 from starlette.exceptions import HTTPException as starletteHTTPException
-
+from starlette_prometheus import metrics, PrometheusMiddleware
 from source.config import settings
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.order.controllers.checkout_step import first_step_order
@@ -36,6 +36,8 @@ app.include_router(final_step_order)
 app.include_router(get_order)
 app.include_router(edit_order)
 
+app.add_middleware(PrometheusMiddleware)
+app.add_route('/metrics', metrics)
 
 # customize exception handler of fast api
 @app.exception_handler(starletteHTTPException)

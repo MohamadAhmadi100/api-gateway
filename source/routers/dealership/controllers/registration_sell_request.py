@@ -50,7 +50,6 @@ def sell_request(data: SellRequest,
                 },
                 headers={'order': True}
             ).get("order", {})
-            print(order_response)
             if order_response.get("success"):
                 uis = Uis(
                     requestType="payment",

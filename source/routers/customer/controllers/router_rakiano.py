@@ -3,32 +3,29 @@ import logging
 import codemelli
 from fastapi import APIRouter, HTTPException, Response
 from unidecode import unidecode
-# import source.services.address.address_router as address_funcs
-# import source.services.customer.router_register as register_funcs
 from source.helpers.exception_handler import LogHandler
-# from source.helpers.rabbit_config import new_rpc
 from source.routers.customer.module.auth import AuthHandler
-from source.routers.customer.validators import validation_register
+from source.routers.customer.validators import validation_rakiano
 from source.message_broker.rabbit_server import RabbitRPC
 
-router_register = APIRouter(
-    prefix="/register",
-    tags=["register"]
+router_rakiano = APIRouter(
+    prefix="/rakiano",
+    tags=["rakiano"]
 )
 
 auth_handler = AuthHandler()
 
 
-@router_register.get("/")
+@router_rakiano.get("/")
 def register_validation_generator():
-    form = validation_register.CustomerRegister.schema().get("properties").copy()
+    form = validation_rakiano.CustomerRegister.schema().get("properties").copy()
     return {"fields": form}
 
 
-@router_register.post("/")
+@router_rakiano.post("/")
 def register(
         response: Response,
-        value: validation_register.CustomerRegister,
+        value: validation_rakiano.CustomerRegister,
 ):
     try:
         # nationalCode = unidecode(f"u{value.customer_national_id}")
@@ -41,10 +38,6 @@ def register(
         customer_national_id = unidecode(value.customer_national_id)
         customer_postal_code = unidecode(value.customer_postal_code)
         customer_tel = unidecode(value.customer_telephone)
-        if value.customer_ofogh_code:
-            customer_ofogh_code = unidecode(value.customer_ofogh_code)
-        else:
-            customer_ofogh_code = None
         if value.customer_alley:
             customer_alley = unidecode(value.customer_alley)
         else:
@@ -54,10 +47,10 @@ def register(
 
     address = {
         # "customer_name": f"{value.customer_first_name} {value.customer_last_name}",
-        "state_name": value.customer_address_province,
-        "state_id": value.customer_address_province_id,
-        "city_id": value.customer_address_city_id,
-        "city_name": value.customer_address_city,
+        "state_name": value.customer_province,
+        "state_id": value.customer_province_id,
+        "city_id": value.customer_city_id,
+        "city_name": value.customer_city,
         "region_code": value.customer_region_code,
         "street": value.customer_street,
         "alley": customer_alley,
@@ -65,9 +58,7 @@ def register(
         "unit": value.customer_unit,
         "tel": customer_tel,
         "postal_code": customer_postal_code,
-        "is_default": True,
-        "nb_name": value.nb_name,
-        "nb_id": value.nb_id
+        "is_default": True
     }
     customer_address = {
         "customer_name": f"{value.customer_first_name} {value.customer_last_name}",
@@ -82,7 +73,7 @@ def register(
         "unit": value.customer_unit,
         "tel": customer_tel,
         "postal_code": customer_postal_code,
-        "fullAddress": f"{value.customer_address_province}, {value.customer_address_city}, {value.customer_street}, {value.customer_alley}, پلاک: {value.customer_plaque}, ,واحد: {value.customer_unit}"
+        "fullAddress": f"{value.customer_province}, {value.customer_city}, {value.customer_street}, {value.customer_alley}, پلاک: {value.customer_plaque}, ,واحد: {value.customer_unit}"
     }
 
     customer_type = [value.customer_type] if value.customer_type else ["B2B"]
@@ -94,20 +85,14 @@ def register(
         "customer_password": value.customer_password,
         "customer_verify_password": value.customer_verify_password,
         "customer_address": [customer_address],
-        "customer_document_status": value.customer_document_status,
         "customer_region_code": value.customer_region_code,
         "customer_city_name": value.customer_city,
         "customer_city_id": value.customer_city_id,
         "customer_state_name": value.customer_province,
         "customer_state_id": value.customer_province_id,
-        "customer_ofogh_code": customer_ofogh_code,
         "customer_postal_code": customer_postal_code,
         "customer_type": customer_type
     }
-    # customer_result = new_rpc.publish(
-    #     message=[
-    #         register_funcs.register(data=data)]
-    # )
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         customer_result = rpc.publish(
@@ -136,10 +121,6 @@ def register(
         ]
     )
     customer_id = customer_result.get("message").get("data").get("customerID")
-    # address_result = new_rpc.publish(
-    #     message=[
-    #         address_funcs.insert_address(data=address, customerId=str(customer_id))]
-    # )
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         address_result = rpc.publish(

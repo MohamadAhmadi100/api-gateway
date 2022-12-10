@@ -4,6 +4,7 @@ from starlette.exceptions import HTTPException as starletteHTTPException
 from source.config import settings
 from source.routers.attribute.controllers.assignee_controller import router as assignee_router
 from source.routers.attribute.controllers.attribute_controller import router as attribute_router
+from starlette_prometheus import metrics, PrometheusMiddleware
 
 TAGS_META = [
     {
@@ -25,6 +26,9 @@ app = FastAPI(title="Custom Attribute",
 
 app.include_router(assignee_router)
 app.include_router(attribute_router)
+
+app.add_middleware(PrometheusMiddleware)
+app.add_route('/metrics', metrics)
 
 
 # customize exception handler of fast api
