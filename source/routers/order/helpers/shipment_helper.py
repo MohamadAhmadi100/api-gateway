@@ -61,7 +61,7 @@ def ship_address_object(user, cart):
             ).get("cart")
 
             for items in result[0]:
-                stocks.append({
+                data = {
                     "stockName": items['warehouse_label'],
                     "stockId": str(items['warehouse_id']),
                     "origin": items['warehouse_city_id'],
@@ -69,7 +69,10 @@ def ship_address_object(user, cart):
                     "weight": 0,
                     "totalPrice": cart['totalPrice'],
                     "totalItem": cart_result['total_count']
-                })
+                }
+                if address_result['result'].get('nbId') is not None:
+                    data['nbId'] = address_result['result']['nbId']
+                stocks.append(data)
             return_result = {
                 "customerId": user[0].get("user_id"),
                 "stocks": stocks,
