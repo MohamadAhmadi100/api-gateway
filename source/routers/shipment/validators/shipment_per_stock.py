@@ -13,6 +13,7 @@ class Insurance(BaseModel):
 
 class PerStock(BaseModel):
     stockId: str = Field()
+    nbId: Optional[str]
     totalPrice : Optional[int] = Field(isRequired=False)
     totalItem: int
     totalPrice: Optional[int] = Field(isRequired=False)
