@@ -32,6 +32,7 @@ def get_all_orders(response: Response,
                         "page": page,
                         "perPage": perPage,
                         "status": status,
+                        "customer_type": user.get('customer_type')[0]
                     }
                 }
             },
