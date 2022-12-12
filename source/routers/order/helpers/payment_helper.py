@@ -149,12 +149,12 @@ def charge_wallet_edit_order(order_number, user, amount):
 
 def payment_methods(customer, cart):
     payment_method = []
-    cu = customer.get('customerType')[0]
     if customer.get('customerType')[0] == "B2B":
         if cart['totalPrice'] == 0:
             pass
         elif cart['totalPrice'] > 100000000:
-            payment_method = [{"methodName": "cheque", "methodLabe": "پرداخت با چک"}]
+            payment_method = [{"methodName": "cheque", "methodLabe": "پرداخت با چک"},
+                              {"methodName": "deposit", "methodLabe": "واریز به حساب"}]
         else:
             payment_method = [
                 {"methodName": "aiBanking", "methodLabe": "پرداخت انلاین"},

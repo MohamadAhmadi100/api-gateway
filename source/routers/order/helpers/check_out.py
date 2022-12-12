@@ -20,15 +20,35 @@ def check_price_qty(auth_header, cart, response):
         if cart_result.get('products'):
             for cart_items in cart_result.get('products'):
                 if cart_items['storageId'] in allowed_storages:
-                    products.append({
-                        "systemCode": cart_items['systemCode'],
-                        "storage_id": cart_items['storageId'],
-                        "price": cart_items['price'],
-                        "count": cart_items['count'],
-                        "customer_type": auth_header[0].get('customer_type')[0],
-                        "name": cart_items.get('name')
+                    if cart_items['price'] is None:
+                        result = rpc.publish(
+                            message={
+                                "cart": {
+                                    "action": "remove_product_from_cart",
+                                    "body": {
+                                        "user_id": auth_header[0].get("user_id"),
+                                        "system_code": cart_items['systemCode'],
+                                        "storage_id": cart_items['storageId']
+                                    }
+                                }
+                            },
+                            headers={'cart': True}
+                        )
+                        edited_result.append({
+                            "name": cart_items['name'],
+                            "status": "removed",
+                            "message": f"{cart_items['name']} از سبد خرید به دلیل تغییر تایپ مشتری حذف شد"
+                        })
+                    else:
+                        products.append({
+                            "systemCode": cart_items['systemCode'],
+                            "storage_id": cart_items['storageId'],
+                            "price": cart_items['price'] if cart_items['price'] else 0,
+                            "count": cart_items['count'],
+                            "customer_type": auth_header[0].get('customer_type')[0],
+                            "name": cart_items.get('name')
 
-                    })
+                        })
                 else:
                     rpc.publish(
                         message={
