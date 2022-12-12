@@ -2,6 +2,7 @@ from fastapi import HTTPException
 from starlette.exceptions import HTTPException
 
 from source.message_broker.rabbit_server import RabbitRPC
+from source.routers.order.helpers.shipment_helper import is_pos_allowed
 from source.routers.wallet.controllers.other_controllers import reserve_wallet, complete_order_wallet
 
 
@@ -144,3 +145,41 @@ def charge_wallet_edit_order(order_number, user, amount):
             headers={'wallet': True}
         ).get("wallet", {})
         return wallet_response
+
+
+def payment_methods(customer, cart):
+    payment_method = []
+    cu = customer.get('customerType')[0]
+    if customer.get('customerType')[0] == "B2B":
+        if cart['totalPrice'] == 0:
+            pass
+        elif cart['totalPrice'] > 100000000:
+            payment_method = [{"methodName": "cheque", "methodLabe": "پرداخت با چک"}]
+        else:
+            payment_method = [
+                {"methodName": "aiBanking", "methodLabe": "پرداخت انلاین"},
+                {"methodName": "deposit", "methodLabe": "واریز به حساب"}]
+
+        # pardakht dar mahal
+        allowed_pos = is_pos_allowed(cart)
+        if allowed_pos:
+            payment_method.append({"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"})
+        if customer.get('customerActiveCredit'):
+            payment_method.append({"methodName": "credit", "methodLabe": "پرداخت اعتباری",
+                                   "message": customer.get('customerCreditAmount')})
+    elif customer.get('customerType')[0] == "B2C":
+        if cart['totalPrice'] == 0:
+            pass
+        elif cart['totalPrice'] > 100000000:
+            payment_method = [{"methodName": "cheque", "methodLabe": "پرداخت با چک"}]
+        else:
+            payment_method = [
+                {"methodName": "aiBanking", "methodLabe": "پرداخت انلاین"}]
+
+        # pardakht dar mahal
+        allowed_pos = is_pos_allowed(cart)
+        if allowed_pos:
+            payment_method.append({"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"})
+    else:
+        payment_method.append({"methodName": "aiBanking", "methodLabe": "پرداخت انلاین"})
+    return payment_method

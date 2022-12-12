@@ -7,7 +7,7 @@ from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.cart.app import get_cart
 from source.routers.customer.helpers.profile_view import get_profile_info
 from source.routers.customer.module.auth import AuthHandler
-from source.routers.order.helpers.payment_helper import get_remaining_wallet, informal_to_cart
+from source.routers.order.helpers.payment_helper import get_remaining_wallet, informal_to_cart, payment_methods
 from source.routers.order.helpers.shipment_helper import check_shipment_per_stock, is_pos_allowed
 from source.routers.order.validators.order import wallet, payment, informal
 
@@ -32,27 +32,11 @@ def get_formal_payment(response: Response, auth_header=Depends(auth_handler.chec
 
         wallet_amount = get_remaining_wallet(user)
 
-        if cart['totalPrice'] == 0:
-            payment_method = []
-        elif cart['totalPrice'] > 100000000:
-            payment_method = [{"methodName": "cheque", "methodLabe": "پرداخت با چک"},
-                              {"methodName": "deposit", "methodLabe": "واریز به حساب"}]
-        else:
-            payment_method = [
-                {"methodName": "aiBanking", "methodLabe": "پرداخت انلاین"},
-                {"methodName": "deposit", "methodLabe": "واریز به حساب"}]
-
-            # pardakht dar mahal
-        allowed_pos = is_pos_allowed(cart)
-        if allowed_pos:
-            payment_method.append({"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"})
-        if customer.get('customerActiveCredit'):
-            payment_method.append({"methodName": "credit", "methodLabe": "پرداخت اعتباری",
-                                   "message": customer.get('customerCreditAmount')})
+        payment_methods_result = payment_methods(customer,cart)
 
         response_result = {
             "walletAmount": wallet_amount,
-            "allowPaymentMethods": payment_method,
+            "allowPaymentMethods": payment_methods_result,
         }
         response.status_code = 200
         return {"success": True, "message": response_result, "cart": cart}
