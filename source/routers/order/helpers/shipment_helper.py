@@ -185,7 +185,7 @@ def check_shipment_per_stock(cart):
 
 def is_pos_allowed(cart):
     success = False
-    allowed_pos_methods = ['aasood', 'courier']
+    allowed_pos_methods = ['aasood', 'courier', "tehran-courier"]
     for key, value in cart['shipment'].items():
         if value['shippingMethod'] in allowed_pos_methods:
             success = True
