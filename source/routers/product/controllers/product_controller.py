@@ -726,6 +726,7 @@ def get_csv(
 @router.get("/get_data_price_list_pic/", tags=['Product'])
 def get_data_price_list_pic(
         response: Response,
+        system_code: str,
         customer_type: str = Query("B2B"),
         page: int = Query(None),
         per_page: int = Query(None),
@@ -738,6 +739,7 @@ def get_data_price_list_pic(
                 "product": {
                     "action": "get_data_price_list_pic",
                     "body": {
+                        "system_code": system_code,
                         "customer_type": customer_type,
                         "page": page,
                         "per_page": per_page,
