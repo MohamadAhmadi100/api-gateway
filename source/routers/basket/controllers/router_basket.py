@@ -1,11 +1,12 @@
 import json
-from fastapi import APIRouter, Response, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Response, Depends, HTTPException, status, Query, Header
 from source.routers.customer.module.auth import AuthHandler
 from typing import Optional, List
 from source.routers.basket.validators.basket import SortType, SortName, AddToCart
 from source.message_broker.rabbit_server import RabbitRPC
 from datetime import datetime
 from source.routers.basket.modules.date_convertor import jalali_datetime
+from source.routers.product.modules.allowed_storages import get_allowed_storages
 
 router_basket = APIRouter(
     prefix="/basket",
@@ -21,10 +22,15 @@ def get_baskets(
         perPage: Optional[int] = None,
         sortType: Optional[SortType] = None,
         sortName: Optional[SortName] = None,
-        storageId: Optional[List[str]] = Query(None),
         searchPhrase: Optional[str] = Query(None, min_length=3, max_length=50, regex="^[\u0600-\u06FF\s0-9۰-۹]{2,32}$"),
-        # auth_header=Depends(auth_handler.check_current_user_tokens)
+        access: Optional[str] = Header(None),
+        refresh: Optional[str] = Header(None)
 ):
+    if access or refresh:
+        user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
+        allowed_storages = get_allowed_storages(user_data.get("user_id"))
+        storageId = allowed_storages[0] if type(allowed_storages) == list and len(allowed_storages) else "1"
+
     null_filters = {
         "page": page,
         "perPage": perPage,
