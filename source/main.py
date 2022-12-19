@@ -5,8 +5,10 @@ import logging
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from starlette.staticfiles import StaticFiles
+from fastapi.responses import PlainTextResponse
 
 from config import settings
+from source.helpers.monitoring import Monitoring
 from source.routers.address.app import app as address_app
 from source.routers.attribute.app import app as attribute_app
 from source.routers.cart.app import app as cart_app
@@ -24,8 +26,6 @@ from source.routers.shipment.app import app as shipment_app
 from source.routers.uis.app import app as uis_app
 from source.routers.wallet.app import app as wallet_app
 from source.routers.basket.app import app as basket_app
-from starlette_prometheus import metrics, PrometheusMiddleware
-
 
 app = FastAPI(title="API Gateway",
               description="Backend for frontend aka. API Gateway!",
@@ -33,8 +33,15 @@ app = FastAPI(title="API Gateway",
               docs_url="/docs/" if settings.DEBUG_MODE else None,
               redoc_url="/redoc/" if settings.DEBUG_MODE else None
               )
-app.add_middleware(PrometheusMiddleware)
-app.add_route('/metrics', metrics)
+
+app.add_middleware(Monitoring)
+
+
+@app.get("/metrics/{path:path}", response_class=PlainTextResponse)
+def metrics(path):
+    return Monitoring.metrics(path)
+
+
 # ----------------------------------------- Mount all services here -------------------------------------------------- #
 
 app.mount("/cart/api/v1", cart_app)
@@ -107,4 +114,3 @@ def main():
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host=settings.UVICORN_HOST, port=settings.UVICORN_PORT, reload=True, workers=12)
-
