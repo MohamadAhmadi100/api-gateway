@@ -8,6 +8,7 @@ class StoragesModel(BaseModel):
     storage_id: str = Field(..., alias="storageId")
     regular: Optional[int] = Field(None)
     informal_price: Optional[dict] = Field(None, alias="informalPrice")
+    credit: Optional[dict] = None
     special: Optional[int] = None
     special_from_date: Optional[str] = Field(None, alias='specialFromDate')
     special_to_date: Optional[str] = Field(None, alias='specialToDate')
@@ -47,6 +48,24 @@ class StoragesModel(BaseModel):
             raise HTTPException(status_code=422, detail={
                 "error": "informal price/percentage for type {} must be int".format(value.get("type"))})
         return value
+
+    @validator('credit')
+    def credit_validator(cls, value):
+        if not isinstance(value, dict):
+            raise HTTPException(status_code=422, detail={"error": "credit must be dict"})
+        elif value.get("type") not in ['fixed', "daily"]:
+            raise HTTPException(status_code=422,
+                                detail={"error": "credit type must be fixed or daily"})
+        elif value.get("regular") and value.get("percent"):
+            raise HTTPException(status_code=422,
+                                detail={"error": "credit regular and percent must not define together"})
+
+        return {
+            "percent": value.get("percent", 0),
+            "regular": value.get("regular", 0),
+            "days": value.get("days"),
+            "type": value.get("type")
+        }
 
     @validator("special_from_date")
     def special_from_date_validator(cls, value):
@@ -142,7 +161,13 @@ class Price(BaseModel):
                                 {
                                     "storageId": "0",
                                     "regular": 30000000,
-                                    'informal': 33000000,
+                                    'informal': {},
+                                    'credit': {
+                                        "type": 'fixed / daily',
+                                        "regular": 1000,  # should be null if percent is used and vice versa
+                                        "percent": 5,
+                                        "days": 3
+                                    },
                                     "special": 22000000,
                                     "specialFromDate": "2020-01-01",
                                     "specialToDate": "2020-01-01"
@@ -150,7 +175,6 @@ class Price(BaseModel):
                                 {
                                     "storageId": "1",
                                     "regular": 60000000,
-                                    'informal': 33000000,
                                     "special": 42000000,
                                     "specialFromDate": "2020-01-01",
                                     "specialToDate": "2020-01-01"
@@ -174,6 +198,7 @@ class UpdatePrice(BaseModel):
     storage_id: str = Field(..., alias='storageId')
     regular: int
     informal_price: Optional[dict] = Field(None, alias="informalPrice")
+    credit: Optional[dict] = None
     special: Optional[int] = None
     special_from_date: Optional[str] = Field(None, alias='specialFromDate')
     special_to_date: Optional[str] = Field(None, alias='specialToDate')
@@ -261,6 +286,18 @@ class UpdatePrice(BaseModel):
             raise HTTPException(status_code=422, detail={"error": "informal percentage must be int"})
         return value
 
+    @validator('credit')
+    def credit_validator(cls, value):
+        if not isinstance(value, dict):
+            raise HTTPException(status_code=422, detail={"error": "credit must be dict"})
+        elif value.get("type") not in ['fixed', "daily"]:
+            raise HTTPException(status_code=422,
+                                detail={"error": "credit type must be fixed or daily"})
+        elif value.get("regular") and value.get("percent"):
+            raise HTTPException(status_code=422,
+                                detail={"error": "credit regular and percent must not define together"})
+        return value
+
     class Config:
         schema_extra = {
             "example": {
@@ -272,6 +309,12 @@ class UpdatePrice(BaseModel):
                 "informalPrice": {
                     "type": "fixed",
                     "price": 1000000000,
+                },
+                "credit": {
+                    "type": 'fixed / daily',
+                    "regular": 1000,
+                    "percent": 10,
+                    "days": 5
                 },
                 "specialFromDate": "2019-01-01 00:00:00",
                 "specialToDate": "2019-01-01 00:00:00"
