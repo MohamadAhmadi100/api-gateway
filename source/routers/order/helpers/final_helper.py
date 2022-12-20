@@ -90,9 +90,12 @@ def handle_order_bank_callback(result, response):
                 )
 
                 # response.status_code = 200
-                return RedirectResponse(
-                    f"https://aasood.com/payment-result/order/{result.get('service_id')}")
-
+                if order_get_response['order_object']['customer']['type'] == "B2B":
+                    return RedirectResponse(
+                        f"https://aasood.com/payment-result/order/{result.get('service_id')}")
+                elif order_get_response['order_object']['customer']['type'] == "B2C":
+                    return RedirectResponse(
+                        f"https://rakiano.com/payment-result/order/{result.get('service_id')}")
             else:
                 rpc.response_len_setter(response_len=1)
                 rpc.publish(
@@ -149,11 +152,20 @@ def handle_order_bank_callback(result, response):
                     headers={"cart": True}
                 )
                 response.status_code = 200
+
+                if order_get_response['order_object']['customer']['type'] == "B2B":
+                    return RedirectResponse(
+                        f"https://aasood.com/payment-result/order/{result.get('service_id')}")
+                elif order_get_response['order_object']['customer']['type'] == "B2C":
+                    return RedirectResponse(
+                        f"https://rakiano.com/payment-result/order/{result.get('service_id')}")
+        else:
+            if order_get_response['order_object']['customer']['type'] == "B2B":
                 return RedirectResponse(
                     f"https://aasood.com/payment-result/order/{result.get('service_id')}")
-        else:
-            return RedirectResponse(
-                f"https://aasood.com/payment-result/order/{result.get('service_id')}")
+            elif order_get_response['order_object']['customer']['type'] == "B2C":
+                return RedirectResponse(
+                    f"https://rakiano.com/payment-result/order/{result.get('service_id')}")
 
 
 def reserve_order_items(order_object):
