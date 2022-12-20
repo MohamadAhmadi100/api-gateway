@@ -58,8 +58,6 @@ app.mount("/payment/api/v1", payment_app)
 
 app.mount("/kosar/api/v1", kosar_app)
 
-app.mount("/coupon", coupon_app)
-
 app.mount("/gallery/api/v1", gallery_app)
 
 app.mount("/gallery_files/", StaticFiles(directory=settings.GALLERY_DIR), name="gallery_files")
@@ -79,6 +77,8 @@ app.mount("/credit/api/v1", credit_app)
 app.mount("/uis/api/v1", uis_app)
 
 app.mount("/basket/api/v1", basket_app)
+
+app.mount("/coupon/api/v1", coupon_app)
 
 
 # ----------------------------------------- Start logging features  -------------------------------------------------- #

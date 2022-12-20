@@ -1,11 +1,8 @@
-from fastapi import Response, Depends, HTTPException
-from fastapi import status, APIRouter
+from fastapi import Response, Depends, HTTPException, status, APIRouter
 
-# import source.services.customer.router_auth as ra
-# from source.helpers.rabbit_config import new_rpc
+from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.customer.validators import validation_auth
-from source.message_broker.rabbit_server import RabbitRPC
 
 router_auth = APIRouter(
     prefix="/auth",
