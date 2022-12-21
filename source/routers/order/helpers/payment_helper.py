@@ -149,24 +149,30 @@ def charge_wallet_edit_order(order_number, user, amount):
 
 def payment_methods(customer, cart):
     payment_method = []
+    allowed_pos = is_pos_allowed(cart)
+    # aasood payment methods
     if customer.get('customerType')[0] == "B2B":
         if cart['totalPrice'] == 0:
             pass
         elif cart['totalPrice'] > 100000000:
             payment_method = [{"methodName": "cheque", "methodLabe": "پرداخت با چک"},
                               {"methodName": "deposit", "methodLabe": "واریز به حساب"}]
+            # pardakht dar mahal
+            if allowed_pos:
+                payment_method.append({"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"})
         else:
             payment_method = [
                 {"methodName": "aiBanking", "methodLabe": "پرداخت انلاین"},
                 {"methodName": "deposit", "methodLabe": "واریز به حساب"}]
 
-        # pardakht dar mahal
-        allowed_pos = is_pos_allowed(cart)
-        if allowed_pos:
-            payment_method.append({"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"})
-        if customer.get('customerActiveCredit'):
-            payment_method.append({"methodName": "credit", "methodLabe": "پرداخت اعتباری",
-                                   "message": customer.get('customerCreditAmount')})
+            # pardakht dar mahal
+            if allowed_pos:
+                payment_method.append({"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"})
+            # pardakht etebary
+            if customer.get('customerActiveCredit'):
+                payment_method.append({"methodName": "credit", "methodLabe": "پرداخت اعتباری",
+                                       "message": customer.get('customerCreditAmount')})
+    # rakiano payment method
     elif customer.get('customerType')[0] == "B2C":
         if cart['totalPrice'] == 0:
             pass
@@ -175,11 +181,6 @@ def payment_methods(customer, cart):
         else:
             payment_method = [
                 {"methodName": "aiBanking", "methodLabe": "پرداخت انلاین"}]
-
-        # pardakht dar mahal
-        allowed_pos = is_pos_allowed(cart)
-        if allowed_pos:
-            payment_method.append({"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"})
     else:
         payment_method.append({"methodName": "aiBanking", "methodLabe": "پرداخت انلاین"})
     return payment_method
