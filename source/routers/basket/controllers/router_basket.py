@@ -149,7 +149,7 @@ def add_or_edit_cart(response: Response,
             status_code=product_result.get("status_code", 500),
             detail={"error": product_result.get("error", "Something went wrong")}
         )
-    product_data = product_result.get("message", {})[0]
+    product_data = product_result.get("message", {}).get("data", [])[0]
     body = {
         "user_id": user_data.get('user_id'),
         "basket_id": product_data.get("basketId"),
