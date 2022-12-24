@@ -24,7 +24,9 @@ class RequestsDetail(BaseModel):
     date_to: Optional[str] = Field(..., alias="dateTo")
     page: int = Field(..., alias="page")
     per_page: int = Field(..., alias="perPage")
-    accepted: Optional[bool] = Field(..., alias="accepted")
+    amount_from: Optional[int] = Field(alias="amountFrom")
+    amount_to: Optional[int] = Field(alias="amountTo")
+    accepted: Optional[str] = Field(..., alias="accepted")
     search_box: Optional[str] = Field(..., alias="searchBox")
 
 
