@@ -18,8 +18,8 @@ class Attribute(BaseModel):
 
 
 class Product(BaseModel):
-    system_code: str = Field(alias="systemCode")
-    storage_id: str = Field(alias="storageId")
+    systemCode: str = Field(alias="systemCode")
+    storageId: str = Field(alias="storageId")
     price: int
     count: int
     model: str
@@ -28,8 +28,8 @@ class Product(BaseModel):
     color: dict
     guarantee: dict
     seller: dict
-    main_category: dict = Field(alias="mainCategory")
-    sub_category: dict = Field(alias="subCategory")
+    mainCategory: dict = Field(alias="mainCategory")
+    subCategory: dict = Field(alias="subCategory")
     attributes: Union[List[Attribute], list]
 
 
