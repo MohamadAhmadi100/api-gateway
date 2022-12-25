@@ -62,7 +62,8 @@ def handle_order_bank_callback(result, response):
                                     order_get_response['order_object']['customer']['fullName'].split(" ")[0],
                                 "last_name":
                                     order_get_response['order_object']['customer']['fullName'].split(" ")[1],
-                                "order_number": order_get_response['order_object']['orderNumber']
+                                "order_number": order_get_response['order_object']['orderNumber'],
+                                "customer_type": order_get_response['order_object']['customer']['type']
                             }
                         }
                     },
@@ -108,7 +109,8 @@ def handle_order_bank_callback(result, response):
                                     order_get_response['order_object']['customer']['fullName'].split(" ")[0],
                                 "last_name":
                                     order_get_response['order_object']['customer']['fullName'].split(" ")[1],
-                                "order_number": order_get_response['order_object']['orderNumber']
+                                "order_number": order_get_response['order_object']['orderNumber'],
+                                "customer_type": order_get_response['order_object']['customer']['type']
                             }
                         }
                     },
