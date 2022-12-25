@@ -17,6 +17,7 @@ def sell_request(data: SellRequest,
                  response: Response,
                  auth_header=Depends(auth_handler.check_current_user_tokens)):
     user, token = auth_header
+    payment_type = data.dict().get("payment_type")
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         dealership_response = rpc.publish(
@@ -44,13 +45,14 @@ def sell_request(data: SellRequest,
                             "customer_detail": get_profile_info(data.dict().get("customer")),
                             "products": data.dict().get("products"),
                             "device_type": data.dict().get("device_type"),
-                            "wage": dealership_response.get("wage")
+                            "wage": dealership_response.get("wage"),
+                            "payment_type": payment_type
                         }
                     }
                 },
                 headers={'order': True}
             ).get("order", {})
-            if order_response.get("success"):
+            if order_response.get("success") and payment_type == "aiBanking":
                 uis = Uis(
                     requestType="payment",
                     serviceData={"amount": order_response.get("bank_response").get("amount") * 10,
@@ -75,6 +77,10 @@ def sell_request(data: SellRequest,
                     response=response
                 )
                 return uis_response
+
+
+            elif order_response.get("success") and payment_type == "cashondelivery":
+                return order_response
             return order_response
         return dealership_response
 # {
