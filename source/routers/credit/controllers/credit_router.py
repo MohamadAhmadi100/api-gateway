@@ -148,7 +148,7 @@ def get_credit_return_list(
 
 
 @credit.post("/get_credit_requests", tags=["customer_side"])
-def get_credit_requests(response: Response, data: RequesamounttsDetail,
+def get_credit_requests(response: Response, data: RequestsDetail,
                         auth_header=Depends(auth_handler.check_current_user_tokens)):
     user, auth = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
