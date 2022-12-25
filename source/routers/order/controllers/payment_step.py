@@ -32,7 +32,7 @@ def get_formal_payment(response: Response, auth_header=Depends(auth_handler.chec
 
         wallet_amount = get_remaining_wallet(user)
 
-        payment_methods_result = payment_methods(customer,cart)
+        payment_methods_result = payment_methods(customer, cart)
 
         response_result = {
             "walletAmount": wallet_amount,

@@ -166,6 +166,8 @@ def get_credit_requests(response: Response, data: RequestsDetail,
                         "date_to": requests_details.get("date_to"),
                         "page": requests_details.get("page"),
                         "per_page": requests_details.get("per_page"),
+                        "amount_from": requests_details.get("amountFrom"),
+                        "amount_to": requests_details.get("amountTo"),
                         "accepted": requests_details.get("accepted"),
                         "search_box": requests_details.get("search_box"),
                     }

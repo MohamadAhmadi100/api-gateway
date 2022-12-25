@@ -62,7 +62,8 @@ def cancel_order(response: Response,
                                     order_object['customer']['fullName'].split(" ")[0],
                                 "last_name":
                                     order_object['customer']['fullName'].split(" ")[1],
-                                "order_number": order_object['orderNumber']
+                                "order_number": order_object['orderNumber'],
+                                "customer_type": order_object['customer']['type']
                             }
                         }
                     },
