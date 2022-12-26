@@ -1,12 +1,7 @@
 from fastapi import Depends, APIRouter, Query
-
-from source.helpers.case_converter import convert_case
 from source.message_broker.rabbit_server import RabbitRPC
-from source.routers.customer.helpers.profile_view import get_profile_info
 from source.routers.customer.module.auth import AuthHandler
-from source.routers.dealership.validators.register_sell_request import SellRequest
-from source.routers.uis.app import create_link
-from source.routers.uis.validators.uis import Uis
+
 
 router = APIRouter()
 auth_handler = AuthHandler()
