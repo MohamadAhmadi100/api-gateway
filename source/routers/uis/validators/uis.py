@@ -14,7 +14,7 @@ class Uis(BaseModel):
 
     @validator('request_type')
     def check_request_type(cls, request_type):
-        request_types = ["payment", "coupon"]
+        request_types = ["offline", "dealership", "coupon"]
         if request_type.lower() not in request_types:
             raise HTTPException(status_code=422, detail={"error": "request_type is not acceptable!"})
         return request_type
