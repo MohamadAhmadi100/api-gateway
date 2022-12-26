@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from typing import Optional
 
 import jdatetime
@@ -7,7 +8,7 @@ from starlette_prometheus import metrics, PrometheusMiddleware
 from source.config import settings
 from source.helpers.case_converter import convert_case
 from source.message_broker.rabbit_server import RabbitRPC
-from source.routers.cart.validators.cart import AddCart
+from source.routers.cart.validators.cart import AddCart, AddCreditCart
 from source.routers.customer.module.auth import AuthHandler
 
 TAGS = [
@@ -26,9 +27,6 @@ app = FastAPI(
     redoc_url="/redoc/" if settings.DEBUG_MODE else None,
     debug=settings.DEBUG_MODE
 )
-
-app.add_middleware(PrometheusMiddleware)
-app.add_route('/metrics', metrics)
 
 
 # customize exception handler of fast api
@@ -122,6 +120,11 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
                         'storage_id') == item.storage_id:
                     now_count = cart_product.get("count", 0)
                     break
+            for cart_credit in user_cart.get("credits", []):
+                if cart_credit.get("system_code") == item.system_code and cart_credit.get(
+                        'storage_id') == item.storage_id:
+                    now_count += cart_credit.get("count", 0)
+                    break
 
             allowed_count = (quantity.get("quantity", 0) - quantity.get('reserved', 0))
             if allowed_count >= (now_count + item.count):
@@ -142,6 +145,188 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
                 message={
                     "cart": {
                         "action": "add_and_edit_product_in_cart",
+                        "body": final_result
+                    }
+                },
+                headers={'cart': True}
+            )
+            cart_result = cart_result.get("cart", {})
+            if not cart_result.get("success"):
+                raise HTTPException(status_code=product_result.get("status_code", 500),
+                                    detail={"error": product_result.get("error", "Something went wrong")})
+            else:
+                response.status_code = cart_result.get("status_code", 200)
+                return {"message": convert_case(cart_result.get("message"), "camel")}
+
+
+@app.put("/credit_cart/", tags=["Cart"])
+def add_and_edit_credit_product(
+        item: AddCreditCart,
+        response: Response,
+        auth_header=Depends(auth_handler.check_current_user_tokens)
+) -> dict:
+    """
+    add and edit credit items in cart
+    edit is based on product count and warehouse id
+    """
+    # get user from token
+    user, token_dict = auth_header
+    customer_type = user.get("customer_type")[0]
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=4)
+        result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_product_by_system_code",
+                    "body": {
+                        "system_code": item.system_code,
+                        "lang": "fa_ir"
+                    }
+                },
+                "customer": {
+                    "action": "check_is_registered",
+                    "body": {
+                        "customer_phone_number": user.get("phone_number"),
+                    }
+                },
+                "order": {
+                    "action": "customer_products_report",
+                    "body": {
+                        "customer_id": user.get("user_id")
+                    }
+                },
+                "credit": {
+                    "action": "get_credit_and_expire_date",
+                    "body": {
+                        "customer_id": str(user.get("user_id"))
+                    }
+                }
+            },
+            headers={'product': True, "customer": True, "order": True, "credit": True},
+        )
+        credit_result = result.get("credit", {})
+        product_result = result.get("product", {})
+        customer_result = result.get("customer", {})
+        order_result = result.get("order", {})
+        if not product_result.get("success") and customer_result.get("success") and credit_result.get("success"):
+            raise HTTPException(status_code=product_result.get("status_code", 500),
+                                detail={"error": product_result.get("error", "Something went wrong")})
+        elif not customer_result.get("message", {}).get('customerIsActive'):
+            raise HTTPException(status_code=403, detail={"error": "حساب کاربری شما تایید نشده است"})
+        else:
+            credit = credit_result.get("message")
+            if jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") > credit.get(
+                    "expireDate"):
+                raise HTTPException(status_code=403, detail={"error": "بازه ی خرید اعتباری شما به پایان رسیده است"})
+            ordered_count = [i.get("count") for i in order_result.get('customer_detail') if
+                             i.get('system_code') == item.system_code and i.get("storage_id") == item.storage_id]
+            ordered_count = ordered_count[0] if ordered_count else 0
+
+            product_result = product_result.get("message").copy()
+            final_result = dict()
+            final_result["days"] = item.days
+            final_result["user_info"] = {"user_id": user.get("user_id")}
+            cart_product = product_result.copy()
+            del cart_product['visible_in_site']
+            del cart_product['step']
+            del cart_product['warehouse_details']
+            final_result["product"] = cart_product
+
+            # quantity actions
+
+            quantity = product_result.get('warehouse_details', {}).get(customer_type, {}).get("storages", {}).get(
+                item.storage_id, {})
+
+            rpc.response_len_setter(response_len=1)
+            user_cart = rpc.publish(
+                message={
+                    "cart": {
+                        "action": "get_cart",
+                        "body": {
+                            "user_id": user.get("user_id")
+                        }
+                    }
+                },
+                headers={'cart': True}
+            ).get('cart', {}).get('message', {})
+            now_count = 0
+            for cart_product in user_cart.get("products", []):
+                if cart_product.get("system_code") == item.system_code and cart_product.get(
+                        'storage_id') == item.storage_id:
+                    now_count += cart_product.get("count", 0)
+                    break
+            for cart_credit in user_cart.get("credits", []):
+                if cart_credit.get("system_code") == item.system_code and cart_credit.get(
+                        'storage_id') == item.storage_id:
+                    now_count += cart_credit.get("count", 0)
+                    break
+
+            cart_credit_price = rpc.publish(
+                message={
+                    "product": {
+                        "action": "get_products_credit_price_by_system_codes",
+                        "body": {
+                            "product_list": user_cart.get("credits", []),
+                            "lang": "fa_ir",
+                            "customer_type": customer_type
+                        }
+                    }},
+                headers={'product': True}
+            ).get('product', {}).get('message', 0)
+
+            product_storage = product_result.get("warehouse_details", {}).get(customer_type, {}).get(
+                "storages", {}).get(item.storage_id)
+            product_price = product_storage.get("regular", 0)
+            product_credit = product_storage.get("credit")
+            product_credit_days = product_credit.get("days", 0)
+            expire_plus_now = (jdatetime.datetime.now() + jdatetime.timedelta(days=product_credit_days))
+            if credit.get("expireDate") < expire_plus_now.strftime("%Y-%m-%d %H:%M:%S"):
+                if product_credit.get("type") == "fixed":
+                    raise HTTPException(
+                        status_code=403,
+                        detail={
+                            "error":
+                                "اجازه ی انتخاب کالای اعتبار ثابت با زمان بیشتر از اعتبار خود را ندارید"}
+                    )
+                elif product_credit.get("type") == "daily":
+                    if credit.get("expireDate") - datetime.now().strftime("%Y-%m-%d %H:%M:%S") >= item.days:
+                        raise HTTPException(
+                            status_code=403,
+                            detail={
+                                "error":
+                                    "اعتبار شما برای مدت زمان انتخابی کافی نیست"}
+                        )
+
+            if product_credit.get("type") == "fixed":
+                credit_price = product_price + (
+                        product_credit.get("percent", 0) * product_price
+                ) + product_credit.get("regular", 0)
+            elif product_credit.get("type") == "daily":
+                credit_price = product_price + (
+                        (product_credit.get("percent", 0) * product_price) + product_credit.get("regular", 0)
+                ) * item.days
+            if credit.get("creditAmount") - cart_credit_price < credit_price:
+                raise HTTPException(status_code=403,
+                                    detail={"error": "قیمت کالا ی انتخابی بیشتر از سقف قیمت اعتبار است"})
+            allowed_count = (quantity.get("quantity", 0) - quantity.get('reserved', 0))
+            if allowed_count >= (now_count + item.count):
+                final_result["count"] = item.count
+                final_result["storage_id"] = item.storage_id
+            else:
+                raise HTTPException(status_code=400,
+                                    detail={"error": "موجودی این محصول کافی نیست"})
+
+            if (now_count + item.count) < quantity.get('min_qty') or (
+                    now_count + item.count + ordered_count) > quantity.get('max_qty'):
+                response.status_code = 400
+                raise HTTPException(status_code=400,
+                                    detail={"error": "مقدار وارد شده بیش از حد مجاز است"})
+
+            rpc.response_len_setter(response_len=1)
+            cart_result = rpc.publish(
+                message={
+                    "cart": {
+                        "action": "add_and_edit_credit_in_cart",
                         "body": final_result
                     }
                 },
@@ -254,7 +439,22 @@ def get_cart(response: Response,
                         if type(item.get("optional_products")) == list and len(item.get("optional_products")):
                             for product in item.get("optional_products"):
                                 base_price += product.get("price") * product.get("count")
+
             cart_result["message"]["base_price"] = base_price
+            cart_credit_price = 0
+            if cart_result.get("message").get("credits"):
+                cart_credit_price = rpc.publish(
+                    message={
+                        "product": {
+                            "action": "get_products_credit_price_by_system_codes",
+                            "body": {
+                                "product_list": cart_result.get("message").get("credits", []),
+                                "lang": "fa_ir",
+                                "customer_type": customer_type
+                            }
+                        }},
+                    headers={'product': True}
+                ).get('product', {}).get('message', 0)
 
             total_price = base_price
             if cart_result["message"].get("shipment"):
@@ -265,9 +465,11 @@ def get_cart(response: Response,
             if cart_result["message"].get("payment") and cart_result["message"].get("payment").get("walletAmount"):
                 total_price -= cart_result["message"]["payment"]['walletAmount']
 
+            base_price += cart_credit_price
             cart_result['message']['grand_price'] = grand_price
             cart_result["message"]["total_price"] = int(total_price)
             cart_result['message']['profit'] = profit
+            cart_result['message']['credit'] = cart_credit_price
             response.status_code = cart_result.get("status_code", 200)
             return convert_case(cart_result.get("message"), 'camel')
 
