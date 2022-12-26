@@ -8,10 +8,11 @@ auth_handler = AuthHandler()
 
 
 @router.put("/complete_dealership_sell_request", tags=["Complete payment"])
-def sell_request(order_id: str = Query(..., alias="orderId"),
+def sell_request(order_id: int = Query(..., alias="orderId"),
                  auth_header=Depends(auth_handler.check_current_user_tokens)):
     user, token = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
         get_order_response = rpc.publish(
             message={
                 "order": {
