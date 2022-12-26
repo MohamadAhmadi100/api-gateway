@@ -6,6 +6,7 @@ from source.routers.dealership.controllers.get_warehouse import router as get_ap
 from source.routers.dealership.controllers.add_imei import router as add_imei
 from source.routers.dealership.controllers.get_dealership import router as get_inventory
 from source.routers.dealership.controllers.registration_sell_request import router as sell
+from source.routers.dealership.controllers.cash_payment_callback import router as cash_payment
 from starlette_prometheus import metrics, PrometheusMiddleware
 
 
@@ -36,6 +37,7 @@ app.include_router(get_api)
 app.include_router(add_imei)
 app.include_router(get_inventory)
 app.include_router(sell)
+app.include_router(cash_payment)
 
 app.add_middleware(PrometheusMiddleware)
 app.add_route('/metrics', metrics)

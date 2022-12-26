@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from typing import List, Union, Dict
+from fastapi import HTTPException
 
 class Customer(BaseModel):
     user_id: int = Field(alias="customerId")
@@ -26,6 +27,13 @@ class SellRequest(BaseModel):
     customer: Union[Customer]
     products: Union[List[Product], list]
     device_type: str = Field(alias="deviceType")
+    payment_type: str = Field(alias="paymentType")
+
+    @validator('payment_type')
+    def validate_payment_type(cls, payment_type):
+        if payment_type not in ['aiBanking', 'cashondelivery']:
+            raise HTTPException(status_code=422, detail={"error": "نوع متد پرداخت معتبر نیست"})
+        return payment_type
 
 
 
