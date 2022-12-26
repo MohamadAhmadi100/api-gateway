@@ -26,8 +26,11 @@ class Monitoring(BaseHTTPMiddleware):
     @staticmethod
     def metrics(path):
         response = ""
+        excluded_paths = ['docs/', "docs", "openapi.json", 'openapi.json/']
         for k, v in RESPONSE_TIME.items():
-            if k.startswith("/" + path):
+            if k.startswith("/" + path) and len(set([k.endswith(i) for i in excluded_paths])) != 2 and (
+                    k.find("metrics") == -1
+            ):
                 response += Monitoring.metric_formatter("response_time", v.get("method"), k, v.get("value")) + "\n"
 
         return response
