@@ -37,7 +37,11 @@ def create_link(data: Uis, response: Response):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         request_service = {
-            "payment": {
+            "dealership": {
+                "func": get_url,
+                "data": ["amount", "service_id"]
+            },
+            "offline": {
                 "func": get_url,
                 "data": ["amount", "service_id"]
             }

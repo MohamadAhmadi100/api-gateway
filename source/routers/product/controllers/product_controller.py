@@ -1,3 +1,4 @@
+import datetime
 from typing import Optional, List
 
 from fastapi import HTTPException, APIRouter, Response, Path, Body, Query, Header
@@ -458,10 +459,15 @@ def get_product_page(
     Get product page
     """
     allowed_storages = []
+    credit = False
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", ["B2B"])[0]
         allowed_storages = get_allowed_storages(user_data.get("user_id"))
+        credit_expire_date = user_data.get("sub", {}).get("credit_expire_date")
+        credit = user_data.get("sub", {}).get("credit", False)
+        if credit and datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") > credit_expire_date:
+            credit = True
 
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
@@ -473,7 +479,8 @@ def get_product_page(
                         "system_code": system_code,
                         "user_allowed_storages": allowed_storages,
                         "customer_type": customer_type,
-                        "lang": lang
+                        "lang": lang,
+                        "credit": credit
                     }
                 }
             },

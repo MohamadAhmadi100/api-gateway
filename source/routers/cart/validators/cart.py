@@ -50,3 +50,24 @@ class AddCart(BaseCart):
                 "count": 1
             }
         }
+
+class AddCreditCart(AddCart):
+    days: int = Field(..., alias="days")
+
+    @validator("days")
+    def days_validator(cls, value):
+        if not isinstance(int(value), int):
+            raise HTTPException(status_code=400, detail="days must be a int")
+        if value < 0:
+            raise HTTPException(status_code=400, detail="days must be greater than 0")
+        return int(value)
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "systemCode": "100101002001",
+                "storageId": "1",
+                "count": 1,
+                "days": 1
+            }
+        }

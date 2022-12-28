@@ -54,7 +54,7 @@ def sell_request(data: SellRequest,
             ).get("order", {})
             if order_response.get("success") and payment_type == "aiBanking":
                 uis = Uis(
-                    requestType="payment",
+                    requestType="dealership",
                     serviceData={"amount": order_response.get("bank_response").get("amount") * 10,
                                  "customerId": order_response.get("bank_response").get("customerId"),
                                  "serviceName": order_response.get("bank_response").get("serviceName"),
