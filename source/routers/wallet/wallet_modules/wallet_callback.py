@@ -19,9 +19,9 @@ def callback_payment(result, response: Response):
             },
             headers={"wallet": True}
         ).get("wallet", {})
-        # customer_type = service_data.get('message', {}).get('customer_type')
-        # if customer_type == "B2B":
+        customer_type = service_data.get('message', {}).get('customer_type')
+        if customer_type == "B2B":
+            return RedirectResponse(
+                f"https://aasood.com/payment-result/wallet/{service_data.get('message', {}).get('service_id')}")
         return RedirectResponse(
-            f"https://aasood.com/payment-result/wallet/{service_data.get('message', {}).get('service_id')}")
-        # return RedirectResponse(
-        #     f"https://rakiano.com/payment-result/wallet/{service_data.get('message', {}).get('service_id')}")
+            f"https://rakiano.com/payment-result/wallet/{service_data.get('message', {}).get('service_id')}")
