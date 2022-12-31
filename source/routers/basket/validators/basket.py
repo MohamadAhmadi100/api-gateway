@@ -70,6 +70,7 @@ class Product(BaseModel):
 class Action(str, Enum):
     add = "add"
     edit = "edit"
+    delete = "delete"
 
 
 class AddToCart(BaseCart):

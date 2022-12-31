@@ -154,6 +154,7 @@ def add_or_edit_cart(response: Response,
         "user_id": user_data.get('user_id'),
         "basket_id": product_data.get("basketId"),
         "basket_data": {
+            "basket_name": basket_result.get("data").get("basketName"),
             "mandatory_products": product_data.get("mandatoryProducts"),
             "selective_products": product_data.get("selectiveProducts"),
             "optional_products": product_data.get("optionalProducts")
