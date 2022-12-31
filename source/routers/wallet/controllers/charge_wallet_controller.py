@@ -25,7 +25,7 @@ def charge_wallet(
                     "action": "create_transaction",
                     "body": {
                         "data": {
-                            "customer_type": sub_data.get("customer_type"),
+                            "customer_type": sub_data.get("customer_type")[0],
                             "device_type": charge_data.device_type,
                             "customer_id": charge_data.customer_id,
                             "amount": charge_data.amount,
