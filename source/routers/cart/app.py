@@ -430,6 +430,7 @@ def get_cart(response: Response,
             new_baskets = []
             if baskets and type(baskets) == dict:
                 for key, basket in baskets.items():
+                    basket_name = ""
                     if type(basket) == list:
                         for item in basket:
                             single_basket_price = 0
@@ -453,7 +454,7 @@ def get_cart(response: Response,
                                         "count": len(basket),
                                         "baskets": basket}]
             cart_result["message"]["baskets"] = new_baskets
-
+            print(new_baskets)
             cart_result["message"]["base_price"] = base_price
             cart_credit_price = 0
             if cart_result.get("message").get("credits"):
