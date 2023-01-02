@@ -434,19 +434,24 @@ def get_cart(response: Response,
                     if type(basket) == list:
                         for item in basket:
                             single_basket_price = 0
+                            basket_product_count = 0
                             if type(item.get("mandatory_products")) == list and len(item.get("mandatory_products")):
+                                basket_product_count += len(item.get("mandatory_products"))
                                 for product in item.get("mandatory_products"):
                                     base_price += product.get("price") * product.get("count")
                                     single_basket_price += product.get("price") * product.get("count")
                             if type(item.get("selective_products")) == list and len(item.get("selective_products")):
+                                basket_product_count += len(item.get("selective_products"))
                                 for product in item.get("selective_products"):
                                     base_price += product.get("price") * product.get("count")
                                     single_basket_price += product.get("price") * product.get("count")
                             if type(item.get("optional_products")) == list and len(item.get("optional_products")):
+                                basket_product_count += len(item.get("optional_products"))
                                 for product in item.get("optional_products"):
                                     base_price += product.get("price") * product.get("count")
                                     single_basket_price += product.get("price") * product.get("count")
                             item["basket_price"] = single_basket_price
+                            item["basket_product_count"]= basket_product_count
                             if item.get("basket_name"):
                                 basket_name = item.get("basket_name")
                         new_baskets = [{"basketId": key,
@@ -454,7 +459,6 @@ def get_cart(response: Response,
                                         "count": len(basket),
                                         "baskets": basket}]
             cart_result["message"]["baskets"] = new_baskets
-            print(new_baskets)
             cart_result["message"]["base_price"] = base_price
             cart_credit_price = 0
             if cart_result.get("message").get("credits"):
