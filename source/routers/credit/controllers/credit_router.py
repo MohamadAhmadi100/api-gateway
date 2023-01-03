@@ -50,7 +50,8 @@ def request_dealership_credit(response: Response, data: AddCredit,
                         "customer_telephone": customer['customerPhoneNumber'],
                         "amount": data.amount,
                         "payment_type": data.payment_type,
-                        "description": data.description
+                        "description": data.description,
+                        "accepted": data.accepted
                     }
                 }
             },

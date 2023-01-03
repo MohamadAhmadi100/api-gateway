@@ -32,7 +32,8 @@ def products_list(
                 }
             },
             headers={'dealership': True}
-        ).get("dealership", {})
+        )
+        print(get_list_response)
         if get_list_response.get("success"):
             return get_list_response
         return get_list_response

@@ -6,12 +6,19 @@ class AddCredit(BaseModel):
     amount: int = Field(..., alias="amount")
     payment_type: str = Field(..., alias="paymentType")
     description: str = Field(...)
+    accepted: str = Field(default="pending")
 
     @validator('payment_type')
     def validate_payment_type(cls, payment_type):
         if payment_type not in ['cheque', 'online_payment', 'banknotes', 'deposit']:
             raise HTTPException(status_code=422, detail={"error": "نوع متد پرداخت معتبر نیست"})
         return payment_type
+
+    @validator('accepted')
+    def validate_accepted(cls, accepted):
+        if accepted not in ['pending', 'accept', 'cancel']:
+            raise HTTPException(status_code=422, detail={"error": "نوع وضعیت درخواست معتبر نیست"})
+        return accepted
 
 class AcceptCredit(BaseModel):
     referral_number: str = Field(..., alias="referralNumber")
