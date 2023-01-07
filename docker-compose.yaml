@@ -18,7 +18,9 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     ports:
-      - 8000-8003:8000-8003
+      - 8000:8000
+      - 8001:8001
+      - 8002:8002
     networks:
       - apinet
 networks:
