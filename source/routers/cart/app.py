@@ -458,6 +458,8 @@ def get_cart(response: Response,
                                         "basketName": basket_name,
                                         "count": len(basket),
                                         "baskets": basket}]
+            if not new_baskets:
+                new_baskets = {}
             cart_result["message"]["baskets"] = new_baskets
             cart_result["message"]["base_price"] = base_price
             cart_credit_price = 0
