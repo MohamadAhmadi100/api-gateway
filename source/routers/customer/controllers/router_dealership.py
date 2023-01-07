@@ -41,50 +41,50 @@ def register(
     try:
         customer_phone_number = unidecode(value.customer_phone_number)
         customer_national_id = unidecode(value.customer_national_id)
-        customer_postal_code = unidecode(value.customer_postal_code)
-        customer_tel = unidecode(value.customer_telephone)
+        # customer_postal_code = unidecode(value.customer_postal_code)
+        # customer_tel = unidecode(value.customer_telephone)
     except Exception as exc:
         raise HTTPException(status_code=422, detail={"error": "لطفا مقادیر عددی را به درستی وارد کنید"}) from exc
 
-    address = {
-        # "customer_name": f"{value.customer_first_name} {value.customer_last_name}",
-        "state_name": value.customer_province,
-        "state_id": value.customer_province_id,
-        "city_id": value.customer_city_id,
-        "city_name": value.customer_city,
-        "region_code": value.customer_region_code,
-        "street": value.customer_street,
-        "alley": value.customer_alley,
-        "plaque": value.customer_plaque,
-        "unit": value.customer_unit,
-        "tel": customer_tel,
-        "postal_code": customer_postal_code,
-        "is_default": True,
-        "nb_name": value.nb_name,
-        "nb_id": value.nb_id
-    }
-    customer_address = {
-        "customer_name": f"{value.customer_first_name} {value.customer_last_name}",
-        "state_name": value.customer_province,
-        "state_id": value.customer_province_id,
-        "city_id": value.customer_city_id,
-        "city_name": value.customer_city,
-        "region_code": value.customer_region_code,
-        "street": value.customer_street,
-        "alley": value.customer_alley,
-        "plaque": value.customer_plaque,
-        "unit": value.customer_unit,
-        "tel": customer_tel,
-        "postal_code": customer_postal_code,
-        "fullAddress": f"{value.customer_province}, {value.customer_city}, {value.customer_street}, {value.customer_alley}, پلاک: {value.customer_plaque}, ,واحد: {value.customer_unit}"
-    }
+    # address = {
+    #     # "customer_name": f"{value.customer_first_name} {value.customer_last_name}",
+    #     "state_name": value.customer_province,
+    #     "state_id": value.customer_province_id,
+    #     "city_id": value.customer_city_id,
+    #     "city_name": value.customer_city,
+    #     "region_code": value.customer_region_code,
+    #     "street": value.customer_street,
+    #     "alley": value.customer_alley,
+    #     "plaque": value.customer_plaque,
+    #     "unit": value.customer_unit,
+    #     "tel": customer_tel,
+    #     "postal_code": customer_postal_code,
+    #     "is_default": True,
+    #     "nb_name": value.nb_name,
+    #     "nb_id": value.nb_id
+    # }
+    # customer_address = {
+    #     "customer_name": f"{value.customer_first_name} {value.customer_last_name}",
+        # "state_name": value.customer_province,
+        # "state_id": value.customer_province_id,
+        # "city_id": value.customer_city_id,
+        # "city_name": value.customer_city,
+        # "region_code": value.customer_region_code,
+        # "street": value.customer_street,
+        # "alley": value.customer_alley,
+        # "plaque": value.customer_plaque,
+        # "unit": value.customer_unit,
+        # "tel": customer_tel,
+        # "postal_code": customer_postal_code,
+        # "fullAddress": f"{value.customer_province}, {value.customer_city}, {value.customer_street}, {value.customer_alley}, پلاک: {value.customer_plaque}, ,واحد: {value.customer_unit}"
+    # }
     data = {
         "customer_phone_number": customer_phone_number,
         "customer_first_name": value.customer_first_name,
         "customer_last_name": value.customer_last_name,
         "customer_national_id": customer_national_id,
-        "customer_address": [customer_address],
-        "customer_postal_code": customer_postal_code,
+        # "customer_address": [customer_address],
+        # "customer_postal_code": customer_postal_code,
         "customer_type": ["B2C"],
         "customer_types": ["B2C"],
 
@@ -98,7 +98,7 @@ def register(
         first_customer_result = rpc.publish(
             message={
                 "customer": {
-                    "action": "register_dealership",
+                    "action": "register_dealership_final_customer",
                     "body": {
                         "customer_phone_number": user_data.get("phone_number"),
                         "data": data
@@ -121,30 +121,30 @@ def register(
                        backupCount=8),
         ]
     )
-    customer_id = first_customer_result.get("message").get("data").get("customerID")
+    # customer_id = first_customer_result.get("message").get("data").get("customerID")
     # address_result = new_rpc.publish(
     #     message=[
     #         address_funcs.insert_address(data=address, customerId=str(customer_id))]
     # )
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        rpc.response_len_setter(response_len=1)
-        address_result = rpc.publish(
-            message={
-                "address": {
-                    "action": "insert_address",
-                    "body": {
-                        "data": address,
-                        "customerId": str(customer_id)
-                    }
-                }
-            },
-            headers={'address': True}
-        ).get("address", {})
-    if not address_result.get("success"):
-        raise HTTPException(
-            status_code=317,
-            detail={"error": address_result.get("error")}
-        )
+    # with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+    #     rpc.response_len_setter(response_len=1)
+    #     address_result = rpc.publish(
+    #         message={
+    #             "address": {
+    #                 "action": "insert_address",
+    #                 "body": {
+    #                     "data": address,
+    #                     "customerId": str(customer_id)
+    #                 }
+    #             }
+    #         },
+    #         headers={'address': True}
+    #     ).get("address", {})
+    # if not address_result.get("success"):
+    #     raise HTTPException(
+    #         status_code=317,
+    #         detail={"error": address_result.get("error")}
+    #     )
     kosar_data = first_customer_result.get("kosarData")
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)

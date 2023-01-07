@@ -451,7 +451,7 @@ def get_cart(response: Response,
                                     base_price += product.get("price") * product.get("count")
                                     single_basket_price += product.get("price") * product.get("count")
                             item["basket_price"] = single_basket_price
-                            item["basket_product_count"]= basket_product_count
+                            item["basket_product_count"] = basket_product_count
                             if item.get("basket_name"):
                                 basket_name = item.get("basket_name")
                         new_baskets = [{"basketId": key,

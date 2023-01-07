@@ -26,6 +26,18 @@ class CustomerAuth(BaseModel):
         isRquired=True,
         regexPattern="^09[0-9]{9}$",
     )
+    customer_type: Optional[CustomerType] = Field(
+        alias="customerType",
+        description="",
+        title="نوع مشتری",
+        name="customerType",
+        minLength=1,
+        maxLength=4,
+        dataType="string",
+        type="hidden",
+        regexPattern="",
+        isRquired=False,
+    )
 
     # validation phone number on backend side
     # TODO validate code type
