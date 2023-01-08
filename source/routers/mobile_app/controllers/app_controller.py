@@ -39,6 +39,7 @@ def insert_force_update(
 @router.get("/forceUpdate", tags=["ForceUpdate"])
 def get_force_update(
         response: Response,
+        app_name: Optional[str] = Query(None),
         os_type: Optional[str] = Query(None)
 ):
     """
