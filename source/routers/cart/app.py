@@ -427,40 +427,19 @@ def get_cart(response: Response,
                 if product.get("price"):
                     base_price += product.get("price") * product.get("count")
             baskets = cart_result.get("message").get("baskets")
-            new_baskets = []
             if baskets and type(baskets) == dict:
                 for key, basket in baskets.items():
-                    basket_name = ""
-                    if type(basket) == list:
-                        for item in basket:
-                            single_basket_price = 0
-                            basket_product_count = 0
-                            if type(item.get("mandatory_products")) == list and len(item.get("mandatory_products")):
-                                basket_product_count += len(item.get("mandatory_products"))
-                                for product in item.get("mandatory_products"):
-                                    base_price += product.get("price") * product.get("count")
-                                    single_basket_price += product.get("price") * product.get("count")
-                            if type(item.get("selective_products")) == list and len(item.get("selective_products")):
-                                basket_product_count += len(item.get("selective_products"))
-                                for product in item.get("selective_products"):
-                                    base_price += product.get("price") * product.get("count")
-                                    single_basket_price += product.get("price") * product.get("count")
-                            if type(item.get("optional_products")) == list and len(item.get("optional_products")):
-                                basket_product_count += len(item.get("optional_products"))
-                                for product in item.get("optional_products"):
-                                    base_price += product.get("price") * product.get("count")
-                                    single_basket_price += product.get("price") * product.get("count")
-                            item["basket_price"] = single_basket_price
-                            item["basket_product_count"] = basket_product_count
-                            if item.get("basket_name"):
-                                basket_name = item.get("basket_name")
-                        new_baskets = [{"basketId": key,
-                                        "basketName": basket_name,
-                                        "count": len(basket),
-                                        "baskets": basket}]
-            if not new_baskets:
-                new_baskets = {}
-            cart_result["message"]["baskets"] = new_baskets
+                    for item in basket:
+                        if type(item.get("mandatory_products")) == list and len(item.get("mandatory_products")):
+                            for product in item.get("mandatory_products"):
+                                base_price += product.get("price") * product.get("count")
+                        if type(item.get("selective_products")) == list and len(item.get("selective_products")):
+                            for product in item.get("selective_products"):
+                                base_price += product.get("price") * product.get("count")
+                        if type(item.get("optional_products")) == list and len(item.get("optional_products")):
+                            for product in item.get("optional_products"):
+                                base_price += product.get("price") * product.get("count")
+
             cart_result["message"]["base_price"] = base_price
             cart_credit_price = 0
             if cart_result.get("message").get("credits"):
