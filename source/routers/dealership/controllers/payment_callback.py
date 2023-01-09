@@ -58,7 +58,6 @@ def dealership_bank_callback(result, response):
                             },
                             headers={'dealership': True}
                         ).get("dealership", {})
-                        print(price_response)
                         if reduce_inventory.get("success"):
                             rpc.response_len_setter(response_len=1)
                             credit_response = rpc.publish(
@@ -72,7 +71,6 @@ def dealership_bank_callback(result, response):
                                 },
                                 headers={'credit': True}
                             ).get("credit", {})
-                            print(credit_response)
                             return RedirectResponse(
                                 f"https://aasood.com/payment-result/order/{result.get('service_id')}/")
                         return RedirectResponse(
@@ -91,30 +89,10 @@ def dealership_bank_callback(result, response):
                         headers={'order': True}
                     ).get("order")
                     if cancel_order_response.get("success"):
-                        # rpc.response_len_setter(response_len=1)
-                        # dealership_final_response = rpc.publish(
-                        #     message={
-                        #         "dealership": {
-                        #             "action": "insert_order_for_end_user",
-                        #             "body": {
-                        #                 "order_detail": get_order_response.get("order_object"),
-                        #                 "payment_detail": result
-                        #             }
-                        #         }
-                        #     },
-                        #     headers={'dealership': True}
-                        #     ).get("dealership", {})
-                        # if dealership_final_response.get("success"):
                         return RedirectResponse(
                             f"https://aasood.com/payment-result/order/{result.get('service_id')}/")
-                    #     return dealership_final_response
-                    # return dealership_final_response
                     return RedirectResponse(
                         f"https://aasood.com/payment-result/order/{result.get('service_id')}/")
-            # return {"success": False, "message": "سفارش ثبت نشده است"}
-            # return RedirectResponse(
-            #     f"https://aasood.com/payment-result/order/{result.get('service_id')}/")
-        # return get_order_response
         return RedirectResponse(
             f"https://aasood.com/payment-result/order/{result.get('service_id')}/")
 
