@@ -1,18 +1,12 @@
 import datetime
 from typing import Optional, List
 
-from fastapi import HTTPException, APIRouter, Response, Path, Body, Query, Header
+from fastapi import HTTPException, APIRouter, Response, Path, Query, Header
 
 from source.helpers.case_converter import convert_case
-from source.helpers.create_class import CreateClass
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.product.modules.allowed_storages import get_allowed_storages
-from source.routers.product.validators.price_models import Price
-from source.routers.product.validators.price_models import UpdatePrice
-from source.routers.product.validators.product import Product, AddAttributes, EditProduct
-from source.routers.product.validators.quantity_models import UpdateQuantity, Quantity
-from source.message_broker.rabbitmq import new_rpc
 
 router = APIRouter()
 
@@ -117,6 +111,7 @@ def get_product_page(
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", ["B2B"])[0]
+        customer_type = customer_type if not customer_type == "B2B2C" else "B2B"
         allowed_storages = get_allowed_storages(user_data.get("user_id"))
         credit_expire_date = user_data.get("sub", {}).get("credit_expire_date")
         credit = user_data.get("sub", {}).get("credit", False)
@@ -161,6 +156,7 @@ def get_product_by_name(name: str,
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", ["B2B"])[0]
+        customer_type = customer_type if not customer_type == "B2B2C" else "B2B"
         allowed_storages = get_allowed_storages(user_data.get("user_id"))
         user_allowed_storages = [storage for storage in storages if
                                  storage in allowed_storages] if storages else allowed_storages
@@ -206,6 +202,7 @@ def get_category_list(
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", ["B2B"])[0]
+        customer_type = customer_type if not customer_type == "B2B2C" else "B2B"
         allowed_storages = get_allowed_storages(user_data.get("user_id"))
 
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
@@ -247,6 +244,7 @@ def price_list(
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", ["B2B"])[0]
+        customer_type = customer_type if not customer_type == "B2B2C" else "B2B"
         allowed_storages = get_allowed_storages(user_data.get("user_id"))
 
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
@@ -326,6 +324,7 @@ def price_list_all(
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", ["B2B"])[0]
+        customer_type = customer_type if not customer_type == "B2B2C" else "B2B"
         allowed_storages = get_allowed_storages(user_data.get("user_id"))
 
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
@@ -430,6 +429,7 @@ def get_mega_menu(
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", ["B2B"])[0]
+        customer_type = customer_type if not customer_type == "B2B2C" else "B2B"
         allowed_storages = get_allowed_storages(user_data.get("user_id"))
 
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
@@ -466,6 +466,7 @@ def get_main_menu(
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         customer_type = user_data.get("customer_type", ["B2B"])[0]
+        customer_type = customer_type if not customer_type == "B2B2C" else "B2B"
         allowed_storages = get_allowed_storages(user_data.get("user_id"))
 
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
