@@ -51,7 +51,7 @@ def get_force_update(
             message={
                 "mobile_app": {
                     "action": "get_force_update",
-                    "body": {"os_type": os_type}
+                    "body": {"os_type": os_type, "app_name": app_name}
                 }
             },
             headers={'mobile_app': True}
