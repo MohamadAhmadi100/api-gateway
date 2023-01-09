@@ -50,7 +50,7 @@ dev_deploy:
     - echo GALLERY_DIR=$GALLERY_DIR >> .env
     - echo SECRET_KEY=$SECRET_KEY >> .env
 #    - docker login nexus.aasood.com -u registry -p $REGPASS
-    - docker-compose -f docker-compose.yaml up -d --build --scale api=4
+    - docker-compose -f docker-compose.yaml up -d --build --scale api=6
 
 push:
   stage: push
