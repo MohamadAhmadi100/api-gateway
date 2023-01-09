@@ -111,3 +111,4 @@ def dealership_bank_callback(result, response):
 #                                           "CardHolderPan": "589463******4522", "FinalAmount": "290919000"},
 #                           "verify_log": {"ResCode": "0"},
 #                           "settle_log": "0", "payment_method": "online_gateway"}, 200)
+
