@@ -17,7 +17,7 @@ def dealership_bank_callback(result, response):
             headers={'order': True}
         ).get("order")
         if get_order_response.get("success"):
-            if get_order_response['order_object']['status'] == "dealership_initial":
+            if get_order_response.get('order_object', {}).get('status') == "initial_dealership":
                 rpc.response_len_setter(response_len=1)
                 if result.get("is_paid"):
                     message = {
@@ -72,6 +72,7 @@ def dealership_bank_callback(result, response):
                                 },
                                 headers={'credit': True}
                             ).get("credit", {})
+                            print(credit_response)
                             return RedirectResponse(
                                 f"https://aasood.com/payment-result/order/{result.get('service_id')}/")
                         return RedirectResponse(
@@ -118,7 +119,7 @@ def dealership_bank_callback(result, response):
             f"https://aasood.com/payment-result/order/{result.get('service_id')}/")
 
 
-# dealership_bank_callback({"payment_id": 300022, "service_id": "300015359", "customer_id": 20008,
+# dealership_bank_callback({"payment_id": 300022, "service_id": "300019540", "customer_id": 20008,
 #                           "amount": 11000, "bank_name": "mellat", "bank_code": "1011125", "is_paid": True,
 #                           "start_payment": 1660069859.52179,
 #                           "start_payment_jalali": "1401-05-18 23:00:59", "service": "order",
