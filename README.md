@@ -15,7 +15,7 @@
     <br />
     <br />
     <a href="#">View Demo</a>
-    ·
+    ·  
     <a href="https://gitlab.aasood.com/ecommerce/backend/api-gateway/-/issues">Report Bug</a>
     ·
     <a href="https://gitlab.aasood.com/ecommerce/backend/api-gateway/-/issues">Request Feature</a>
