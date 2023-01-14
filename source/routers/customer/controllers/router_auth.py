@@ -62,6 +62,7 @@ def send_otp_code(value: validation_auth.CustomerAuth, response: Response):
     # customer_result = new_rpc.publish(
     #     message=[ra.send_otp_code(customer_phone_number=value.customer_phone_number)]
     # )
+    customer_type = [value.customer_type] if value.customer_type else ["B2B"]
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         customer_result = rpc.publish(
@@ -69,7 +70,8 @@ def send_otp_code(value: validation_auth.CustomerAuth, response: Response):
                 "customer": {
                     "action": "send_otp_code",
                     "body": {
-                        "customer_phone_number": value.customer_phone_number
+                        "customer_phone_number": value.customer_phone_number,
+                        "customer_type": customer_type
                     }
                 }
             },

@@ -2,7 +2,7 @@ import json
 from fastapi import APIRouter, Response, Depends, HTTPException, status, Query, Header
 from source.routers.customer.module.auth import AuthHandler
 from typing import Optional, List
-from source.routers.basket.validators.basket import SortType, SortName, AddToCart
+from source.routers.basket.validators.basket import SortType, SortName, AddToCart, DeleteBasket
 from source.message_broker.rabbit_server import RabbitRPC
 from datetime import datetime
 from source.routers.basket.modules.date_convertor import jalali_datetime
@@ -154,6 +154,7 @@ def add_or_edit_cart(response: Response,
         "user_id": user_data.get('user_id'),
         "basket_id": product_data.get("basketId"),
         "basket_data": {
+            "basket_name": basket_result.get("data").get("basketName"),
             "mandatory_products": product_data.get("mandatoryProducts"),
             "selective_products": product_data.get("selectiveProducts"),
             "optional_products": product_data.get("optionalProducts")
@@ -161,7 +162,6 @@ def add_or_edit_cart(response: Response,
         "action": data.action,
         "list_index": data.index
     }
-    print(user_data.get("user_id"), product_data.get("basketId"))
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         order_result = rpc.publish(
@@ -178,7 +178,6 @@ def add_or_edit_cart(response: Response,
             headers={'order': True}
         )
     order_result = order_result.get("order", {})
-    print(order_result)
     if not order_result.get("success"):
         raise HTTPException(status_code=order_result.get("status_code", 500),
                             detail={"error": order_result.get("error", "Something went wrong")})
@@ -203,6 +202,43 @@ def add_or_edit_cart(response: Response,
     response.headers["accessToken"] = auth_handler.encode_refresh_token(sub_dict)
     response.headers["refresh_token"] = auth_handler.encode_access_token(sub_dict)
     response.status_code = basket_result.get("status_code", 200)
+    if not cart_result.get("success"):
+        raise HTTPException(status_code=cart_result.get("status_code", 500),
+                            detail={"error": cart_result.get("error", "Something went wrong")})
+    response.status_code = cart_result.get("status_code", 200)
+    return {"message": cart_result.get("message")}
+
+
+@router_basket.delete("/cart")
+def delete_basket_from_cart(response: Response,
+                            data: DeleteBasket,
+                            auth_header=Depends(auth_handler.check_current_user_tokens)
+                            ):
+    user_data, header = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        cart_result = rpc.publish(
+            message={
+                "cart": {
+                    "action": "basket_delete_from_cart",
+                    "body": {
+                        "user_id": user_data.get('user_id'),
+                        "basket_id": data.basket_id,
+                        "list_index": data.index
+                    }
+                }
+            },
+            headers={'cart': True}
+        )
+    cart_result = cart_result.get("cart", {})
+    sub_dict = {
+        "user_id": user_data.get('user_id'),
+        "customer_type": user_data.get('customer_type'),
+        "phone_number": user_data.get('phone_number'),
+    }
+    response.headers["accessToken"] = auth_handler.encode_refresh_token(sub_dict)
+    response.headers["refresh_token"] = auth_handler.encode_access_token(sub_dict)
+    response.status_code = cart_result.get("status_code", 200)
     if not cart_result.get("success"):
         raise HTTPException(status_code=cart_result.get("status_code", 500),
                             detail={"error": cart_result.get("error", "Something went wrong")})

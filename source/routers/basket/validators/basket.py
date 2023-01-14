@@ -96,3 +96,16 @@ class AddToCart(BaseCart):
     #             "count": 1
     #         }
     #     }
+
+
+class DeleteBasket(BaseModel):
+    basket_id: int = Field(
+        title="شناسه سبد",
+        alias="basketId",
+        name="basketId",
+        description="basket Id",
+        dataType="int",
+        type="Id",
+        isRequired=True
+    )
+    index: int

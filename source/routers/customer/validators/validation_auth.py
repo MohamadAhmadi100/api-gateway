@@ -9,6 +9,7 @@ from pydantic import BaseModel, validator, Field
 class CustomerType(str, Enum):
     B2B = "B2B"
     B2C = "B2C"
+    B2B2C = "B2B2C"
 
 
 class CustomerAuth(BaseModel):
@@ -25,6 +26,18 @@ class CustomerAuth(BaseModel):
         type="tel",
         isRquired=True,
         regexPattern="^09[0-9]{9}$",
+    )
+    customer_type: Optional[CustomerType] = Field(
+        alias="customerType",
+        description="",
+        title="نوع مشتری",
+        name="customerType",
+        minLength=1,
+        maxLength=4,
+        dataType="string",
+        type="hidden",
+        regexPattern="",
+        isRquired=False,
     )
 
     # validation phone number on backend side
@@ -53,18 +66,18 @@ class CustomerVerifyOTP(CustomerAuth):
         isRequired=True,
         regexPattern="^[0-9]{4}$",
     )
-    customer_type: Optional[CustomerType] = Field(
-        alias="customerType",
-        description="",
-        title="نوع مشتری",
-        name="customerType",
-        minLength=1,
-        maxLength=4,
-        dataType="string",
-        type="hidden",
-        regexPattern="",
-        isRquired=False,
-    )
+    # customer_type: Optional[CustomerType] = Field(
+    #     alias="customerType",
+    #     description="",
+    #     title="نوع مشتری",
+    #     name="customerType",
+    #     minLength=1,
+    #     maxLength=4,
+    #     dataType="string",
+    #     type="hidden",
+    #     regexPattern="",
+    #     isRquired=False,
+    # )
 
     @validator("customer_code")
     def validate_otp(cls, code):
@@ -89,18 +102,18 @@ class CustomerVerifyPassword(CustomerAuth):
         isRquired=True,
         regexPattern="^([a-zA-Z0-9'!#$%&'*+/=?^_`{|}~.-]{6,32})",
     )
-    customer_type: Optional[CustomerType] = Field(
-        alias="customerType",
-        description="",
-        title="نوع مشتری",
-        name="customerType",
-        minLength=1,
-        maxLength=4,
-        dataType="string",
-        type="hidden",
-        regexPattern="",
-        isRquired=False,
-    )
+    # customer_type: Optional[CustomerType] = Field(
+    #     alias="customerType",
+    #     description="",
+    #     title="نوع مشتری",
+    #     name="customerType",
+    #     minLength=1,
+    #     maxLength=4,
+    #     dataType="string",
+    #     type="hidden",
+    #     regexPattern="",
+    #     isRquired=False,
+    # )
 
     @validator("customer_password")
     def validate_password(cls, code):

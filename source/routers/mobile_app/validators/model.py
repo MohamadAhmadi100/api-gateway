@@ -7,6 +7,7 @@ from pydantic import BaseModel, validator
 from threading import Timer
 
 class ForceUpdate(BaseModel):
+    app_name: str
     build_number: int
     build_name: str
     os_type: str
@@ -16,6 +17,7 @@ class ForceUpdate(BaseModel):
     class Config:
         schema_extra = {
             "example": {
+                "app_name": "aasood",
                 "build_number": 1,
                 "build_name": "1.0.0",
                 "os_type": "android",
