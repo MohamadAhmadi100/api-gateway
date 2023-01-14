@@ -1,4 +1,3 @@
-import datetime
 import json
 import signal
 import sys
@@ -16,11 +15,12 @@ class RabbitRPC:
             self,
             exchange_name: str,
             timeout: int,
+            local: bool = False
     ):
-        self.host = settings.RABBITMQ_HOST
-        self.port = settings.RABBITMQ_PORT
-        self.user = settings.RABBITMQ_USER
-        self.password = settings.RABBITMQ_PASS
+        self.host = settings.RABBITMQ_HOST if not local else "localhost"
+        self.port = settings.RABBITMQ_PORT if not local else 5672
+        self.user = settings.RABBITMQ_USER if not local else "guest"
+        self.password = settings.RABBITMQ_PASS if not local else "guest"
         self.exchange_name = exchange_name
         self.credentials = pika.PlainCredentials(self.user, self.password)
         self.connection = None
