@@ -439,7 +439,8 @@ def get_cart(response: Response,
                                 basket_product_count += len(item.get("mandatory_products"))
                                 for product in item.get("mandatory_products"):
                                     regular_price = product.get("regular") or False
-                                    if regular_price and type(regular_price)==int and regular_price > product.get("price"):
+                                    if regular_price and type(regular_price) == int and regular_price > product.get(
+                                            "price"):
                                         profit += (product.get("price") - regular_price) * product.get("count")
                                     base_price += product.get("price") * product.get("count")
                                     single_basket_price += product.get("price") * product.get("count")
@@ -447,7 +448,8 @@ def get_cart(response: Response,
                                 basket_product_count += len(item.get("selective_products"))
                                 for product in item.get("selective_products"):
                                     regular_price = product.get("regular")
-                                    if regular_price and type(regular_price)==int and regular_price > product.get("price"):
+                                    if regular_price and type(regular_price) == int and regular_price > product.get(
+                                            "price"):
                                         profit += (product.get("price") - regular_price) * product.get("count")
                                     base_price += product.get("price") * product.get("count")
                                     single_basket_price += product.get("price") * product.get("count")
@@ -455,7 +457,8 @@ def get_cart(response: Response,
                                 basket_product_count += len(item.get("optional_products"))
                                 for product in item.get("optional_products"):
                                     regular_price = product.get("regular")
-                                    if regular_price and type(regular_price)==int and regular_price > product.get("price"):
+                                    if regular_price and type(regular_price) == int and regular_price > product.get(
+                                            "price"):
                                         profit += (product.get("price") - regular_price) * product.get("count")
                                     base_price += product.get("price") * product.get("count")
                                     single_basket_price += product.get("price") * product.get("count")

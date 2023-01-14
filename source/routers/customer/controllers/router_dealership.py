@@ -146,6 +146,16 @@ def register(
     #         detail={"error": address_result.get("error")}
     #     )
     kosar_data = first_customer_result.get("kosarData")
+    if not kosar_data:
+        sub_dict = {
+            "user_id": user_data.get('user_id'),
+            "customer_type": user_data.get('customer_type'),
+            "phone_number": user_data.get('phone_number'),
+        }
+        response.headers["refreshToken"] = auth_handler.encode_refresh_token(sub_dict)
+        response.headers["accessToken"] = auth_handler.encode_access_token(sub_dict)
+        response.status_code = first_customer_result.get("status_code", 200)
+        return first_customer_result.get("message")
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         result = rpc.publish(
