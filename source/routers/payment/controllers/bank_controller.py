@@ -32,13 +32,15 @@ router = APIRouter()
 def get_url(data: payment.SendData, response: Response):
     data = dict(data)
     bank_name = "saman" if data.get("amount") > 1_000_000_000 else random.choice(BANK_NAMES)
+    bank_name = "saman" if data.get("customer_type") == "B2C" else bank_name
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         payment_result = rpc.publish(
             message=
             bank_controller.get_data(
                 data=data,
-                bank_name=bank_name
+                bank_name=bank_name,
+                customer_type=data.get("customer_type")
             )
             ,
             headers={"payment": True}
@@ -76,7 +78,8 @@ def get_url(data: payment.SendData, response: Response):
         uis_result = rpc.publish(
             message=
             uis_controller.hashed_generator(
-                link=url_result.get("message")
+                link=url_result.get("message"),
+                customer_type=data.get("customer_type")
             ),
             headers={"uis": True}
         )

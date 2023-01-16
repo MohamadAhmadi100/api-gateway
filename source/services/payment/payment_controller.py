@@ -44,3 +44,15 @@ def get_info_payment(data, bank_name, payment_type):
                 }
             }
         }
+
+def get_info_payment(data, bank_name, payment_type):
+    return {
+            "payment": {
+                "action": "get_info_payment",
+                "body": {
+                    "data": data,
+                    "bank_name": bank_name,
+                    "payment_type": payment_type
+                }
+            }
+        }

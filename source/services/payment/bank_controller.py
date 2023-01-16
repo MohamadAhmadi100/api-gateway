@@ -1,10 +1,11 @@
-def get_data(data: dict, bank_name: str):
+def get_data(data: dict, bank_name: str, customer_type):
     return {
             "payment": {
                 "action": "get_data",
                 "body": {
                     "data": data,
-                    "bank_name": bank_name
+                    "bank_name": bank_name,
+                    "customer_type": customer_type
                 }
             }
         }

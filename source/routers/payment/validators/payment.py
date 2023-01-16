@@ -1,5 +1,4 @@
 from enum import Enum
-
 from fastapi import HTTPException
 from pydantic import BaseModel, validator, Field
 from typing import Optional
@@ -17,8 +16,9 @@ class Services(str, Enum):
 class SendData(BaseModel):
     amount: int = Field(..., alias="amount")
     customer_id: int = Field(..., alias="customerId")
-    service_name: str = Field(..., alias="serviceName")
+    service_name: Services = Field(..., alias="serviceName")
     service_id: str = Field(..., alias="serviceId")
+    customer_type: Optional[CustomerType] = Field("B2B", alias="customerType")
 
     @validator('amount')
     def check_amount(cls, amount):

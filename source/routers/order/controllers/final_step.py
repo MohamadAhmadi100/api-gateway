@@ -27,6 +27,9 @@ def final_order(
         data: final,
         auth_header=Depends(auth_handler.check_current_user_tokens)
 ) -> dict:
+
+    user, token_dict = auth_header
+    customer_type = user.get("customer_type")[0]
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         cart = get_cart(response=response, auth_header=auth_header)
         check_shipment_result = check_shipment_per_stock(cart)
@@ -57,6 +60,7 @@ def final_order(
                             customerId=int(place_order_result.get("bank_request").get("customerId")),
                             serviceName=place_order_result.get("bank_request").get("serviceName"),
                             serviceId=str(place_order_result.get("bank_request").get('serviceId')),
+                            customerType=customer_type
                         )
                         send_data = convert_case(send_data, "snake")
                         payment_result = get_url(
