@@ -21,7 +21,7 @@ def add_coupon_to_cart(
     user_data, header = auth_header
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
-        basket_result = rpc.publish(
+        coupon_result = rpc.publish(
             message={
                 "coupon": {
                     "action": "check_coupon",
@@ -34,11 +34,11 @@ def add_coupon_to_cart(
             },
             headers={'coupon': True}
         )
-    basket_result = basket_result.get("coupon", {})
-    if not basket_result.get("success"):
+    coupon_result = coupon_result.get("coupon", {})
+    if not coupon_result.get("success"):
         raise HTTPException(
-            status_code=basket_result.get("status_code", 500),
-            detail={"error": basket_result.get("error", "Something went wrong")}
+            status_code=coupon_result.get("status_code", 500),
+            detail={"error": coupon_result.get("error", "Something went wrong")}
         )
     sub_dict = {
         "user_id": user_data.get('user_id'),
@@ -47,5 +47,5 @@ def add_coupon_to_cart(
     }
     response.headers["accessToken"] = auth_handler.encode_refresh_token(sub_dict)
     response.headers["refresh_token"] = auth_handler.encode_access_token(sub_dict)
-    response.status_code = basket_result.get("status_code", 200)
-    return basket_result.get("message", {})
+    response.status_code = coupon_result.get("status_code", 200)
+    return coupon_result.get("message", {})
