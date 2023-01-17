@@ -26,6 +26,7 @@ from source.routers.shipment.app import app as shipment_app
 from source.routers.uis.app import app as uis_app
 from source.routers.wallet.app import app as wallet_app
 from source.routers.basket.app import app as basket_app
+from source.routers.rating.app import app as rating_app
 
 app = FastAPI(title="API Gateway",
               description="Backend for frontend aka. API Gateway!",
@@ -79,6 +80,8 @@ app.mount("/uis/api/v1", uis_app)
 app.mount("/basket/api/v1", basket_app)
 
 app.mount("/coupon/api/v1", coupon_app)
+
+app.mount("/rating/api/v1", rating_app)
 
 
 # ----------------------------------------- Start logging features  -------------------------------------------------- #

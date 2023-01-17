@@ -48,6 +48,7 @@ def charge_wallet(
                 customerId=int(charge_data.customer_id),
                 serviceName="wallet",
                 serviceId=f'w{transaction.get("transactionId")}',
+                customerType = sub_data.get("customer_type")
             )
             send_data = convert_case(send_data, "snake")
             payment_result = get_url(

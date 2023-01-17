@@ -3,6 +3,7 @@ from starlette.exceptions import HTTPException as starletteHTTPException
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from source.config import settings
 from source.routers.payment.controllers.bank_controller import router as bank_controller
+from source.routers.payment.controllers.kowsar_controller import router as kowsar_controller
 from starlette_prometheus import metrics, PrometheusMiddleware
 
 TAGS = [
@@ -34,3 +35,4 @@ def validation_exception_handler(request, exc):
 
 
 app.include_router(bank_controller)
+app.include_router(kowsar_controller)

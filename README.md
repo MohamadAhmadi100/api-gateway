@@ -7,22 +7,22 @@
   </a>
 
 <h3 align="center">Api Gateway Microservice</h3>
-  
-  <p align="center">
+      
+  <p align="center">  
     A microservice to intract with services!
-    <br />
+    <br />  
     <a href="#"><strong>Explore the docs »</strong></a>
     <br />
     <br />
     <a href="#">View Demo</a>
-    ·
+    ·  
     <a href="https://gitlab.aasood.com/ecommerce/backend/api-gateway/-/issues">Report Bug</a>
     ·
     <a href="https://gitlab.aasood.com/ecommerce/backend/api-gateway/-/issues">Request Feature</a>
   </p>
-</div>
+</div>  
  
-
+ 
 
 <!-- TABLE OF CONTENTS -->
 <details>
