@@ -20,7 +20,7 @@ class Product(BaseModel):
     storage_id: str = Field(alias="storageId")
     price: int
     count: int
-    model: str
+    model: dict
     name: str
     brand: dict
     color: dict

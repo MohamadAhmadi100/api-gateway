@@ -10,8 +10,8 @@ class Product(BaseModel):
     status : str = Field(default="initial")
     systemCode: str = Field(alias="systemCode")
     storageId: str = Field(alias="storageId")
-    price: int
-    totalPrice: int
+    price: int = Field(alias="price")
+    totalPrice: int = Field(alias="totalPrice")
     count: int
     model: str
     name: str

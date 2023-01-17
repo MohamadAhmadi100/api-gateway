@@ -35,7 +35,7 @@ def get_profile_info(user_data: dict) -> dict or Exception:
         ).get("address", {})
         customer = customer_data.get("message")
         if not address_response.get("success"):
-            return customer_data
+            return customer
         customer['customerAddress'] = address_response['result'].get("fullAddress")
         customer['customerCity'] = address_response['result'].get('cityName')
         customer['customerProvince'] = address_response['result'].get('stateName')
