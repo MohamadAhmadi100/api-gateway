@@ -1,7 +1,7 @@
 import datetime
 from typing import Optional, List
 
-from fastapi import HTTPException, APIRouter, Response, Path, Query, Header
+from fastapi import HTTPException, APIRouter, Response, Path, Query, Header, Form
 
 from source.helpers.case_converter import convert_case
 from source.message_broker.rabbit_server import RabbitRPC
@@ -488,5 +488,29 @@ def get_main_menu(
             message_product = product_result.get("message", {})
             response.status_code = product_result.get("status_code", 200)
             return convert_case(message_product, 'camel')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
+
+
+@router.post('/torob/products', tags=['Product'])
+def get_torob_data(response: Response, page: int = Form(1), page_unique: str = Form(None)):
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5, local=True) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_torob_data",
+                    "body": {
+                        "page": page,
+                        "system_code": page_unique
+                    }
+                }
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            response.status_code = product_result.get("status_code", 200)
+            return product_result.get('message')
         raise HTTPException(status_code=product_result.get("status_code", 500),
                             detail={"error": product_result.get("error", "Something went wrong")})
