@@ -494,7 +494,7 @@ def get_main_menu(
 
 @router.post('/torob/products', tags=['Product'])
 def get_torob_data(response: Response, page: int = Form(1), page_unique: str = Form(None)):
-    with RabbitRPC(exchange_name='headers_exchange', timeout=5, local=True) as rpc:
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         product_result = rpc.publish(
             message={
