@@ -6,7 +6,7 @@ from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.cart.app import get_cart
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.order.helpers.shipment_helper import shipment_detail
-from source.routers.shipment.validators.shipment_per_stock import PerStock
+from source.routers.shipment.validators.shipment_per_stock_validator import PerStock
 
 shipment_step = APIRouter()
 

@@ -1,13 +1,13 @@
 import json
 from starlette_prometheus import metrics, PrometheusMiddleware
-from fastapi import FastAPI, HTTPException, Response, responses, Depends
+from fastapi import FastAPI, HTTPException, Response, responses, Depends, Query
 from source.config import settings
 from starlette.exceptions import HTTPException as starletteHTTPException
 from source.message_broker.rabbit_server import RabbitRPC
-from source.routers.shipment.validators.shipment import Shipment
-from source.routers.shipment.validators.shipment_per_stock import PerStock
+from source.routers.shipment.validators.shipment_validator import Shipment
+from source.routers.shipment.validators.shipment_per_stock_validator import PerStock
 from source.routers.customer.module.auth import AuthHandler
-from source.routers.shipment.validators.mahex_weekly_limit import WeekDays
+from source.routers.shipment.validators.mahex_validator import WeekDays, MahexShipment
 
 TAGS = [
     {
@@ -130,7 +130,7 @@ def shipment_per_stock(
                                 detail={"error": cart_response.get("error", "Shipment service Internal error")})
 
 
-@app.put("/mahex_weekly_limit", tags=["change mahex weekly limit for free price"])
+@app.put("/mahex_weekly_limit", tags=["Mahex"])
 def change_limit(data: WeekDays, response: Response):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
@@ -151,3 +151,54 @@ def change_limit(data: WeekDays, response: Response):
             return shipment_response
         raise HTTPException(status_code=shipment_response.get("status_code", 500),
                             detail={"error": shipment_response.get("error", "Shipment service Internal error")})
+
+
+
+@app.post("/create_mahex_shipment", tags=["Mahex"])
+def create_mahex_shipment(shipment_data: MahexShipment, response: Response):
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        shipment_data = shipment_data.dict()
+        rpc.response_len_setter(response_len=1)
+        shipment_response = rpc.publish(
+            message={
+                "shipment": {
+                    "action": "create_mahex_shipment",
+                    "body": {
+                        "shipment_data": shipment_data
+                    }
+                }
+            },
+            headers={'shipment': True}
+        ).get("shipment", {})
+        if shipment_response.get("success"):
+            response.status_code = shipment_response.get("status_code", 201)
+            return shipment_response
+        raise HTTPException(status_code=shipment_response.get("status_code", 500),
+                            detail={"success": False, "message": shipment_response.get("message", "Shipment service Internal error")})
+
+
+
+
+@app.get("/get_waybill_number", tags=["Mahex"])
+def change_limit(order_number: str, response: Response):
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        shipment_response = rpc.publish(
+            message={
+                "shipment": {
+                    "action": "get_waybill_number",
+                    "body": {
+                        "order_number": order_number
+                    }
+                }
+            },
+            headers={'shipment': True}
+        ).get("shipment", {})
+
+        if shipment_response.get("success"):
+            response.status_code = shipment_response.get("status_code", 200)
+            return shipment_response
+        raise HTTPException(status_code=shipment_response.get("status_code", 500),
+                            detail={"success": False, "message": shipment_response.get("message", "Shipment service Internal error")})
+
+
