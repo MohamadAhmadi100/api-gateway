@@ -76,7 +76,7 @@ def register(
         "fullAddress": f"{value.customer_province}, {value.customer_city}, {value.customer_street}, {value.customer_alley}, پلاک: {value.customer_plaque}, ,واحد: {value.customer_unit}"
     }
 
-    customer_type = [value.customer_type] if value.customer_type else ["B2C"]
+    customer_type = ["B2C"]
     data = {
         "customer_phone_number": customer_phone_number,
         "customer_first_name": value.customer_first_name,
@@ -95,7 +95,7 @@ def register(
     }
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
-        customer_result = rpc.publish(
+        first_customer_result = rpc.publish(
             message={
                 "customer": {
                     "action": "register",
@@ -106,10 +106,10 @@ def register(
             },
             headers={'customer': True}
         ).get("customer", {})
-    if not customer_result.get("success"):
+    if not first_customer_result.get("success"):
         raise HTTPException(
-            status_code=customer_result.get("status_code", 500),
-            detail={"error": customer_result.get("error", "Something went wrong")}
+            status_code=first_customer_result.get("status_code", 500),
+            detail={"error": first_customer_result.get("error", "Something went wrong")}
         )
     logging.basicConfig(
         level=logging.INFO,
@@ -120,7 +120,7 @@ def register(
                        backupCount=8),
         ]
     )
-    customer_id = customer_result.get("message").get("data").get("customerID")
+    customer_id = first_customer_result.get("message").get("data").get("customerID")
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         address_result = rpc.publish(
@@ -140,5 +140,49 @@ def register(
             status_code=317,
             detail={"message": "برای ثبت آدرس دوباره تلاش کنید"}
         )
+    kosar_data = first_customer_result.get("kosarData")
+    if not kosar_data:
+        response.status_code = first_customer_result.get("status_code", 200)
+        return first_customer_result.get("message")
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
+            message={
+                "kosar": {
+                    "action": "get_customer_kosar_data",
+                    "body": {
+                        "data": kosar_data
+                    }
+                }
+            },
+            headers={'kosar': True}
+        )
+    kosar_result = result.get("kosar", {})
+    if not kosar_result.get("success"):
+        raise HTTPException(
+            status_code=kosar_result.get("status_code", 500),
+            detail={"error": kosar_result.get("error", "Something went wrong")}
+        )
+    kosar_data = kosar_result.get("message")
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
+            message={
+                "customer": {
+                    "action": "set_kosar_data",
+                    "body": {
+                        "mobileNumber": customer_phone_number,
+                        "kosarData": kosar_data
+                    }
+                }
+            },
+            headers={'customer': True}
+        )
+    customer_result = result.get("customer", {})
+    if not customer_result.get("success"):
+        raise HTTPException(
+            status_code=customer_result.get("status_code", 500),
+            detail={"error": customer_result.get("error", "Something went wrong")}
+        )
     response.status_code = customer_result.get("status_code", 200)
-    return customer_result.get("message")
+    return first_customer_result.get("message")

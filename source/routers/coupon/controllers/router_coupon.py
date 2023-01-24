@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Response, HTTPException
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.coupon.validators.coupon import Coupon
+from source.routers.cart.app import get_cart
 
 router_coupon = APIRouter(
     prefix="/coupon",
@@ -19,6 +20,7 @@ def add_coupon_to_cart(
         auth_header=Depends(auth_handler.check_current_user_tokens)
 ):
     user_data, header = auth_header
+    cart = get_cart(response=response, auth_header=auth_header)
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         coupon_result = rpc.publish(
@@ -26,9 +28,9 @@ def add_coupon_to_cart(
                 "coupon": {
                     "action": "check_coupon",
                     "body": {
-                        "customer_id": user_data.get("customer_id"),
-                        "token": Coupon.token,
-                        "cart": Coupon.cart
+                        "customer_id": user_data.get("user_id"),
+                        "token": data.token,
+                        "cart": cart
                     }
                 }
             },
