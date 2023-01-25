@@ -140,6 +140,20 @@ def register(
             status_code=317,
             detail={"message": "برای ثبت آدرس دوباره تلاش کنید"}
         )
+    data = first_customer_result.get("userData")
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        _wallet_response = rpc.publish(
+            message={
+                "wallet": {
+                    "action": "create_wallet",
+                    "body": {
+                        "data": data
+                    }
+                }
+            },
+            headers={'wallet': True}
+        ).get("wallet", {})
     kosar_data = first_customer_result.get("kosarData")
     if not kosar_data:
         response.status_code = first_customer_result.get("status_code", 200)

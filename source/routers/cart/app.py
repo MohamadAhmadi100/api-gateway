@@ -435,6 +435,7 @@ def get_cart(response: Response,
                         for item in basket:
                             single_basket_price = 0
                             basket_product_count = 0
+                            storage_id = 0
                             if type(item.get("mandatory_products")) == list and len(item.get("mandatory_products")):
                                 basket_product_count += len(item.get("mandatory_products"))
                                 for product in item.get("mandatory_products"):
@@ -444,6 +445,7 @@ def get_cart(response: Response,
                                         profit += (regular_price - product.get("price")) * product.get("count")
                                     base_price += product.get("price") * product.get("count")
                                     single_basket_price += product.get("price") * product.get("count")
+                                    storage_id = storage_id or product.get("storageId")
                             if type(item.get("selective_products")) == list and len(item.get("selective_products")):
                                 basket_product_count += len(item.get("selective_products"))
                                 for product in item.get("selective_products"):
@@ -453,6 +455,7 @@ def get_cart(response: Response,
                                         profit += (regular_price - product.get("price")) * product.get("count")
                                     base_price += product.get("price") * product.get("count")
                                     single_basket_price += product.get("price") * product.get("count")
+                                    storage_id = storage_id or product.get("storageId")
                             if type(item.get("optional_products")) == list and len(item.get("optional_products")):
                                 basket_product_count += len(item.get("optional_products"))
                                 for product in item.get("optional_products"):
@@ -462,6 +465,7 @@ def get_cart(response: Response,
                                         profit += (regular_price - product.get("price")) * product.get("count")
                                     base_price += product.get("price") * product.get("count")
                                     single_basket_price += product.get("price") * product.get("count")
+                                    storage_id = storage_id or product.get("storageId")
                             item["basket_price"] = single_basket_price
                             item["basket_product_count"] = basket_product_count
                             if item.get("basket_name"):
@@ -469,7 +473,8 @@ def get_cart(response: Response,
                         new_baskets.append({"basketId": key,
                                             "basketName": basket_name,
                                             "count": len(basket),
-                                            "baskets": basket})
+                                            "baskets": basket,
+                                            "storageId": storage_id})
             cart_result["message"]["baskets"] = new_baskets
             cart_result["message"]["base_price"] = base_price
             cart_credit_price = 0
