@@ -138,6 +138,7 @@ def shipment_detail(auth_header, response):
                     "shipmentDetail": shipment,
                     "reciverInfo": reciver_data,
                     "products": cart['products'],
+                    "cart": cart,
                     "totalPrice": cart['totalPrice']
 
                 }
