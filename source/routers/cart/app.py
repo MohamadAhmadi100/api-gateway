@@ -445,7 +445,7 @@ def get_cart(response: Response,
                                         profit += (regular_price - product.get("price")) * product.get("count")
                                     base_price += product.get("price") * product.get("count")
                                     single_basket_price += product.get("price") * product.get("count")
-                                    storage_id = storage_id or product.get("storageId")
+                                    storage_id = storage_id or product.get("storage_id")
                             if type(item.get("selective_products")) == list and len(item.get("selective_products")):
                                 basket_product_count += len(item.get("selective_products"))
                                 for product in item.get("selective_products"):
@@ -455,7 +455,7 @@ def get_cart(response: Response,
                                         profit += (regular_price - product.get("price")) * product.get("count")
                                     base_price += product.get("price") * product.get("count")
                                     single_basket_price += product.get("price") * product.get("count")
-                                    storage_id = storage_id or product.get("storageId")
+                                    storage_id = storage_id or product.get("storage_id")
                             if type(item.get("optional_products")) == list and len(item.get("optional_products")):
                                 basket_product_count += len(item.get("optional_products"))
                                 for product in item.get("optional_products"):
@@ -465,7 +465,7 @@ def get_cart(response: Response,
                                         profit += (regular_price - product.get("price")) * product.get("count")
                                     base_price += product.get("price") * product.get("count")
                                     single_basket_price += product.get("price") * product.get("count")
-                                    storage_id = storage_id or product.get("storageId")
+                                    storage_id = storage_id or product.get("storage_id")
                             item["basket_price"] = single_basket_price
                             item["basket_product_count"] = basket_product_count
                             if item.get("basket_name"):
