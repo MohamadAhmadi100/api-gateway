@@ -14,7 +14,7 @@ from source.routers.order.helpers.shipment_helper import check_shipment_per_stoc
 from source.routers.order.validators.order import final
 from source.routers.payment.controllers.bank_controller import get_url
 from source.routers.payment.validators.payment import SendData
-
+from source.routers.order.helpers.log import log_decorator
 final_step_order = APIRouter()
 
 auth_handler = AuthHandler()
@@ -22,6 +22,7 @@ rpc = RabbitRPC(exchange_name='headers_exchange', timeout=1000)
 
 
 @final_step_order.put("/final/", tags=["final steps and create order"])
+@log_decorator
 def final_order(
         response: Response,
         data: final,
