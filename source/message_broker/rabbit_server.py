@@ -1,3 +1,4 @@
+import datetime
 import json
 import signal
 import sys
@@ -103,7 +104,10 @@ class RabbitRPC:
                 body=json.dumps(message) if isinstance(message, dict) else message
             )
             print("message sent...")
+            started = datetime.datetime.now()
             while len(self.broker_response) < self.response_len:
+                if (datetime.datetime.now() - started).total_seconds() < 10:
+                    print(f"timeout {message}")
                 self.connection.process_data_events()
             result = self.broker_response.copy()
             self.broker_response.clear()
