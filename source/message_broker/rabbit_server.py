@@ -105,9 +105,11 @@ class RabbitRPC:
             )
             print("message sent...")
             started = datetime.datetime.now()
+            timed_out = False
             while len(self.broker_response) < self.response_len:
-                if (datetime.datetime.now() - started).total_seconds() < 10:
+                if (datetime.datetime.now() - started).total_seconds() < 10 and not timed_out:
                     print(f"timeout {message}")
+                    timed_out = True
                 self.connection.process_data_events()
             result = self.broker_response.copy()
             self.broker_response.clear()
