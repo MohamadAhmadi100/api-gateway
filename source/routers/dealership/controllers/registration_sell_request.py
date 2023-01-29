@@ -42,7 +42,7 @@ def sell_request(data: SellRequest,
                                 "dealershipId": user.get("user_id"),
                                 "dealershipPhoneNumber": user.get("phone_number")
                             },
-                            "customer_detail": get_profile_info(data.dict().get("customer")),
+                            "customer_detail": get_profile_info(data.dict().get("customer"), dealership_id=user.get("user_id")),
                             "products": data.dict().get("products"),
                             "device_type": data.dict().get("device_type"),
                             "wage": dealership_response.get("wage"),
@@ -77,7 +77,6 @@ def sell_request(data: SellRequest,
                     response=response
                 )
                 return uis_response
-
 
             elif order_response.get("success") and payment_type == "cashondelivery":
                 return order_response

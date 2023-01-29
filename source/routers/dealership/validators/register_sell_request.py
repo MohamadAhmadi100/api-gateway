@@ -13,7 +13,7 @@ class Product(BaseModel):
     price: int = Field(alias="price")
     totalPrice: int = Field(alias="totalPrice")
     count: int
-    model: str
+    model: dict
     name: str
     brand: dict
     color: dict
