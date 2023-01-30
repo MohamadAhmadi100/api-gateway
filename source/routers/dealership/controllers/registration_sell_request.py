@@ -42,7 +42,7 @@ def sell_request(data: SellRequest,
                                 "dealershipId": user.get("user_id"),
                                 "dealershipPhoneNumber": user.get("phone_number")
                             },
-                            "customer_detail": get_profile_info(data.dict().get("customer"), dealership_id=user.get("user_id")),
+                            "customer_detail": get_profile_info(data.dict().get("customer")),
                             "products": data.dict().get("products"),
                             "device_type": data.dict().get("device_type"),
                             "wage": dealership_response.get("wage"),
