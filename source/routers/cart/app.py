@@ -426,6 +426,9 @@ def get_cart(response: Response,
 
                 if product.get("price"):
                     base_price += product.get("price") * product.get("count")
+
+            # ======================= Add Baskets to base price =================================== #
+
             baskets = cart_result.get("message").get("baskets")
             new_baskets = []
             if baskets and type(baskets) == dict:
@@ -477,6 +480,13 @@ def get_cart(response: Response,
                                             "storageId": storage_id})
             cart_result["message"]["baskets"] = new_baskets
             cart_result["message"]["base_price"] = base_price
+
+            # ======================= Add Coupon to base price =================================== #
+
+            coupon = cart_result.get("message").get("coupon")
+            if coupon and type(coupon) == dict and coupon.get("discountValue"):
+                base_price -= coupon.get("discountValue")
+                profit += coupon.get("discountValue")
             cart_credit_price = 0
             if cart_result.get("message").get("credits"):
                 cart_credit_price = rpc.publish(
@@ -573,6 +583,36 @@ def basket_remove(
         else:
             response.status_code = cart_result.get("status_code", 200)
             return {"message": convert_case(cart_result.get("message"), "camel")}
+
+
+@app.delete("/cart/coupon", status_code=200, tags=["Cart"])
+def remove_coupon(
+        response: Response,
+        auth_header=Depends(auth_handler.check_current_user_tokens),
+) -> dict:
+    """
+    remove an item from cart
+    """
+    user, token_dict = auth_header
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
+            message={
+                "cart": {
+                    "action": "delete_coupon_from_cart",
+                    "body": {
+                        "user_id": user.get("user_id")
+                    }
+                }
+            },
+            headers={'cart': True}
+        )
+        cart_result = result.get("cart", {})
+        if not cart_result.get("success"):
+            raise HTTPException(status_code=cart_result.get("status_code", 500),
+                                detail={"error": cart_result.get("error", "Something went wrong")})
+        response.status_code = cart_result.get("status_code", 200)
+        return {"message": cart_result.get("message")}
 
 
 @app.put("/checkout/", tags=["Cart"])
