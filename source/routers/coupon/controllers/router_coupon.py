@@ -70,4 +70,4 @@ def add_coupon_to_cart(
     response.headers["accessToken"] = auth_handler.encode_refresh_token(sub_dict)
     response.headers["refresh_token"] = auth_handler.encode_access_token(sub_dict)
     response.status_code = coupon_result.get("status_code", 200)
-    return coupon_result.get("message", {})
+    return {"message": coupon_result.get("message", {}), "data": coupon_result.get("data", {})}
