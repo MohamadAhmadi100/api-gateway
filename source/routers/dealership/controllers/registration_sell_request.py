@@ -2,7 +2,7 @@ from fastapi import Depends, APIRouter, Response
 
 from source.helpers.case_converter import convert_case
 from source.message_broker.rabbit_server import RabbitRPC
-from source.routers.customer.helpers.profile_view import get_profile_info
+from source.routers.dealership.controllers.dealership_profie_view import get_customer_profile_info
 from source.routers.customer.module.auth import AuthHandler
 from source.routers.dealership.validators.register_sell_request import SellRequest
 from source.routers.uis.app import create_link
@@ -42,7 +42,7 @@ def sell_request(data: SellRequest,
                                 "dealershipId": user.get("user_id"),
                                 "dealershipPhoneNumber": user.get("phone_number")
                             },
-                            "customer_detail": get_profile_info(data.dict().get("customer")),
+                            "customer_detail": get_customer_profile_info(data.dict().get("customer"), user.get("user_id")),
                             "products": data.dict().get("products"),
                             "device_type": data.dict().get("device_type"),
                             "wage": dealership_response.get("wage"),
