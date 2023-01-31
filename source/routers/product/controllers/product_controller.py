@@ -515,3 +515,24 @@ def get_torob_data(response: Response, page: int = Form(1), page_unique: str = F
             return product_result.get('message')
         raise HTTPException(status_code=product_result.get("status_code", 500),
                             detail={"error": product_result.get("error", "Something went wrong")})
+
+
+@router.get('/emalls/products/', tags=['Product'])
+def get_emalls_data(response: Response):
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_emalls_data",
+                    "body": {}
+                }
+            },
+            headers={'product': True}
+        )
+        product_result = product_result.get("product", {})
+        if product_result.get("success"):
+            response.status_code = product_result.get("status_code", 200)
+            return product_result.get('message')
+        raise HTTPException(status_code=product_result.get("status_code", 500),
+                            detail={"error": product_result.get("error", "Something went wrong")})
