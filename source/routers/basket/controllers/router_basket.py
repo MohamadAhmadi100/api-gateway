@@ -26,12 +26,10 @@ def get_baskets(
         access: Optional[str] = Header(None),
         refresh: Optional[str] = Header(None)
 ):
-    storage_id = "1"
+    allowed_storages = ["1"]
     if access or refresh:
         user_data, tokens = auth_handler.check_current_user_tokens(access, refresh)
         allowed_storages = get_allowed_storages(user_data.get("user_id"))
-        storage_id = allowed_storages[0] if type(allowed_storages) == list and len(allowed_storages) else "1"
-
     null_filters = {
         "page": page,
         "perPage": perPage,
@@ -40,7 +38,7 @@ def get_baskets(
         "search": searchPhrase,
         "filters": {
             "basketStatus": ["active"],
-            "storageId": storage_id,
+            "storageId": allowed_storages,
             "basketJalaliStartDate": {
                 "start": jalali_datetime(datetime.now()),
             },
