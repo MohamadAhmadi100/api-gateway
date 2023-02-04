@@ -32,8 +32,8 @@ router = APIRouter()
 def get_url(data: payment.SendData, response: Response):
     data = dict(data)
     bank_name = "saman" if data.get("amount") > 1_000_000_000 else random.choice(BANK_NAMES)
-    if customer_type == "B2C" and bank_name == "saman":
-        bank_name == "mellat"
+    if data.get("customer_type") == "B2C" and bank_name == "saman":
+        bank_name = "mellat"
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         payment_result = rpc.publish(
