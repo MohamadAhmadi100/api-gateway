@@ -95,9 +95,55 @@ def get_baskets(
             detail={"error": product_result.get("error", "Something went wrong")}
         )
     product_data = product_result.get("message", {})
-    response.status_code = basket_result.get("status_code", 200)
     # checking whole sales and per day with order service
-    return product_data
+    new_baskets = []
+    if type(product_data.get("data")) == list and len(product_data.get("data")):
+        for basket in product_data.get("data"):
+            with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+                rpc.response_len_setter(response_len=1)
+                order_result = rpc.publish(
+                    message={
+                        "order": {
+                            "action": "limit_basket_count",
+                            "body": {
+                                "user_id": None,
+                                "basket_id": basket.get("basketId"),
+                                "today": True
+                            }
+                        }
+                    },
+                    headers={'order': True}
+                )
+            today_order_result = order_result.get("order", {})
+            if not today_order_result.get("success") or today_order_result.get("total_sell") >= basket.get("basketSalesPerDay"):
+                continue
+            with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+                rpc.response_len_setter(response_len=1)
+                order_result = rpc.publish(
+                    message={
+                        "order": {
+                            "action": "limit_basket_count",
+                            "body": {
+                                "user_id": None,
+                                "basket_id": basket.get("basketId"),
+                                "today": False
+                            }
+                        }
+                    },
+                    headers={'order': True}
+                )
+            whole_order_result = order_result.get("order", {})
+            if not whole_order_result.get("success") or whole_order_result.get("total_sell") >= basket.get("basketSalesNumber"):
+                continue
+            new_baskets.append(basket)
+    if not len(new_baskets):
+        response.status_code = 404
+        raise HTTPException(
+            status_code=404,
+            detail={"error": "سبدی برای نمایش وجود ندارد"}
+        )
+    response.status_code = basket_result.get("status_code", 200)
+    return {"data": new_baskets, "totalCount": len(new_baskets)}
 
 
 @router_basket.put("/cart")
