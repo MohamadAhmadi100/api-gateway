@@ -15,6 +15,7 @@ from source.routers.order.validators.order import final
 from source.routers.payment.controllers.bank_controller import get_url
 from source.routers.payment.validators.payment import SendData
 from source.routers.order.helpers.log import log_decorator
+
 final_step_order = APIRouter()
 
 auth_handler = AuthHandler()
@@ -28,19 +29,17 @@ def final_order(
         data: final,
         auth_header=Depends(auth_handler.check_current_user_tokens)
 ) -> dict:
-
     user, token_dict = auth_header
     customer_type = user.get("customer_type")[0]
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         cart = get_cart(response=response, auth_header=auth_header)
         check_shipment_result = check_shipment_per_stock(cart)
         if len(cart['shipment']) != len(check_shipment_result):
-            response.status_code = 202
+            response.status_code = 400
             return {"success": False, "message": "!روش ارسال برای همه انبار ها را انتخاب کنید"}
         elif len(cart['payment']) < 1:
-            response.status_code = 202
+            response.status_code = 400
             return {"success": False, "message": "!روش پرداخت را انتخاب کنید"}
-
 
         # check quantity
         check_out = check_price_qty(auth_header, cart, response)
@@ -98,6 +97,7 @@ def final_order(
                                 },
                                 headers={"product": True}
                             ).get("product")
+                            payment_result['gateway_message'] = "خطا در برقراری ارتباط با بانک"
                             return {"success": False, "paymentResult": payment_result.get("error")}
                     else:
                         rpc.response_len_setter(response_len=1)
@@ -134,7 +134,8 @@ def final_order(
                 else:
                     delete_order_reserving_fail(place_order_result.get("order_object"))
                     check_out = check_price_qty(auth_header, cart, response)
-                    response.status_code = 202
+                    response.status_code = 400
+                    check_out['gateway_message'] = "خطا در رزرو کالا"
                     return {"success": False, "message": check_out.get("message")}
             else:
                 rpc.response_len_setter(response_len=1)
@@ -149,7 +150,8 @@ def final_order(
                     },
                     headers={'cart': True}
                 )
-                response.status_code = place_order_result.get("status_code")
+                response.status_code = place_order_result.get("status_code", 400)
+                place_order_result['gateway_error'] = "خطا در ثبت سفارش"
                 return place_order_result
         else:
             rpc.response_len_setter(response_len=1)
@@ -164,5 +166,6 @@ def final_order(
                 },
                 headers={'cart': True}
             )
-        response.status_code = 202
-        return {"success": False, "message": check_out.get("message")}
+
+            response.status_code = 400
+            return {"success": False, "error": check_out.get("message")}

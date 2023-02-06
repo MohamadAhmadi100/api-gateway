@@ -257,7 +257,8 @@ def place_order(auth_header, cart, customer, device_type):
         if result_to_order.get("success"):
             return result_to_order
         else:
-            return {"success": False, "message": "something went wrong!"}
+            return {"success": False, "message": "خطا در ثبت سفارش. لطفا با پشتیبانی تماس بگیرید",
+                    "error": result.get("error"), "status_code": 400}
 
 
 def add_final_flag_to_cart(auth_header):

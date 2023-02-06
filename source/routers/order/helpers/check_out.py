@@ -160,7 +160,26 @@ def check_price_qty(auth_header, cart, response):
                     },
                     headers={'basket': True}
                 ).get("basket")
-                if basket_checkout['failed']:
+                if not basket_checkout['success']:
+                    rpc.response_len_setter(response_len=1)
+                    rpc.publish(
+                        message={
+                            "cart": {
+                                "action": "delete_basket",
+                                "body": {
+                                    "user_id": auth_header[0].get("user_id"),
+                                }
+                            }
+                        },
+                        headers={'cart': True}
+                    ).get("cart")
+                    for cursor in cart['baskets']:
+                        edited_result.append({
+                            "name": cursor['basketName'],
+                            "status": "deleted",
+                            "message": f"{cursor['basketName']} از سبد خرید به دلیل مشکلات فنی حذف شد",
+                        })
+                elif basket_checkout['failed']:
                     rpc.response_len_setter(response_len=1)
                     rpc.publish(
                         message={
