@@ -115,7 +115,8 @@ def get_baskets(
                     headers={'order': True}
                 )
             today_order_result = order_result.get("order", {})
-            if not today_order_result.get("success") or today_order_result.get("total_sell") >= basket.get("basketSalesPerDay"):
+            if not today_order_result.get("success") or today_order_result.get("total_sell") >= basket.get(
+                    "basketSalesPerDay"):
                 continue
             with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
                 rpc.response_len_setter(response_len=1)
@@ -133,7 +134,8 @@ def get_baskets(
                     headers={'order': True}
                 )
             whole_order_result = order_result.get("order", {})
-            if not whole_order_result.get("success") or whole_order_result.get("total_sell") >= basket.get("basketSalesNumber"):
+            if not whole_order_result.get("success") or whole_order_result.get("total_sell") >= basket.get(
+                    "basketSalesNumber"):
                 continue
             new_baskets.append(basket)
     if not len(new_baskets):
@@ -213,7 +215,7 @@ def add_or_edit_cart(response: Response,
                 "order": {
                     "action": "limit_basket_count",
                     "body": {
-                        "user_id": user_data.get("user_id"),
+                        "user_id": None,
                         "basket_id": product_data.get("basketId"),
                         "today": True
                     }
@@ -221,10 +223,35 @@ def add_or_edit_cart(response: Response,
             },
             headers={'order': True}
         )
-    order_result = order_result.get("order", {})
-    if not order_result.get("success"):
-        raise HTTPException(status_code=order_result.get("status_code", 500),
-                            detail={"error": order_result.get("error", "Something went wrong")})
+    today_order_result = order_result.get("order", {})
+    if not today_order_result.get("success") or today_order_result.get("total_sell") >= basket_result.get("data").get(
+            "basketSalesPerDay"):
+        raise HTTPException(
+            status_code=422,
+            detail={"error": "فروش این سبد به پایان رسیده است"}
+        )
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        order_result = rpc.publish(
+            message={
+                "order": {
+                    "action": "limit_basket_count",
+                    "body": {
+                        "user_id": None,
+                        "basket_id": product_data.get("basketId"),
+                        "today": False
+                    }
+                }
+            },
+            headers={'order': True}
+        )
+    whole_order_result = order_result.get("order", {})
+    if not whole_order_result.get("success") or whole_order_result.get("total_sell") >= basket_result.get("data").get(
+            "basketSalesNumber"):
+        raise HTTPException(
+            status_code=422,
+            detail={"error": "فروش این سبد به پایان رسیده است"}
+        )
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         cart_result = rpc.publish(
