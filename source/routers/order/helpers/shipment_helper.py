@@ -18,9 +18,6 @@ def ship_address_object(user, cart):
             headers={"product": True}
         ).get("product")['warehouses']
 
-        if not cart.get("baskets"):
-            cart["baskets"] = {}
-
         rpc.response_len_setter(response_len=1)
         storage_result = rpc.publish(
             message={
