@@ -39,7 +39,11 @@ def register(
         customer_postal_code = unidecode(value.customer_postal_code)
         customer_tel = unidecode(value.customer_telephone)
         if value.customer_alley:
-            customer_alley = unidecode(value.customer_alley)
+            try:
+                customer_alley = unidecode(value.customer_alley)
+                customer_alley = int(customer_alley)
+            except Exception as e:
+                customer_alley = value.customer_alley
         else:
             customer_alley = ""
     except Exception as exc:
