@@ -485,7 +485,7 @@ def get_cart(response: Response,
 
             coupon = cart_result.get("message").get("coupon")
             if coupon and type(coupon) == dict and coupon.get("discountValue"):
-                base_price -= coupon.get("discountValue")
+                # base_price -= coupon.get("discountValue")
                 profit += coupon.get("discountValue")
             cart_credit_price = 0
             if cart_result.get("message").get("credits"):
@@ -508,6 +508,7 @@ def get_cart(response: Response,
                     total_price += shipment.get("customerPrice", 0)
 
             grand_price = total_price
+            total_price -= coupon.get("discountValue")
             if cart_result["message"].get("payment") and cart_result["message"].get("payment").get("walletAmount"):
                 total_price -= cart_result["message"]["payment"]['walletAmount']
 
