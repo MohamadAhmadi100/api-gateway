@@ -135,8 +135,7 @@ def final_order(
                     delete_order_reserving_fail(place_order_result.get("order_object"))
                     check_out = check_price_qty(auth_header, cart, response)
                     response.status_code = 400
-                    check_out['gateway_message'] = "خطا در رزرو کالا"
-                    return {"success": False, "message": check_out.get("message")}
+                    return {"success": False, "message": "سفارش به علت نقص فنی ثبت نشد. لطفا با پشتیبانی تماس بگیرید."}
             else:
                 rpc.response_len_setter(response_len=1)
                 rpc.publish(
