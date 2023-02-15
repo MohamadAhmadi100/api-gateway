@@ -171,7 +171,7 @@ def add_or_edit_cart(response: Response,
     if not basket_result.get("success"):
         raise HTTPException(
             status_code=basket_result.get("status_code", 500),
-            detail={"error": basket_result.get("error", "Something went wrong")}
+            detail={"error": basket_result.get("message", "Something went wrong")}
         )
     # checking basket products with product service
     baskets = [basket_result.get("data")]
@@ -270,12 +270,12 @@ def add_or_edit_cart(response: Response,
         if not cart_result.get("success"):
             raise HTTPException(status_code=cart_result.get("status_code", 500),
                                 detail={"error": cart_result.get("error", "Something went wrong")})
-    cart_baskets = cart_result.get("baskets")
+    cart_baskets = cart_result.get("message").get("baskets")
     if cart_baskets and type(cart_baskets) == dict:
-        cart_basket = cart_baskets.get(product_data.get("basketId"))
+        cart_basket = cart_baskets.get(str(product_data.get("basketId")))
         if cart_basket and type(cart_basket) == list:
-            if len(cart_basket) > basket_result.get("data").get("basketSalesPerDay") or len(
-                    cart_basket) > basket_result.get("data").get("basketSalesNumber"):
+            if len(cart_basket) >= basket_result.get("data").get("basketSalesPerDay") or len(
+                    cart_basket) >= basket_result.get("data").get("basketSalesNumber"):
                 raise HTTPException(
                     status_code=422,
                     detail={"error": "فروش این سبد به پایان رسیده است"}
