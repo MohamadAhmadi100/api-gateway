@@ -252,6 +252,46 @@ def add_or_edit_cart(response: Response,
             status_code=422,
             detail={"error": "فروش این سبد به پایان رسیده است"}
         )
+    # =================== check cart baskets ================================
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        result = rpc.publish(
+            message={
+                "cart": {
+                    "action": "get_cart",
+                    "body": {
+                        "user_id": user_data.get("user_id")
+                    }
+                }
+            },
+            headers={'cart': True}
+        )
+        cart_result = result.get("cart", {})
+        if not cart_result.get("success"):
+            raise HTTPException(status_code=cart_result.get("status_code", 500),
+                                detail={"error": cart_result.get("error", "Something went wrong")})
+    cart_baskets = cart_result.get("baskets")
+    if cart_baskets and type(cart_baskets) == dict:
+        cart_basket = cart_baskets.get(product_data.get("basketId"))
+        if cart_basket and type(cart_basket) == list:
+            if len(cart_basket) > basket_result.get("data").get("basketSalesPerDay") or len(
+                    cart_basket) > basket_result.get("data").get("basketSalesNumber"):
+                raise HTTPException(
+                    status_code=422,
+                    detail={"error": "فروش این سبد به پایان رسیده است"}
+                )
+            if type(basket_result.get("data").get("basketSalesPerDay")) == int and type(
+                    today_order_result.get("total_sell")) == int and type(
+                    basket_result.get("data").get("basketSalesNumber")) == int and type(
+                    whole_order_result.get("total_sell")) == int and (
+                    len(cart_basket) > basket_result.get("data").get("basketSalesPerDay") - today_order_result.get(
+                    "total_sell") or len(cart_basket) > basket_result.get("data").get(
+                    "basketSalesNumber") - whole_order_result.get("total_sell")):
+                raise HTTPException(
+                    status_code=422,
+                    detail={"error": "ظرفیت فروش این سبد به پایان رسیده است"}
+                )
+                # ================================================
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
         rpc.response_len_setter(response_len=1)
         cart_result = rpc.publish(
