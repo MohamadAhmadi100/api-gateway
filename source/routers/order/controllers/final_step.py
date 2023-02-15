@@ -72,6 +72,7 @@ def final_order(
                             return {"success": True, "Type": "pending_payment",
                                     "paymentResult": payment_result.get("message")}
                         else:
+
                             rpc.response_len_setter(response_len=1)
                             rpc.publish(
                                 message={
@@ -100,6 +101,23 @@ def final_order(
                             payment_result['gateway_message'] = "خطا در برقراری ارتباط با بانک"
                             return {"success": False, "paymentResult": payment_result.get("error")}
                     else:
+                        if place_order_result.get("order_object").get('coupon') is not None:
+                            rpc.response_len_setter(response_len=1)
+                            rpc.publish(
+                                message={
+                                    "coupon": {
+                                        "action": "use_coupon",
+                                        "body": {
+                                            "coupon_id": place_order_result.get("order_object")['coupon'].get('couponId'),
+                                            "customer_id": place_order_result.get("order_object")['customer']['id'],
+                                            "token": place_order_result.get("order_object")['coupon'].get('token'),
+                                            "order_number": place_order_result.get("order_object")['orderNumber']
+                                        }
+                                    }
+                                },
+                                headers={"coupon": True}
+                            ).get("coupon")
+
                         rpc.response_len_setter(response_len=1)
                         rpc.publish(
                             message={

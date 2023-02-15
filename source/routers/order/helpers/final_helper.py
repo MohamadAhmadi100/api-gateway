@@ -24,6 +24,7 @@ def handle_order_bank_callback(result, response):
                 # consume wallet
                 if wallet_amount is not None:
                     if result.get("is_paid"):
+
                         data_reserve_wallet = {"amount": wallet_amount, "order_number": result['service_id'],
                                                "action_type": "auto",
                                                "balance": "consume", "type": "order", 'status': "success",
@@ -50,6 +51,22 @@ def handle_order_bank_callback(result, response):
                     ).get("wallet", {})
 
             if result['is_paid']:
+                # coupon
+                rpc.response_len_setter(response_len=1)
+                rpc.publish(
+                    message={
+                        "coupon": {
+                            "action": "use_coupon",
+                            "body": {
+                                "coupon_id": order_get_response.get("order_object")['coupon'].get('couponId'),
+                                "customer_id": order_get_response.get("order_object")['customer']['id'],
+                                "token": order_get_response.get("order_object")['coupon'].get('token'),
+                                "order_number": order_get_response.get("order_object")['orderNumber']
+                            }
+                        }
+                    },
+                    headers={"coupon": True}
+                ).get("coupon")
                 # send sms
                 rpc.response_len_setter(response_len=1)
                 rpc.publish(
