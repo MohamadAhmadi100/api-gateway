@@ -1,8 +1,7 @@
 import time
-
 from starlette.middleware.base import BaseHTTPMiddleware
-
-RESPONSE_TIME = {}
+import command
+from source.helpers.influx import InfluxConnection
 
 
 class Monitoring(BaseHTTPMiddleware):
@@ -13,24 +12,23 @@ class Monitoring(BaseHTTPMiddleware):
         start = round(time.time() * 1000)
         response = await call_next(request)
         end = round(time.time() * 1000)
-        RESPONSE_TIME[request.url.path] = {
-            "method": request.method,
-            "value": end - start
-        }
-        return response
-
-    @staticmethod
-    def metric_formatter(metric_name, method, path, value):
-        return f'{metric_name}{{method="{method}", path="{path}"}} {value}'
-
-    @staticmethod
-    def metrics(path):
-        response = ""
-        excluded_paths = ['docs/', "docs", "openapi.json", 'openapi.json/']
-        for k, v in RESPONSE_TIME.items():
-            if k.startswith("/" + path) and len(set([k.endswith(i) for i in excluded_paths])) != 2 and (
-                    k.find("metrics") == -1
-            ):
-                response += Monitoring.metric_formatter("response_time", v.get("method"), k, v.get("value")) + "\n"
-
-        return response
+        service = request.url.path.split("/")[1]
+        if service:
+            if request.path_params:
+                url = "/".join(list(set(request.url.path.split("/")).difference(set(request.path_params.values()))))
+            else:
+                url = request.url.path
+            gateway = command.run(["hostname"]).output.decode("utf-8")
+            with InfluxConnection() as db:
+                db.monitoring(
+                    tags={
+                        "service": service,
+                        "url": url,
+                        "method": request.method,
+                        "gateway": gateway
+                    },
+                    fields={
+                        "response_time": end - start
+                    }
+                )
+            return response

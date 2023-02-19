@@ -16,6 +16,12 @@ class Settings(BaseSettings):
     RABBITMQ_USER: str = os.getenv("RABBITMQ_USER")
     RABBITMQ_PASS: str = os.getenv("RABBITMQ_PASS")
 
+    # InfluxDB
+
+    INFLUXDB_HOST: str = os.getenv("INFLUXDB_HOST")
+    INFLUXDB_PORT: int = os.getenv("INFLUXDB_PORT")
+    INFLUXDB_DB: str = os.getenv("INFLUXDB_DB")
+
     # Uvicorn
     UVICORN_HOST: str = os.getenv("UVICORN_HOST")
     UVICORN_PORT: int = os.getenv("UVICORN_PORT")
