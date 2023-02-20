@@ -31,4 +31,4 @@ class Monitoring(BaseHTTPMiddleware):
                         "response_time": end - start
                     }
                 )
-            return response
+        return response

@@ -38,11 +38,6 @@ app = FastAPI(title="API Gateway",
 app.add_middleware(Monitoring)
 
 
-@app.get("/metrics/{path:path}", response_class=PlainTextResponse)
-def metrics(path):
-    return Monitoring.metrics(path)
-
-
 # ----------------------------------------- Mount all services here -------------------------------------------------- #
 
 app.mount("/cart/api/v1", cart_app)
