@@ -155,15 +155,15 @@ def payment_methods(customer, cart):
         if cart['totalPrice'] == 0:
             pass
         elif cart['totalPrice'] > 100000000:
-            payment_method = [{"methodName": "cheque", "methodLabe": "پرداخت با چک"},
-                              {"methodName": "deposit", "methodLabe": "واریز به حساب"}]
+            payment_method = [{"methodName": "cheque", "methodLabe": "پرداخت با چک"}}]
+            #{"methodName": "deposit", "methodLabe": "واریز به حساب"
             # pardakht dar mahal
             if allowed_pos:
                 payment_method.append({"methodName": "cashondelivery", "methodLabe": "پرداخت در محل"})
         else:
             payment_method = [
-                {"methodName": "aiBanking", "methodLabe": "پرداخت انلاین"},
-                {"methodName": "deposit", "methodLabe": "واریز به حساب"}]
+                {"methodName": "aiBanking", "methodLabe": "پرداخت انلاین"}]
+                #{"methodName": "deposit", "methodLabe": "واریز به حساب"}
 
             # pardakht dar mahal
             if allowed_pos:
