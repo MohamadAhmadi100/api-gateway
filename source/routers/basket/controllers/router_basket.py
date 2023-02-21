@@ -144,6 +144,31 @@ def get_baskets(
             status_code=404,
             detail={"error": "سبدی برای نمایش وجود ندارد"}
         )
+    with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        rpc.response_len_setter(response_len=1)
+        product_result = rpc.publish(
+            message={
+                "product": {
+                    "action": "get_all_warehouses",
+                    "body": {
+                        "all": False
+                    }
+                }
+            },
+            headers={'product': True}
+        )
+    product_data = product_result.get("product", {})
+    if product_data.get("success"):
+        storages = product_data.get("message")
+    else:
+        storages= []
+    for basket in new_baskets:
+        storage_id = basket.get("storageId")
+        for storage in storages:
+            if str(storage.get("storage_id")) == storage_id:
+                basket["storageLabel"] = storage.get("label")
+        if not basket.get("storageLabel"):
+            basket["storageLabel"] = "نامشخص"
     response.status_code = basket_result.get("status_code", 200)
     return {"data": new_baskets, "totalCount": len(new_baskets)}
 
@@ -282,11 +307,11 @@ def add_or_edit_cart(response: Response,
                 )
             if type(basket_result.get("data").get("basketSalesPerDay")) == int and type(
                     today_order_result.get("total_sell")) == int and type(
-                    basket_result.get("data").get("basketSalesNumber")) == int and type(
-                    whole_order_result.get("total_sell")) == int and (
+                basket_result.get("data").get("basketSalesNumber")) == int and type(
+                whole_order_result.get("total_sell")) == int and (
                     len(cart_basket) > basket_result.get("data").get("basketSalesPerDay") - today_order_result.get(
-                    "total_sell") or len(cart_basket) > basket_result.get("data").get(
-                    "basketSalesNumber") - whole_order_result.get("total_sell")):
+                "total_sell") or len(cart_basket) > basket_result.get("data").get(
+                "basketSalesNumber") - whole_order_result.get("total_sell")):
                 raise HTTPException(
                     status_code=422,
                     detail={"error": "ظرفیت فروش این سبد به پایان رسیده است"}
