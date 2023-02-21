@@ -81,7 +81,7 @@ def add_and_edit_product(item: AddCart, response: Response, auth_header=Depends(
             raise HTTPException(status_code=product_result.get("status_code", 500),
                                 detail={"error": product_result.get("error", "Something went wrong")})
         elif not customer_result.get("message", {}).get('customerIsActive'):
-            raise HTTPException(status_code=403, detail={"error": "حساب کاربری شما تایید نشده است"})
+            raise HTTPException(status_code=403, detail={"error": customer_result.get("message", {}).get('message')})
         else:
 
             ordered_count = [i.get("count") for i in order_result.get('customer_detail') if
