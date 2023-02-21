@@ -212,7 +212,7 @@ def add_and_edit_credit_product(
             raise HTTPException(status_code=product_result.get("status_code", 500),
                                 detail={"error": product_result.get("error", "Something went wrong")})
         elif not customer_result.get("message", {}).get('customerIsActive'):
-            raise HTTPException(status_code=403, detail={"error": "حساب کاربری شما تایید نشده است"})
+            raise HTTPException(status_code=403, detail={"error": customer_result.get("message", {}).get('message')})
         else:
             credit = credit_result.get("message")
             if jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") > credit.get(
