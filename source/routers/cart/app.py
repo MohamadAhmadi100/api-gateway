@@ -212,7 +212,13 @@ def add_and_edit_credit_product(
             raise HTTPException(status_code=product_result.get("status_code", 500),
                                 detail={"error": product_result.get("error", "Something went wrong")})
         elif not customer_result.get("message", {}).get('customerIsActive'):
-            raise HTTPException(status_code=403, detail={"error": customer_result.get("message", {}).get('message')})
+            if not customer_result.get("message", {}).get('customerOfogh'):
+                if item.system_code[:6] == "20001":
+                    raise HTTPException(status_code=403,
+                                        detail={"error": customer_result.get("message", {}).get('message')})
+            else:
+                raise HTTPException(status_code=403,
+                                    detail={"error": customer_result.get("message", {}).get('message')})
         else:
             credit = credit_result.get("message")
             if jdatetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") > credit.get(
@@ -482,7 +488,6 @@ def get_cart(response: Response,
             cart_result["message"]["base_price"] = base_price
 
             # ======================= Add Coupon to base price =================================== #
-
 
             cart_credit_price = 0
             if cart_result.get("message").get("credits"):
