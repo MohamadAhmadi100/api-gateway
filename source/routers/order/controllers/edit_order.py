@@ -51,23 +51,23 @@ def cancel_order(response: Response,
                 headers={'order': True}
             ).get("order")
             if order_result.get("success"):
-                rpc.response_len_setter(response_len=1)
-                rpc.publish(
-                    message={
-                        "order": {
-                            "action": "send_cancel_order_sms",
-                            "body": {
-                                "phone_number": order_object['customer']['mobile'],
-                                "first_name":
-                                    order_object['customer']['fullName'].split(" ")[0],
-                                "last_name":
-                                    order_object['customer']['fullName'].split(" ")[1],
-                                "order_number": order_object['orderNumber'],
-                                "customer_type": order_object['customer']['type']
-                            }
-                        }
-                    },
-                    headers={'order': True})
+                # rpc.response_len_setter(response_len=1)
+                # rpc.publish(
+                #     message={
+                #         "order": {
+                #             "action": "send_cancel_order_sms",
+                #             "body": {
+                #                 "phone_number": order_object['customer']['mobile'],
+                #                 "first_name":
+                #                     order_object['customer']['fullName'].split(" ")[0],
+                #                 "last_name":
+                #                     order_object['customer']['fullName'].split(" ")[1],
+                #                 "order_number": order_object['orderNumber'],
+                #                 "customer_type": order_object['customer']['type']
+                #             }
+                #         }
+                #     },
+                #     headers={'order': True})
                 if order_result['wallet_charge'] == 0:
                     return {"success": True, "message": "سفارش با موفقیت لغو شد"}
                 else:

@@ -118,23 +118,23 @@ def final_order(
                                 headers={"coupon": True}
                             ).get("coupon")
 
-                        rpc.response_len_setter(response_len=1)
-                        rpc.publish(
-                            message={
-                                "order": {
-                                    "action": "send_place_order_sms",
-                                    "body": {
-                                        "phone_number": place_order_result['order_object']['customer']['mobile'],
-                                        "first_name":
-                                            place_order_result['order_object']['customer']['fullName'].split(" ")[0],
-                                        "last_name":
-                                            place_order_result['order_object']['customer']['fullName'].split(" ")[1],
-                                        "order_number": place_order_result['order_object']['orderNumber']
-                                    }
-                                }
-                            },
-                            headers={'order': True}
-                        )
+                        # rpc.response_len_setter(response_len=1)
+                        # rpc.publish(
+                        #     message={
+                        #         "order": {
+                        #             "action": "send_place_order_sms",
+                        #             "body": {
+                        #                 "phone_number": place_order_result['order_object']['customer']['mobile'],
+                        #                 "first_name":
+                        #                     place_order_result['order_object']['customer']['fullName'].split(" ")[0],
+                        #                 "last_name":
+                        #                     place_order_result['order_object']['customer']['fullName'].split(" ")[1],
+                        #                 "order_number": place_order_result['order_object']['orderNumber']
+                        #             }
+                        #         }
+                        #     },
+                        #     headers={'order': True}
+                        # )
                         rpc.response_len_setter(response_len=1)
                         rpc.publish(
                             message={

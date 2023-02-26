@@ -1,3 +1,5 @@
+from fastapi import HTTPException
+
 from source.message_broker.rabbit_server import RabbitRPC
 from source.routers.cart.app import add_and_edit_product
 from source.routers.product.modules.allowed_storages import get_allowed_storages
@@ -12,6 +14,35 @@ class EditQuantity:
 
 def check_price_qty(auth_header, cart, response):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+        with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
+            rpc.response_len_setter(response_len=1)
+            customer_result = rpc.publish(
+                message={
+                    "customer": {
+                        "action": "check_is_registered",
+                        "body": {
+                            "customer_phone_number": auth_header[0].get('phone_number')
+                        }
+                    }
+                },
+                headers={'customer': True}
+            ).get("customer", {})
+        if not customer_result.get("success") or not customer_result.get('message').get('customerIsActive'):
+            rpc.publish(
+                message={
+                    "cart": {
+                        "action": "delete_cart",
+                        "body": {
+                            "user_id": auth_header[0].get("user_id")
+                        }
+                    }
+                },
+                headers={'cart': True}
+            )
+            raise HTTPException(
+                status_code=customer_result.get("status_code", 500),
+                detail={"error": customer_result.get("error", "شما مجاز به خرید نیستید. لطفا با پشتیبانی تماس بگیرید")}
+            )
         cart_result = cart
         # find product in cart and build product object
         allowed_storages = get_allowed_storages(auth_header[0].get("user_id"))
