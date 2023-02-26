@@ -116,24 +116,24 @@ def handle_order_bank_callback(result, response):
                     return RedirectResponse(
                         f"https://rakiano.com/payment-result/order/{result.get('service_id')}")
             else:
-                # rpc.response_len_setter(response_len=1)
-                # rpc.publish(
-                #     message={
-                #         "order": {
-                #             "action": "send_cancel_order_sms",
-                #             "body": {
-                #                 "phone_number": order_get_response['order_object']['customer']['mobile'],
-                #                 "first_name":
-                #                     order_get_response['order_object']['customer']['fullName'].split(" ")[0],
-                #                 "last_name":
-                #                     order_get_response['order_object']['customer']['fullName'].split(" ")[1],
-                #                 "order_number": order_get_response['order_object']['orderNumber'],
-                #                 "customer_type": order_get_response['order_object']['customer']['type']
-                #             }
-                #         }
-                #     },
-                #     headers={'order': True}
-                # )
+                rpc.response_len_setter(response_len=1)
+                rpc.publish(
+                    message={
+                        "order": {
+                            "action": "send_cancel_order_sms",
+                            "body": {
+                                "phone_number": order_get_response['order_object']['customer']['mobile'],
+                                "first_name":
+                                    order_get_response['order_object']['customer']['fullName'].split(" ")[0],
+                                "last_name":
+                                    order_get_response['order_object']['customer']['fullName'].split(" ")[1],
+                                "order_number": order_get_response['order_object']['orderNumber'],
+                                "customer_type": order_get_response['order_object']['customer']['type']
+                            }
+                        }
+                    },
+                    headers={'order': True}
+                )
                 rpc.response_len_setter(response_len=1)
                 rpc.publish(
                     message={
