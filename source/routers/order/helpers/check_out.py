@@ -14,19 +14,18 @@ class EditQuantity:
 
 def check_price_qty(auth_header, cart, response):
     with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-        with RabbitRPC(exchange_name='headers_exchange', timeout=5) as rpc:
-            rpc.response_len_setter(response_len=1)
-            customer_result = rpc.publish(
-                message={
-                    "customer": {
-                        "action": "check_is_registered",
-                        "body": {
-                            "customer_phone_number": auth_header[0].get('phone_number')
-                        }
+        rpc.response_len_setter(response_len=1)
+        customer_result = rpc.publish(
+            message={
+                "customer": {
+                    "action": "check_is_registered",
+                    "body": {
+                        "customer_phone_number": auth_header[0].get('phone_number')
                     }
-                },
-                headers={'customer': True}
-            ).get("customer", {})
+                }
+            },
+            headers={'customer': True}
+        ).get("customer", {})
         if not customer_result.get("success") or not customer_result.get('message').get('customerIsActive'):
             rpc.publish(
                 message={
