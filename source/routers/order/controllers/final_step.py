@@ -130,7 +130,7 @@ def final_order(
                                         "last_name":
                                             place_order_result['order_object']['customer']['fullName'].split(" ")[1],
                                         "order_number": place_order_result['order_object']['orderNumber'],
-                                        "customer_type": place_order_result['customer']['customer_type']
+                                        "customer_type": place_order_result['order_object']['customer']['customer_type']
                                     }
                                 }
                             },
