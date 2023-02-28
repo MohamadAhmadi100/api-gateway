@@ -35,7 +35,7 @@ app = FastAPI(title="API Gateway",
               redoc_url="/redoc/" if settings.DEBUG_MODE else None
               )
 
-# app.add_middleware(Monitoring)
+app.add_middleware(Monitoring)
 
 
 # ----------------------------------------- Mount all services here -------------------------------------------------- #
