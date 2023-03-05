@@ -7,6 +7,7 @@ from source.routers.dealership.controllers.add_imei import router as add_imei
 from source.routers.dealership.controllers.get_dealership import router as get_inventory
 from source.routers.dealership.controllers.registration_sell_request import router as sell
 from source.routers.dealership.controllers.cash_payment_callback import router as cash_payment
+from source.routers.dealership.controllers.return_products import router as return_product
 from starlette_prometheus import metrics, PrometheusMiddleware
 
 
@@ -32,12 +33,15 @@ def validation_exception_handler(request, exc):
     return responses.JSONResponse(exc.detail, status_code=exc.status_code)
 
 
+
+
 app.include_router(post_api)
 app.include_router(get_api)
 app.include_router(add_imei)
 app.include_router(get_inventory)
 app.include_router(sell)
 app.include_router(cash_payment)
+app.include_router(return_product)
 
 app.add_middleware(PrometheusMiddleware)
 app.add_route('/metrics', metrics)
